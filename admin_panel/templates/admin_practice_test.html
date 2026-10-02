@@ -1,0 +1,479 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+{% block title %}Practice Tests{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_practice_test.css' %}?v=20260724-1">
+<link rel="stylesheet" href="{% static 'css/toast.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="practice-test-wrapper">
+  <div class="page-header">
+    <h1>Practice Tests</h1>
+  </div>
+
+  <!-- Toasts -->
+  <div class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Navigation actions -->
+  <div class="btn-group">
+    <button type="button" data-section="list" class="toggle-btn btn-active">All Tests</button>
+    <button type="button" data-section="create" class="toggle-btn">+ Create Practice Test</button>
+    <button type="button" data-section="schedule" class="toggle-btn"> Schedule Test</button>
+    <div class="search-wrap">
+      <input type="text" id="searchInput" placeholder="Search Tests..." autocomplete="off">
+    </div>
+  </div>
+
+  <!-- Data URLs for external JS -->
+  <div id="practice-test-api-urls"
+       data-list-url="{% url 'admin_practice_test_page' %}"
+       data-questions-list-url-template="{% url 'practice_api_list_questions_by_name' '_TEST_TITLE_' %}"
+       data-questions-add-url-template="{% url 'practice_api_add_question_by_name' '_TEST_TITLE_' %}"
+       data-bulk-upload-url="{% url 'practice_bulk_upload' %}"
+       data-schedule-detail-base="/practicetest/admin/practice-tests/schedules/"
+       data-schedule-update-base="/practicetest/admin/practice-tests/schedules/"
+       data-schedule-delete-base="/practicetest/admin/practice-tests/schedules/">
+  </div>
+
+  <!-- SECTION: List -->
+  <div class="section" id="list-section">
+    <div class="table-container">
+      <table class="exam-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Domain</th>
+            <th>Max Marks</th>
+            <th>Passing</th>
+            <th>Duration</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for test in tests %}
+          <tr>
+            <td><strong>{{ test.title }}</strong></td>
+            <td>{{ test.domain.domain_name }}</td>
+            <td>{{ test.max_marks }}</td>
+            <td>{{ test.passing_marks }}</td>
+            <td>{{ test.duration_minutes }} mins</td>
+            <td>
+              <div class="action-group">
+                <button type="button"
+                        class="action-btn edit select-test-btn"
+                        data-test-title="{{ test.title|escape }}">
+                  Manage Questions
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="6" class="muted text-center">No practice tests found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- SECTION: Create -->
+  <div class="section" id="create-section" hidden>
+    <div class="card">
+      <h2 class="card-title">Create Practice Test</h2>
+      <form method="post" action="{% url 'admin_practice_test_page' %}" id="create-test-form" class="schedule-form">
+        {% csrf_token %}
+        <div class="schedule-grid">
+          {% for field in create_form %}
+            <div class="schedule-field {% if field.name == 'title' %}full{% endif %}">
+              <label for="{{ field.id_for_label }}" class="schedule-label">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+                <span class="field-error">{{ field.errors.0 }}</span>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <div class="actions mt-3">
+          <button type="submit" name="create_test" class="add-btn">+ Create Test</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SECTION: Schedule -->
+  <div class="section" id="schedule-section" hidden>
+    <div class="card">
+      <h2 class="card-title">Schedule Practice Test</h2>
+      <form method="post" action="{% url 'admin_practice_test_page' %}" id="schedule-test-form" class="schedule-form">
+        {% csrf_token %}
+        <div class="schedule-grid">
+          {% for field in schedule_form %}
+            <div class="schedule-field {% if field.name == 'practice_test' or field.name == 'college' %}full{% endif %}">
+              <label for="{{ field.id_for_label }}" class="schedule-label">{{ field.label }}</label>
+              {{ field }}
+              {% if field.errors %}
+                <span class="field-error">{{ field.errors.0 }}</span>
+              {% endif %}
+            </div>
+          {% endfor %}
+        </div>
+        <div class="actions mt-3">
+          <button type="submit" name="schedule_test" class="add-btn">Schedule Test</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- SECTION: Questions -->
+  <div class="section" id="questions-section" hidden>
+    <div class="panel-header">
+      <h2 id="q-title">Questions</h2>
+      <div class="muted" id="q-subtitle"></div>
+    </div>
+
+    <div class="grid-two">
+      <!-- Add Single Question -->
+      <div class="card">
+        <h3>Add Single Question</h3>
+        <form id="single-question-form" method="post" enctype="multipart/form-data" class="schedule-form">
+          {% csrf_token %}
+          <!-- IMAGE UPLOAD -->
+          <div class="form-row">
+            <label class="schedule-label">Attach Image (optional)</label>
+            <input type="file" name="image" accept="image/*">
+            <button type="button" class="action-btn delete btn-small mt-1" id="remove-selected-image">Remove Selected Image</button>
+          </div>
+
+          <!-- QUESTION TYPE -->
+          <div class="form-row">
+            <label class="schedule-label">Type</label>
+            <select name="type" required>
+              <option value="">-- Select Type --</option>
+              <option value="MCQ">MCQ</option>
+              <option value="TF">True/False</option>
+              <option value="DESC">Descriptive</option>
+              <option value="CODE">Code</option>
+            </select>
+          </div>
+
+          <div class="form-row">
+            <label class="schedule-label">Question Text</label>
+            <textarea name="question_text" rows="3" required></textarea>
+          </div>
+
+          <div class="schedule-grid">
+            <div class="schedule-field">
+              <label class="schedule-label">Marks</label>
+              <input type="number" name="marks" step="0.01" value="1" required />
+            </div>
+            <div class="schedule-field">
+              <label class="schedule-label">Negative Mark</label>
+              <input type="number" name="negative_mark" step="0.01" value="0" />
+            </div>
+          </div>
+
+          <!-- MCQ SECTION -->
+          <div id="mcq-section" hidden class="form-row mt-2">
+            <label class="schedule-label">MCQ Options & Correct Answer</label>
+            <div id="mcq-options-container" class="mb-2">
+              <div class="mcq-opt-row">
+                <input type="text" class="mcq-option-input" placeholder="Option 1" />
+                <label class="radio-label"><input type="radio" name="mcq_correct_option" /> Correct</label>
+                <button type="button" class="action-btn delete btn-small remove-mcq-opt" title="Remove Option">×</button>
+              </div>
+              <div class="mcq-opt-row">
+                <input type="text" class="mcq-option-input" placeholder="Option 2" />
+                <label class="radio-label"><input type="radio" name="mcq_correct_option" /> Correct</label>
+                <button type="button" class="action-btn delete btn-small remove-mcq-opt" title="Remove Option">×</button>
+              </div>
+              <div class="mcq-opt-row">
+                <input type="text" class="mcq-option-input" placeholder="Option 3" />
+                <label class="radio-label"><input type="radio" name="mcq_correct_option" /> Correct</label>
+                <button type="button" class="action-btn delete btn-small remove-mcq-opt" title="Remove Option">×</button>
+              </div>
+              <div class="mcq-opt-row">
+                <input type="text" class="mcq-option-input" placeholder="Option 4" />
+                <label class="radio-label"><input type="radio" name="mcq_correct_option" /> Correct</label>
+                <button type="button" class="action-btn delete btn-small remove-mcq-opt" title="Remove Option">×</button>
+              </div>
+            </div>
+            <button type="button" class="action-btn edit btn-small" id="add-mcq-option">+ Add Option</button>
+          </div>
+
+          <!-- TF SECTION -->
+          <div id="tf-section" hidden class="form-row mt-2">
+            <label class="schedule-label">Correct Answer</label>
+            <select id="tf-correct-select">
+              <option value="True">True</option>
+              <option value="False">False</option>
+            </select>
+          </div>
+
+          <!-- HIDDEN FIELDS FOR BACKEND SUBMISSION -->
+          <input type="hidden" name="options" id="final-options" />
+          <input type="hidden" name="correct_answer" id="final-correct-answer" />
+
+          <!-- DESC -->
+          <div id="desc-section" hidden>
+            <div class="form-row">
+              <label class="schedule-label">Expected Keywords (DESC)</label>
+              <input type="text" name="expected_keywords" placeholder='["algo","complexity"] or algo,complexity' />
+            </div>
+            <div class="form-row">
+              <label class="schedule-label">Min Characters (DESC)</label>
+              <input type="number" name="min_characters" />
+            </div>
+          </div>
+
+          <!-- CODE -->
+          <div id="coding-section" class="coding-fields" hidden>
+            <div class="form-row">
+              <label class="schedule-label">Input Example</label>
+              <input type="text" name="input_example" placeholder="e.g., 2 3" />
+            </div>
+            <div class="form-row">
+              <label class="schedule-label">Expected Output</label>
+              <input type="text" name="expected_output" placeholder="e.g., 5" />
+            </div>
+
+            <div id="test-cases-container">
+              <label class="schedule-label">Test Cases</label>
+              <div class="test-case-row">
+                <input type="text" name="test_input_0" placeholder="Input" />
+                <input type="text" name="test_output_0" placeholder="Expected Output" />
+                <button type="button" class="action-btn delete btn-small remove-test-case">Remove</button>
+              </div>
+            </div>
+            <button type="button" class="action-btn btn-small mt-2" id="add-test-case">+ Test Case</button>
+          </div>
+
+          <div class="actions mt-3">
+            <button type="submit" class="add-btn">Add Question</button>
+            <button type="button" class="action-btn edit" id="open-format-help">Format Help</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Bulk Upload -->
+      <div class="card">
+        <h3>Bulk Upload</h3>
+        <form id="bulk-upload-form" method="post" enctype="multipart/form-data" action="{% url 'practice_bulk_upload' %}" class="schedule-form">
+          {% csrf_token %}
+          <input type="hidden" name="test_name" id="bulk-test-name" />
+          <div class="form-row">
+            <label class="schedule-label">Upload File (.xlsx, .csv, .docx)</label>
+            <input type="file" name="file" accept=".xlsx,.csv,.docx" required />
+          </div>
+          <div class="actions mt-3">
+            <button type="submit" class="add-btn">Upload Questions</button>
+            <button type="button" class="action-btn edit" id="open-format-help-2">Format Help</button>
+          </div>
+          <div id="bulk-progress" class="muted mt-2"></div>
+        </form>
+      </div>
+    </div>
+
+    <!-- EXISTING QUESTIONS -->
+    <div class="section-block mt-4">
+      <h3>Existing Questions</h3>
+      <div class="table-container">
+        <table class="exam-table" id="questions-table">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Question</th>
+              <th>Marks</th>
+              <th>Neg</th>
+              <th>Options</th>
+              <th>Correct</th>
+              <th>Keywords</th>
+              <th>Min Chars</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Filled dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scheduled Tests -->
+  <div class="section" id="scheduled-list-section">
+    <div class="panel-header mb-3">
+      <h2>All Scheduled Practice Tests</h2>
+    </div>
+    <div class="table-container">
+      <table class="exam-table" id="scheduled-table">
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>College</th>
+            <th>Course</th>
+            <th>Sem</th>
+            <th>Year</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for s in scheduled_tests %}
+          <tr data-schedule-id="{{ s.id }}">
+            <td><strong>{{ s.practice_test.title }}</strong></td>
+            <td>{{ s.college.name }}</td>
+            <td>{{ s.course.name }}</td>
+            <td>{{ s.semester }}</td>
+            <td>{{ s.year }}</td>
+            <td>{{ s.start_datetime|date:"d M Y, h:i A" }}</td>
+            <td>{{ s.end_datetime|date:"d M Y, h:i A" }}</td>
+            <td>
+              <div class="action-group">
+                <button class="action-btn edit btn-edit-schedule" data-id="{{ s.id }}">Edit</button>
+                <button class="action-btn delete btn-delete-schedule" data-id="{{ s.id }}">Delete</button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="8" class="muted text-center">No scheduled practice tests found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Question Modal -->
+<div class="modal" id="editQuestionModal" hidden>
+  <div class="modal-content">
+    <button class="close-modal" data-close>&times;</button>
+    <h3>Edit Question</h3>
+    <form id="edit-question-form" enctype="multipart/form-data" class="schedule-form">
+      {% csrf_token %}
+      <input type="hidden" name="question_id" id="edit-qid" />
+
+      <div class="form-row">
+        <label class="schedule-label">Question Text</label>
+        <textarea name="question_text" id="edit-question-text" rows="3" required></textarea>
+      </div>
+
+      <div class="schedule-grid">
+        <div class="schedule-field">
+          <label class="schedule-label">Marks</label>
+          <input type="number" name="marks" id="edit-marks" step="0.01" />
+        </div>
+        <div class="schedule-field">
+          <label class="schedule-label">Negative Mark</label>
+          <input type="number" name="negative_mark" id="edit-negative" step="0.01" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label class="schedule-label">Correct Answer</label>
+        <input type="text" name="correct_answer" id="edit-correct" />
+      </div>
+
+      <div class="form-row">
+        <label class="schedule-label">Options</label>
+        <input type="text" name="options" id="edit-options" placeholder='["A","B","C","D"]' />
+      </div>
+
+      <div class="actions mt-3">
+        <button type="submit" class="add-btn">Save Changes</button>
+        <button type="button" class="action-btn delete" data-close>Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit/Reschedule Modal -->
+<div class="modal" id="scheduleEditModal" hidden>
+  <div class="modal-content">
+    <button class="close-modal" data-close>&times;</button>
+    <h3>Edit Schedule</h3>
+    <form id="edit-schedule-form" method="post" class="schedule-form">
+      {% csrf_token %}
+      <input type="hidden" name="schedule_id" id="edit-schedule-id" />
+      <input type="hidden" name="college" id="edit-college-id" />
+      <input type="hidden" name="course" id="edit-course-id" />
+
+      <div class="schedule-grid">
+        <div class="schedule-field full">
+          <label for="id_practice_test_modal" class="schedule-label">Practice test</label>
+          <select name="practice_test" id="id_practice_test_modal" required>
+            <option value="">--------</option>
+            {% for t in tests %}
+              <option value="{{ t.id }}">{{ t.title }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="schedule-field">
+          <label class="schedule-label">College</label>
+          <div id="id_college_modal_display" class="muted font-weight-bold">—</div>
+        </div>
+
+        <div class="schedule-field">
+          <label class="schedule-label">Course</label>
+          <div id="id_course_modal_display" class="muted font-weight-bold">—</div>
+        </div>
+
+        <div class="schedule-field">
+          <label for="id_semester_modal" class="schedule-label">Semester</label>
+          <input type="number" name="semester" id="id_semester_modal" min="1" max="12" required />
+        </div>
+
+        <div class="schedule-field">
+          <label for="id_year_modal" class="schedule-label">Year</label>
+          <input type="number" name="year" id="id_year_modal" min="1" max="10" required />
+        </div>
+
+        <div class="schedule-field">
+          <label for="id_start_modal" class="schedule-label">Start</label>
+          <input type="datetime-local" name="start_datetime" id="id_start_modal" required />
+        </div>
+
+        <div class="schedule-field">
+          <label for="id_end_modal" class="schedule-label">End</label>
+          <input type="datetime-local" name="end_datetime" id="id_end_modal" required />
+        </div>
+      </div>
+
+      <div class="actions mt-3">
+        <button type="submit" class="add-btn">Save Changes</button>
+        <button type="button" class="action-btn delete" data-close>Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop" hidden></div>
+
+<!-- Modal (format help) -->
+<div class="modal" id="formatHelpModal" hidden>
+  <div class="modal-content">
+    <button class="close-modal" data-close>&times;</button>
+    <h3 class="mb-2">Bulk Upload Format</h3>
+    <p class="muted mb-2">Header row must include:</p>
+    <pre class="bg-light p-2 rounded mb-3">type, question_text, marks, negative_mark, options, correct_answer, expected_keywords, min_characters</pre>
+    <ul class="format-help-list">
+      <li><b>type</b>: MCQ | TF | DESC | CODE</li>
+      <li><b>options</b> (MCQ): JSON array OR comma-separated (e.g., ["A","B","C","D"] or A,B,C,D)</li>
+      <li><b>correct_answer</b> (MCQ/TF): e.g., A or True</li>
+      <li><b>expected_keywords</b> (DESC): JSON array or comma-separated list</li>
+      <li><b>min_characters</b> (DESC): integer</li>
+      <li><b>CODE</b>: include input_example, expected_output, test_cases if needed</li>
+    </ul>
+    <p class="muted mt-2">Supported files: <code>.xlsx</code>, <code>.csv</code>, <code>.docx</code>.</p>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/admin_practice_test.js' %}" defer></script>
+{% endblock %}
+

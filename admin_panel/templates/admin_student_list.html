@@ -1,0 +1,85 @@
+{% extends "admin_base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<!-- FontAwesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/admin_student_list.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="student-list-wrapper">
+
+  <div class="page-header">
+    <div class="header-titles">
+      <h1>{{ college.name }}</h1>
+      <p class="subtitle-text">
+        <i class="fa-solid fa-user-graduate"></i> Student Directory &nbsp;|&nbsp; 
+        <strong>Batch {{ batch_year }}</strong>
+      </p>
+    </div>
+
+    <a href="{% url 'college_student_page' college.id %}" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to Groups
+    </a>
+  </div>
+
+  <div class="table-container">
+    <table class="student-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>USN</th>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Course</th>
+          <th>Year</th>
+          <th>Semester</th>
+          <th>Section</th>
+          <th>Batch Year</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in students %}
+        <tr>
+          <td>{{ forloop.counter }}</td>
+          <td class="usn-highlight">{{ s.usn }}</td>
+          <td class="student-name"><strong>{{ s.user.get_full_name }}</strong></td>
+          <td>{{ s.user.email }}</td>
+          <td><span class="badge badge-course">{{ s.course.name }}</span></td>
+          <td>{{ s.year }}</td>
+          <td>{{ s.semester }}</td>
+          <td><span class="badge badge-section">{{ s.section.name }}</span></td>
+          <td><strong>{{ s.batch_year }}</strong></td>
+          <td>
+            <div class="actions-flex">
+              <a href="{% url 'admin_edit_student' s.id %}" class="btn btn-teal btn-sm">
+                <i class="fa-solid fa-user-pen"></i> Edit
+              </a>
+              <form action="{% url 'admin_delete_student' s.id %}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete student {{ s.user.get_full_name }}? This will permanently delete their account and profile.');">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="btn btn-danger btn-sm">
+                  <i class="fa-solid fa-trash-can"></i> Delete
+                </button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="10" class="empty-row">
+            <i class="fa-solid fa-users-slash empty-icon"></i>
+            <div>No students found for this batch.</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+{% endblock %}

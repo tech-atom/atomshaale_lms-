@@ -1,0 +1,471 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<!-- FontAwesome for Premium Icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/admin_college.css' %}">
+<link rel="stylesheet" href="{% static 'css/toast.css' %}">
+<meta name="csrf-token" content="{{ csrf_token }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- ================= API URL CONFIG ================= -->
+<div id="college-api-urls"
+  data-add-college="{% url 'add_college' %}"
+  data-update-college="{% url 'api_update_college' '00000000-0000-0000-0000-000000000000' %}"
+  data-delete-college="{% url 'delete_college' '00000000-0000-0000-0000-000000000000' %}"
+  data-add-course="{% url 'add_course' %}"
+  data-update-course="{% url 'api_update_course_course' 0 %}"
+  data-delete-course="{% url 'delete_course' 0 %}"
+  data-get-mappings="{% url 'get_college_mappings' '00000000-0000-0000-0000-000000000000' %}"
+  data-add-mapping="{% url 'add_college_mapping' '00000000-0000-0000-0000-000000000000' %}"
+  data-remove-mapping="{% url 'remove_college_mapping' '00000000-0000-0000-0000-000000000000' %}">
+</div>
+
+<div class="admin-college-container">
+  
+  <!-- ================= DASHBOARD HEADER ================= -->
+  <div class="dashboard-header-block">
+    <div class="header-titles">
+      <h1>Academic Structures</h1>
+      <p class="subtitle-text">Manage colleges, courses, sections, and mappings.</p>
+    </div>
+  </div>
+
+  <!-- ================= DASHBOARD STATS GRID ================= -->
+  <div class="dashboard-stats-grid">
+    <div class="stat-card colleges-card">
+      <div class="stat-icon-wrapper">
+        <i class="fa-solid fa-university"></i>
+      </div>
+      <div class="stat-info">
+        <h3 id="stat-colleges-count">{{ colleges|length }}</h3>
+        <p>Active Colleges</p>
+      </div>
+    </div>
+    <div class="stat-card courses-card">
+      <div class="stat-icon-wrapper">
+        <i class="fa-solid fa-graduation-cap"></i>
+      </div>
+      <div class="stat-info">
+        <h3 id="stat-courses-count">{{ courses|length }}</h3>
+        <p>Total Courses</p>
+      </div>
+    </div>
+    <div class="stat-card sections-card">
+      <div class="stat-icon-wrapper">
+        <i class="fa-solid fa-layer-group"></i>
+      </div>
+      <div class="stat-info">
+        <h3 id="stat-sections-count">{{ sections|length }}</h3>
+        <p>Sections Active</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TAB NAVIGATION ================= -->
+  <div class="admin-tabs-nav">
+    <button class="tab-btn active" data-tab="colleges">
+      <i class="fa-solid fa-school"></i>
+      <span>Colleges</span>
+    </button>
+    <button class="tab-btn" data-tab="courses">
+      <i class="fa-solid fa-book-open"></i>
+      <span>Courses</span>
+    </button>
+    <button class="tab-btn" data-tab="sections">
+      <i class="fa-solid fa-list-ol"></i>
+      <span>Sections</span>
+    </button>
+  </div>
+
+  <!-- ================= TAB CONTENT PANES ================= -->
+  <div class="tab-content-wrapper">
+
+    <!-- Colleges Tab Pane -->
+    <div id="colleges-tab" class="tab-pane active-pane">
+      <div class="section-controls-row">
+        <button id="addCollegeBtn" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> Add College
+        </button>
+        <div class="search-box-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="searchInput" placeholder="Search colleges by name, email or phone..." autocomplete="off">
+        </div>
+      </div>
+
+      <div class="table-wrap" aria-label="College table container">
+        <table id="collegeTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Actions</th>
+              <th>Students</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for college in colleges %}
+            <tr data-id="{{ college.id }}">
+              <td>{{ forloop.counter }}</td>
+              <td class="col-name">{{ college.name }}</td>
+              <td class="col-email">{{ college.contact_email }}</td>
+              <td class="col-phone">{{ college.contact_number }}</td>
+              <td class="col-address">{{ college.address }}</td>
+              <td>
+                <div class="actions-flex">
+                  <button class="edit-btn btn btn-teal"
+                    data-id="{{ college.id }}"
+                    data-url="{% url 'api_update_college' college.id %}"
+                    data-name="{{ college.name }}"
+                    data-email="{{ college.contact_email }}"
+                    data-phone="{{ college.contact_number }}"
+                    data-address="{{ college.address }}">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                  </button>
+                  <button class="delete-btn btn btn-danger"
+                    data-url="{% url 'delete_college' college.id %}"
+                    data-id="{{ college.id }}"
+                    data-name="{{ college.name }}">
+                    <i class="fa-solid fa-trash"></i> Delete
+                  </button>
+                  <button class="map-btn btn btn-slate"
+                    data-id="{{ college.id }}"
+                    data-name="{{ college.name }}">
+                    <i class="fa-solid fa-link"></i> Map
+                  </button>
+                </div>
+              </td>
+              <td>
+                <a href="{% url 'college_student_page' college.id %}" class="view-btn btn btn-blue">
+                  <i class="fa-solid fa-users"></i> View Students
+                </a>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" class="empty-table-message">No colleges found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Courses Tab Pane -->
+    <div id="courses-tab" class="tab-pane">
+      <div class="section-controls-row">
+        <button id="addCourseBtn" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> Add Course
+        </button>
+        <div class="search-box-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="searchCourseInput" placeholder="Search courses..." autocomplete="off">
+        </div>
+      </div>
+
+      <div class="course-table-wrap" aria-label="Course table container">
+        <table id="courseTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Course Name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for course in courses %}
+            <tr data-id="{{ course.id }}">
+              <td>{{ forloop.counter }}</td>
+              <td class="course-name">{{ course.name }}</td>
+              <td>
+                <div class="actions-flex">
+                  <button class="course-edit-btn btn btn-teal"
+                    data-id="{{ course.id }}"
+                    data-url="{% url 'api_update_course_course' course.id %}"
+                    data-name="{{ course.name }}">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                  </button>
+                  <button class="course-delete-btn btn btn-danger"
+                    data-url="{% url 'delete_course' course.id %}"
+                    data-id="{{ course.id }}"
+                    data-name="{{ course.name }}">
+                    <i class="fa-solid fa-trash"></i> Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="3" class="empty-table-message">No courses found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sections Tab Pane -->
+    <div id="sections-tab" class="tab-pane">
+      <div class="section-controls-row">
+        <button id="addSectionBtn" class="btn btn-primary">
+          <i class="fa-solid fa-plus"></i> Add Section
+        </button>
+        <div class="search-box-wrapper">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input type="text" id="searchSectionInput" placeholder="Search sections..." autocomplete="off">
+        </div>
+      </div>
+
+      <div class="section-table-wrap" aria-label="Section table container">
+        <table id="sectionTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Section Name</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for section in sections %}
+            <tr data-name="{{ section.name }}">
+              <td>{{ forloop.counter }}</td>
+              <td class="section-name">{{ section.name }}</td>
+              <td>
+                <div class="actions-flex">
+                  <button class="section-edit-btn btn btn-teal"
+                    data-name="{{ section.name }}"
+                    data-url="{% url 'api_update_section' section.name %}">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                  </button>
+                  <button class="section-delete-btn btn btn-danger"
+                    data-url="{% url 'delete_section' section.name %}"
+                    data-name="{{ section.name }}">
+                    <i class="fa-solid fa-trash"></i> Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="3" class="empty-table-message">No sections found.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<!-- ================= ADD COLLEGE MODAL ================= -->
+<div id="addModal" class="modal" aria-hidden="true">
+  <div class="modal-content">
+    <button class="close-modal" aria-label="Close modal">&times;</button>
+    <h2><i class="fa-solid fa-university"></i> Add College</h2>
+    <form id="addCollegeForm">
+      <div class="form-group">
+        <label for="newCollegeName">College Name</label>
+        <input type="text" id="newCollegeName" placeholder="Enter college full name" required>
+      </div>
+      <div class="form-group">
+        <label for="newCollegeEmail">Contact Email</label>
+        <input type="email" id="newCollegeEmail" placeholder="Enter contact email address" required>
+      </div>
+      <div class="form-group">
+        <label for="newCollegePhone">Phone Number</label>
+        <input type="text" id="newCollegePhone" placeholder="Enter contact number" required>
+      </div>
+      <div class="form-group">
+        <label for="newCollegeAddress">Address</label>
+        <textarea id="newCollegeAddress" rows="3" placeholder="Enter physical address details" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Add College</button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= EDIT COLLEGE MODAL ================= -->
+<div id="editModal" class="modal" aria-hidden="true">
+  <div class="modal-content">
+    <button class="close-modal" aria-label="Close modal">&times;</button>
+    <h2><i class="fa-solid fa-pen-to-square"></i> Edit College</h2>
+    <form id="editCollegeForm">
+      <input type="hidden" id="editCollegeId">
+      <div class="form-group">
+        <label for="editCollegeName">College Name</label>
+        <input type="text" id="editCollegeName" required>
+      </div>
+      <div class="form-group">
+        <label for="editCollegeEmail">Contact Email</label>
+        <input type="email" id="editCollegeEmail" required>
+      </div>
+      <div class="form-group">
+        <label for="editCollegePhone">Phone Number</label>
+        <input type="text" id="editCollegePhone" required>
+      </div>
+      <div class="form-group">
+        <label for="editCollegeAddress">Address</label>
+        <textarea id="editCollegeAddress" rows="3" required></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= ADD COURSE MODAL ================= -->
+<div id="addCourseModal" class="modal" aria-hidden="true">
+  <div class="modal-content">
+    <button class="close-modal" aria-label="Close modal">&times;</button>
+    <h2><i class="fa-solid fa-book-open"></i> Add Course(s)</h2>
+    <form id="addCourseForm">
+      <div class="form-group">
+        <label for="newCourseName">Course Name(s)</label>
+        <textarea id="newCourseName" placeholder="Enter course names (one per line, or separated by commas)" required style="width: 100%; min-height: 100px; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; font-size: 0.95rem; resize: vertical;"></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Add Course(s)</button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= EDIT COURSE MODAL ================= -->
+<div id="editCourseModal" class="modal" aria-hidden="true">
+  <div class="modal-content">
+    <button class="close-modal" aria-label="Close modal">&times;</button>
+    <h2><i class="fa-solid fa-pen-to-square"></i> Edit Course</h2>
+    <form id="editCourseForm">
+      <div class="form-group">
+        <label for="editCourseName">Course Name</label>
+        <input type="text" id="editCourseName" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= ADD SECTION MODAL ================= -->
+<div id="addSectionModal" class="modal" aria-hidden="true">
+  <div class="modal-content">
+    <button class="close-modal" aria-label="Close modal">&times;</button>
+    <h2><i class="fa-solid fa-list-ol"></i> Add Section</h2>
+    <form id="addSectionForm">
+      <div class="form-group">
+        <label for="newSectionName">Section Name</label>
+        <input type="text" id="newSectionName" placeholder="Enter section (e.g. A)" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Add Section</button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= EDIT SECTION MODAL ================= -->
+<div id="editSectionModal" class="modal" aria-hidden="true">
+  <div class="modal-content">
+    <button class="close-modal" aria-label="Close modal">&times;</button>
+    <h2><i class="fa-solid fa-pen-to-square"></i> Edit Section</h2>
+    <form id="editSectionForm">
+      <input type="hidden" id="editOldSectionName">
+      <div class="form-group">
+        <label for="editSectionName">Section Name</label>
+        <input type="text" id="editSectionName" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">Save Changes</button>
+    </form>
+  </div>
+</div>
+
+<!-- ================= DELETE MODAL ================= -->
+<div id="deleteModal" class="modal" aria-hidden="true">
+  <div class="modal-content modal-danger">
+    <div class="delete-warning-icon">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+    </div>
+    <h3 id="deleteText">Are you sure?</h3>
+    <p class="delete-help-text">This action is permanent and cannot be undone.</p>
+    <form id="deleteCollegeForm">
+      <div class="modal-actions-grid">
+        <button type="submit" class="btn btn-danger btn-block">Yes, Delete</button>
+        <button type="button" class="close-modal btn btn-secondary btn-block">Cancel</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ================= MAPPING MODAL ================= -->
+<div id="mappingModal" class="modal" aria-hidden="true">
+  <div class="modal-content mapping-modal-content">
+    <button class="close-modal" aria-label="Close modal">&times;</button>
+    <h2 id="mappingTitle"><i class="fa-solid fa-link"></i> Map Courses & Sections</h2>
+    
+    <!-- Mapping Form -->
+    <form id="mappingForm">
+      <div class="mapping-grid-container">
+        
+        <div class="mapping-column">
+          <label class="mapping-column-title">Select Courses</label>
+          <div class="checkbox-scroller">
+            {% for course in courses %}
+              <label class="checkbox-label">
+                <input type="checkbox" name="map_courses" value="{{ course.id }}">
+                <span class="custom-checkbox-text">{{ course.name }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+        <div class="mapping-column">
+          <label class="mapping-column-title">Select Sections</label>
+          <div class="checkbox-scroller">
+            {% for section in sections %}
+              <label class="checkbox-label">
+                <input type="checkbox" name="map_sections" value="{{ section.name }}">
+                <span class="custom-checkbox-text">{{ section.name }}</span>
+              </label>
+            {% endfor %}
+          </div>
+        </div>
+
+      </div>
+      <div class="mapping-submit-row">
+        <button type="submit" class="btn btn-primary">Save Mapping</button>
+      </div>
+    </form>
+
+    <!-- Active Mappings Table -->
+    <div class="active-mappings-section">
+      <h3>Active Mappings</h3>
+      <div class="mapping-table-wrap">
+        <table id="mappingTable">
+          <thead>
+            <tr>
+              <th>Course</th>
+              <th>Mapped Sections</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="3" class="mapping-loading">Loading mappings...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="toast-container" class="toast-container"></div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/admin_college.js' %}" defer></script>
+{% endblock %}

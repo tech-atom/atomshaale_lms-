@@ -1,0 +1,33 @@
+# Java compiler dependencies
+compiler/template_compilers/java/lib/modules
+Compiler/portable_compilers/java/lib/modules
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.venv_lms/
+venv/
+env/
+
+# Environment / secrets
+.env
+.env.*
+
+# Node
+node_modules/
+npm-debug.log*
+dist/
+build/
+
+# Django
+staticfiles/
+media/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

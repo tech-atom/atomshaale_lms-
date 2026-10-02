@@ -1,0 +1,200 @@
+{% extends "tpo_base.html" %}
+{% load static %}
+
+{% block title %}Student Resumes - TPO Panel{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/tpo_resume.css' %}?v=3.0">
+
+<div class="resume-dashboard-wrapper">
+
+  <!-- 1. HERO HEADER TITLE SECTION -->
+  <div class="resume-header-bar">
+    <div class="resume-header-title">
+      <div class="header-icon-box">
+        <i class="fas fa-file-invoice"></i>
+      </div>
+      <div>
+        <h2>Resume Bank </h2>
+        <p class="resume-subtitle">Manage, inspect, and download professional student resumes .</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. PRIMARY FILTERS BAR (Dark Green Card) -->
+  <form method="get" class="resume-filter-card" id="resumeFilterForm">
+    <div class="filter-field-group">
+      <label>Course:</label>
+      <select name="course" class="filter-select">
+        <option value="">All Courses</option>
+        {% for course in courses %}
+          <option value="{{ course.id }}" {% if selected_course == course.id|stringformat:"s" %}selected{% endif %}>{{ course.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-field-group">
+      <label>Year:</label>
+      <select name="year" class="filter-select">
+        <option value="">All Years</option>
+        {% for y in years %}
+          <option value="{{ y }}" {% if selected_year == y|stringformat:"s" %}selected{% endif %}>Year {{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-field-group">
+      <label>Semester:</label>
+      <select name="semester" class="filter-select">
+        <option value="">All Semesters</option>
+        {% for s in semesters %}
+          <option value="{{ s }}" {% if selected_semester == s|stringformat:"s" %}selected{% endif %}>Semester {{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-actions-group">
+      <button type="submit" class="btn-primary-filter"><i class="fas fa-filter"></i> Filter</button>
+      <a href="{% url 'tpo_resume' %}" class="btn-reset-filter"><i class="fas fa-undo"></i> Reset</a>
+    </div>
+  </form>
+
+  <!-- 3. 4 FUTURISTIC METRIC CARDS -->
+  <div class="resume-metrics-grid">
+    <div class="metric-card">
+      <div class="metric-icon-wrap icon-bg-blue">
+        <i class="fas fa-users"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Total Students</span>
+        <h3 class="metric-val">{{ total_students }}</h3>
+        <span class="metric-sub">Enrolled Students</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-wrap icon-bg-green">
+        <i class="fas fa-file-circle-check"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Resumes Uploaded</span>
+        <h3 class="metric-val">{{ uploaded_count }}</h3>
+        <span class="metric-sub">Ready for Download</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-wrap icon-bg-amber">
+        <i class="fas fa-file-circle-exclamation"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Pending Upload</span>
+        <h3 class="metric-val">{{ pending_count }}</h3>
+        <span class="metric-sub">Awaiting Submission</span>
+      </div>
+    </div>
+
+    <div class="metric-card">
+      <div class="metric-icon-wrap icon-bg-teal">
+        <i class="fas fa-chart-pie"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Completion Rate</span>
+        <h3 class="metric-val">{{ upload_rate }}</h3>
+        <span class="metric-sub">Upload Progress</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. STUDENT RESUMES DIRECTORY TABLE CARD -->
+  <div class="resume-table-card">
+    <div class="table-card-head" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+      <h3><i class="fas fa-folder-open"></i> Student Resumes Directory</h3>
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <button id="bulkDownloadZipBtn" class="btn-primary-filter" type="button" style="background: #008037; border: 1px solid #008037; color: white; display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; transition: background 0.2s;"><i class="fas fa-file-archive"></i> Download ZIP</button>
+        <div class="search-box-wrap">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="resumeSearchInput" placeholder="Search student name, USN...">
+        </div>
+      </div>
+    </div>
+
+    <div class="table-scroll-container">
+      <table class="resume-data-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="selectAllResumes" style="cursor: pointer; width: 16px; height: 16px;"></th>
+            <th>#</th>
+            <th>Student Name</th>
+            <th>USN</th>
+            <th>Course</th>
+            <th>Year</th>
+            <th>Semester</th>
+            <th>Resume Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="resumeTableBody">
+          {% if students %}
+            {% for student in students %}
+              <tr {% if student.resume %}class="has-resume-row"{% endif %}>
+                <td>
+                  <input type="checkbox" class="resume-checkbox" data-student-id="{{ student.id }}" {% if not student.resume %}disabled style="opacity: 0.4; cursor: not-allowed; width: 16px; height: 16px;"{% else %}style="cursor: pointer; width: 16px; height: 16px;"{% endif %}>
+                </td>
+                <td>{{ forloop.counter }}</td>
+                <td class="student-name-cell">
+                  <div class="name-avatar-wrap">
+                    <div class="small-avatar-circle">
+                      <i class="fas fa-user"></i>
+                    </div>
+                    <span class="font-bold-name">{{ student.user.get_full_name|default:student.user.username }}</span>
+                  </div>
+                </td>
+                <td><span class="usn-code-badge">{{ student.usn|default:"—" }}</span></td>
+                <td>{{ student.course.name|default:"—" }}</td>
+                <td><span class="level-pill">Yr {{ student.year }}</span></td>
+                <td><span class="level-pill">Sem {{ student.semester }}</span></td>
+                <td>
+                  {% if student.resume %}
+                    <span class="status-badge uploaded"><i class="fas fa-check-circle"></i> Uploaded</span>
+                  {% else %}
+                    <span class="status-badge not-uploaded"><i class="fas fa-clock"></i> Not Uploaded</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if student.resume %}
+                    <a href="{% url 'download_resume' student.id %}" class="btn-download-action">
+                      <i class="fas fa-download"></i> Download PDF
+                    </a>
+                  {% else %}
+                    <span class="btn-disabled-action"><i class="fas fa-ban"></i> Unavailable</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="9" class="no-records-cell">No student resume records found.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Table Footer -->
+    <div class="table-card-footer">
+      <div class="entries-info">
+        Showing <span id="showingStart">1</span> to <span id="showingEnd">{{ students|length }}</span> of {{ total_students }} entries
+      </div>
+      <div class="rows-info">
+        <i class="fas fa-info-circle"></i> Showing active enrolled students 
+      </div>
+    </div>
+  </div>
+
+</div>
+
+  <div id="tpo-resume-config" data-bulk-download-url="{% url 'bulk_download_resumes_zip' %}"></div>
+  <script src="{% static 'js/tpo_resume.js' %}?v=3.0"></script>
+{% endblock %}

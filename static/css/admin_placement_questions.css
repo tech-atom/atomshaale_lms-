@@ -1,0 +1,196 @@
+/* Custom Styles for Placement Questions Modals (adapted from assessment styling) */
+
+/* Variables */
+:root {
+  --modal-bg: #ffffff;
+  --modal-text: #334155;
+  --btn-bg: #008037;
+  --btn-text: #ffffff;
+}
+
+/* Modals layout */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 1050;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0,0,0,0.5);
+  backdrop-filter: blur(4px);
+  transition: opacity 0.35s ease;
+}
+
+.modal.modal-show {
+  display: block;
+}
+
+.modal-content {
+  background-color: var(--modal-bg);
+  margin: 5% auto;
+  padding: 24px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 750px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  position: relative;
+  animation: slideDown 0.3s ease-out;
+  color: var(--modal-text);
+  box-sizing: border-box;
+}
+
+@keyframes slideDown {
+  from { transform: translateY(-30px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.close-modal {
+  position: absolute;
+  right: 20px;
+  top: 15px;
+  font-size: 32px;
+  font-weight: 300;
+  color: #64748b;
+  border: none;
+  background: none;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.close-modal:hover {
+  color: #0f172a;
+}
+
+/* Scoped inputs inside modals to prevent breaking page layouts */
+.modal input[type="search"],
+.modal input[type="text"],
+.modal input[type="number"],
+.modal textarea,
+.modal select {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #cbd5e1;
+  margin-bottom: 12px;
+  width: 100%;
+  box-sizing: border-box;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 0.95rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.modal input:focus, 
+.modal textarea:focus, 
+.modal select:focus {
+  border-color: #008037;
+  box-shadow: 0 0 6px rgba(0, 128, 55, 0.25);
+  outline: none;
+}
+
+.modal label {
+  display: block;
+  margin-top: 8px;
+  margin-bottom: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #334155;
+}
+
+/* Toast Notifications */
+.toast {
+  position: fixed;
+  top: 25px;
+  right: 25px;
+  z-index: 2000;
+  min-width: 250px;
+  padding: 14px 20px;
+  border-radius: 8px;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+  transform: translateY(-20px);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.toast.show {
+  transform: translateY(0);
+  opacity: 1;
+  visibility: visible;
+}
+
+.toast-success {
+  background-color: #16a34a;
+}
+
+.toast-error {
+  background-color: #dc2626;
+}
+
+/* Action and Add Buttons inside modals/table */
+.add-btn {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 700;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: inline-block;
+}
+
+.add-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0,128,55,0.2);
+}
+
+.action-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 4px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+/* Table styling for Modal content lists */
+.exam-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.exam-table th {
+  background: #f8fafc;
+  color: #475569;
+  font-weight: 700;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.exam-table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e2e8f0;
+  font-size: 0.9rem;
+  color: #334155;
+  vertical-align: middle;
+}
+
+.exam-table tr:hover {
+  background: #f8fafc;
+}

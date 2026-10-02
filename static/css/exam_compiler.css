@@ -1,0 +1,526 @@
+/* Exam Compiler Styles - Enhanced Version */
+
+.exam-compiler {
+    border: 2px solid #008037;
+    border-radius: 10px;
+    background: #1e1e1e;
+    font-family: 'Century Gothic';
+    margin: 15px 0;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0, 128, 55, 0.3);
+    transition: all 0.3s ease;
+    width: 100%;
+    max-width: 100%;
+}
+
+.exam-compiler:hover {
+    box-shadow: 0 6px 20px rgba(0, 128, 55, 0.4);
+}
+
+.compiler-header {
+    background: linear-gradient(135deg, #008037 0%, #005a29 50%, #004d24 100%);
+    padding: 12px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 3px solid #00a84a;
+    font-family: 'Century Gothic';
+}
+
+.compiler-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    font-family: 'Century Gothic';
+}
+
+.compiler-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: 'Century Gothic';
+}
+
+.status-indicator {
+    color: #28a745;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 4px 12px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'Century Gothic';
+}
+
+.language-select {
+    padding: 8px 14px;
+    border: 2px solid #00a84a;
+    border-radius: 6px;
+    background: white;
+    color: #333;
+    font-size: 14px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    font-family: 'Century Gothic';
+}
+
+.language-select:hover {
+    border-color: #008037;
+    transform: translateY(-1px);
+    font-family: 'Century Gothic';
+}
+
+.language-select:focus {
+    outline: none;
+    border-color: #008037;
+    box-shadow: 0 0 0 3px rgba(0, 128, 55, 0.2);
+    font-family: 'Century Gothic';
+}
+
+.btn-run,
+.btn-clear,
+.btn-template {
+    padding: 8px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'Century Gothic';
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.btn-run {
+    background: #008037;
+    color: white;
+    font-family: 'Century Gothic';
+}
+
+.btn-run:hover:not(:disabled) {
+    background: #008037;
+    transform: translateY(-2px);
+    font-family: 'Century Gothic';
+
+}
+
+.btn-run:disabled {
+    background: #008037;
+    cursor: not-allowed;
+    opacity: 0.7;
+    font-family: 'Century Gothic';
+}
+
+.btn-clear {
+    background: #008037;
+    color: #333;
+    font-family: 'Century Gothic';
+}
+
+.btn-clear:hover {
+    font-family: 'Century Gothic';
+    background: #008037;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 102, 34, 0.4);
+}
+
+.btn-template {
+    font-family: 'Century Gothic';
+    background: #008037;
+    color: white;
+}
+
+.btn-template:hover {
+    font-family: 'Century Gothic';
+    background: #008037;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 128, 55, 0.4);
+}
+
+.compiler-body {
+    font-family: 'Century Gothic';
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    min-height: 450px;
+}
+
+@media (max-width: 968px) {
+    .compiler-body {
+        grid-template-columns: 1fr;
+    }
+
+    .compiler-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+        padding: 10px 12px;
+    }
+
+    .compiler-controls,
+    .compiler-info {
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .language-select {
+        width: 100%;
+        min-height: 40px;
+    }
+
+    .btn-run,
+    .btn-clear,
+    .btn-template {
+        min-height: 40px;
+    }
+
+    .code-section,
+    .output-section {
+        padding: 12px;
+    }
+
+    .code-section {
+        border-right: none;
+        border-bottom: 2px solid #008037;
+    }
+
+    .code-editor,
+    .output-display {
+        min-height: 240px;
+    }
+
+    .input-editor {
+        min-height: 80px;
+    }
+}
+
+@media (max-width: 600px) {
+    .exam-compiler {
+        margin: 12px 0;
+        border-width: 1px;
+    }
+
+    .compiler-controls {
+        gap: 8px;
+    }
+
+    .btn-run,
+    .btn-clear,
+    .btn-template {
+        width: 100%;
+        justify-content: center;
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .status-indicator {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .code-editor,
+    .output-display,
+    .input-editor {
+        font-size: 12px;
+    }
+}
+
+.code-section,
+.output-section {
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+}
+
+.code-section {
+    background: #1e1e1e;
+    border-right: 2px solid #008037;
+}
+
+.output-section {
+    background: #0d0d0d;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.editor-tools {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-tool {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-family: 'Century Gothic';
+    transition: all 0.3s ease;
+}
+
+.btn-tool:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: #00a84a;
+}
+
+.code-section label,
+.output-section label {
+    color: #ffffff;
+    font-weight: 700;
+    margin-bottom: 10px;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.input-section {
+    margin-top: 15px;
+}
+
+.input-section label {
+    color: #ffffff;
+    font-weight: 600;
+    margin-bottom: 8px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.code-editor {
+    flex: 1;
+    background: #2d2d2d;
+    color: #f8f8f2;
+    border: 2px solid #444;
+    border-radius: 6px;
+    padding: 14px;
+    font-family: 'Century Gothic';
+    font-size: 14px;
+    line-height: 1.6;
+    resize: vertical;
+    min-height: 350px;
+    transition: border-color 0.3s ease;
+}
+
+.input-editor {
+    background: #2d2d2d;
+    color: #f8f8f2;
+    border: 2px solid #444;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-family: 'Century Gothic';
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    min-height: 70px;
+    max-height: 150px;
+    transition: border-color 0.3s ease;
+}
+
+.code-editor:focus,
+.input-editor:focus {
+    outline: none;
+    border-color: #008037;
+    box-shadow: 0 0 0 3px rgba(0, 128, 55, 0.2);
+}
+
+.code-editor::placeholder,
+.input-editor::placeholder {
+    color: #888;
+    font-style: italic;
+}
+
+.output-display {
+    flex: 1;
+    background: #000000;
+    border: 2px solid #444;
+    border-radius: 6px;
+    padding: 14px;
+    font-family: 'Century Gothic';
+    font-size: 13px;
+    line-height: 1.7;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    min-height: 350px;
+    max-height: 600px;
+}
+
+.output-placeholder {
+    color: #666;
+    text-align: center;
+    padding: 40px 20px;
+    font-size: 15px;
+}
+
+.output-placeholder i {
+    font-size: 32px;
+    display: block;
+    margin-bottom: 12px;
+    color: #008037;
+}
+
+.output-loading {
+    color: #17a2b8;
+    text-align: center;
+    padding: 30px 20px;
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+.output-loading i {
+    font-size: 28px;
+    display: block;
+    margin-bottom: 12px;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.output-success {
+    color: #00ff00;
+    padding: 12px;
+    background: rgba(40, 167, 69, 0.1);
+    border-left: 4px solid #28a745;
+    border-radius: 4px;
+}
+
+.output-error {
+    color: #ff6b6b;
+    padding: 12px;
+    background: rgba(220, 53, 69, 0.1);
+    border-left: 4px solid #dc3545;
+    border-radius: 4px;
+}
+
+.output-info {
+    color: #17a2b8;
+    padding: 12px;
+    background: rgba(23, 162, 184, 0.1);
+    border-left: 4px solid #17a2b8;
+    border-radius: 4px;
+    text-align: center;
+}
+
+.compiler-stats {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(40, 167, 69, 0.1);
+    border-radius: 4px;
+    border-left: 3px solid #28a745;
+}
+
+.compiler-stats small {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.text-muted {
+    color: #888 !important;
+}
+
+/* Scrollbar styling */
+.code-editor::-webkit-scrollbar,
+.output-display::-webkit-scrollbar,
+.input-editor::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+
+.code-editor::-webkit-scrollbar-track,
+.output-display::-webkit-scrollbar-track,
+.input-editor::-webkit-scrollbar-track {
+    background: #1a1a1a;
+    border-radius: 5px;
+}
+
+.code-editor::-webkit-scrollbar-thumb,
+.output-display::-webkit-scrollbar-thumb,
+.input-editor::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #008037 0%, #00a84a 100%);
+    border-radius: 5px;
+}
+
+.code-editor::-webkit-scrollbar-thumb:hover,
+.output-display::-webkit-scrollbar-thumb:hover,
+.input-editor::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #00a84a 0%, #00c458 100%);
+}
+
+/* Loading spinner animation */
+.fa-spinner {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Compact mode for exam interface */
+.exam-compiler.compact {
+    margin: 15px 0;
+}
+
+.exam-compiler.compact .compiler-body {
+    min-height: 400px;
+}
+
+.exam-compiler.compact .code-editor,
+.exam-compiler.compact .output-display {
+    min-height: 280px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .compiler-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .compiler-controls {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btn-run,
+    .btn-clear,
+    .btn-template {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+
+    .language-select {
+        width: 100%;
+    }
+}

@@ -1,0 +1,20 @@
+{% load static %}
+<link rel="stylesheet" href="{% static 'css/star_radio.css' %}" nonce="{{ request.csp_nonce }}">
+<script src="{% static 'js/star_radio.js' %}" nonce="{{ request.csp_nonce }}" defer></script>
+
+<div class="star-radio-wrapper">
+  <div class="star-radio" id="rating-{{ widget.attrs.id }}">
+    {% for i in "12345" %}
+      <input
+        type="radio"
+        id="{{ widget.attrs.id }}_{{ i }}"
+        name="{{ widget.name }}"
+        value="{{ i }}"
+        {% if widget.value|stringformat:"s" == i|stringformat:"s" %}checked{% endif %}
+        {% include "django/forms/widgets/attrs.html" %}
+      >
+      <label for="{{ widget.attrs.id }}_{{ i }}" aria-label="{{ i }} star"><svg viewBox="0 0 24 24" width="28" height="28" fill="currentColor" style="display:inline-block; vertical-align:middle; transition: transform 0.15s ease;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></label>
+    {% endfor %}
+  </div>
+  <span class="rating-scale-hint">Rating Scale: Poor • Fair • Good • Very Good • Excellent</span>
+</div>

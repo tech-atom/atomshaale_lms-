@@ -1,0 +1,280 @@
+{% extends 'trainer_base.html' %}
+{% load static %}
+
+{% block title %}Trainer Daily Report{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/trainer_report.css' %}?v=3.0" nonce="{{ request.csp_nonce }}">
+<!-- Premium Typography -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" nonce="{{ request.csp_nonce }}">
+{% endblock %}
+
+{% block content %}
+<!-- API URLs for Javascript -->
+<div id="report-api-urls"
+     data-colleges-url="{% url 'get_colleges' %}"
+     data-courses-url="{% url 'api_courses' %}"
+     data-semesters-url="{% url 'api_semesters' %}"
+     data-domains-url="{% url 'api_domains' %}"
+     data-submit-url="{% url 'submit_trainer_report' %}"
+     data-list-url="{% url 'trainer_report_list' %}"
+     data-marked-sessions-url="{% url 'get_marked_sessions_for_reports' %}"
+     data-modules-url="{% url 'api_modules' %}">
+</div>
+
+<div class="trainer-report-page">
+  
+  <!-- Header Card Banner -->
+  <div class="report-header-card">
+    <div class="header-info">
+      <span class="category-tag">Trainer Portal</span>
+      <h1>Daily Session <span class="accent-color">Reports</span></h1>
+      <p class="subtitle-text">Create and review your daily session evaluation logs, attendance summaries, and curriculum logs.</p>
+    </div>
+    <div class="header-actions" id="headerActionsPane">
+      <button type="button" id="btnShowReportForm" class="btn-primary-action">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="12" y1="5" x2="12" y2="19"></line>
+          <line x1="5" y1="12" x2="19" y2="12"></line>
+        </svg>
+        <span>Fill Daily Report</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Form Area (Hidden by default) -->
+  <div class="report-form-wrapper" style="display: none;">
+    <div class="form-navigation-header">
+      <button type="button" id="btnHideReportForm" class="btn-back-to-list">
+        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line x1="19" y1="12" x2="5" y2="12"></line>
+          <polyline points="12 19 5 12 12 5"></polyline>
+        </svg>
+        <span>Back to reports list</span>
+      </button>
+      <div class="form-status-badge">
+        <span class="pulse-indicator"></span>
+        <span>Creating Session Log</span>
+      </div>
+    </div>
+
+    <form id="reportForm" class="report-form-element">
+      {% csrf_token %}
+
+      <!-- Section 1: Session Selector -->
+      <div class="glass-card form-section-card active-session-card">
+        <label for="markedSessionSelect" class="session-select-label">
+          <span class="select-title-span">Select Training Session (Attendance Marked):</span>
+          <div class="select-wrapper-custom">
+            <select id="markedSessionSelect" required>
+              <option value="">-- Fetching marked training sessions... --</option>
+            </select>
+          </div>
+        </label>
+      </div>
+
+      <!-- Section 2: Session Information (Auto populated) -->
+      <div class="glass-card form-section-card">
+        <h3 class="card-section-title">
+          <span class="section-badge">01</span>
+          Session Information
+        </h3>
+        
+        <div class="form-fields-grid">
+          <div class="form-group-field">
+            <label for="date" class="field-label">Date of Training:</label>
+            <input type="date" name="date" id="date" required readonly class="readonly-input">
+          </div>
+
+          <div class="form-group-field">
+            <label class="field-label">Trainer Name:</label>
+            <input type="text" value="{{ request.user.get_full_name }}" readonly class="readonly-input">
+          </div>
+
+          <div class="form-group-field">
+            <label for="collegeDropdown" class="field-label">College:</label>
+            <div class="select-wrapper">
+              <select id="collegeDropdown" name="college" required></select>
+            </div>
+          </div>
+
+          <div class="form-group-field">
+            <label for="courseDropdown" class="field-label">Course:</label>
+            <div class="select-wrapper">
+              <select id="courseDropdown" name="course" required></select>
+            </div>
+          </div>
+
+          <div class="form-group-field">
+            <label for="yearDropdown" class="field-label">Year:</label>
+            <div class="select-wrapper">
+              <select id="yearDropdown" name="year" required></select>
+            </div>
+          </div>
+
+          <div class="form-group-field">
+            <label for="semesterDropdown" class="field-label">Semester:</label>
+            <div class="select-wrapper">
+              <select id="semesterDropdown" name="semester" required></select>
+            </div>
+          </div>
+
+          <div class="form-group-field">
+            <label for="sectionDropdown" class="field-label">Section:</label>
+            <div class="select-wrapper">
+              <select id="sectionDropdown" name="section"></select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Curriculum Details (Auto populated) -->
+      <div class="glass-card form-section-card">
+        <h3 class="card-section-title">
+          <span class="section-badge">02</span>
+          Curriculum & Module Logs
+        </h3>
+        
+        <div class="form-fields-grid">
+          <div class="form-group-field">
+            <label for="domainDropdown" class="field-label">Domain:</label>
+            <div class="select-wrapper">
+              <select id="domainDropdown" name="domain" required></select>
+            </div>
+          </div>
+
+          <div class="form-group-field">
+            <label for="subdomainDropdown" class="field-label">Subdomain:</label>
+            <div class="select-wrapper">
+              <select id="subdomainDropdown" name="subdomain"></select>
+            </div>
+          </div>
+
+          <div class="form-group-field span-2-cols" id="moduleFieldWrapper">
+            <label for="moduleDropdown" class="field-label">Module:</label>
+            <div class="select-wrapper">
+              <select id="moduleDropdown" name="module" required>
+                <option value="">-- Select training session first --</option>
+              </select>
+            </div>
+            <input type="text" id="moduleTextInput" name="module_custom" placeholder="Type custom module name..." class="custom-module-input">
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Metrics & Deliverables -->
+      <div class="glass-card form-section-card">
+        <h3 class="card-section-title">
+          <span class="section-badge">03</span>
+          Session Metrics & Deliverables
+        </h3>
+        
+        <div class="form-fields-grid">
+          <div class="form-group-field">
+            <label for="total_students" class="field-label">Total Students:</label>
+            <input type="number" name="total_students" id="total_students" required readonly class="readonly-input">
+          </div>
+
+          <div class="form-group-field">
+            <label for="present_students" class="field-label">Present Students:</label>
+            <input type="number" name="present_students" id="present_students" required readonly class="readonly-input">
+          </div>
+
+          <div class="form-group-field">
+            <label for="absent_students" class="field-label">Absent Students:</label>
+            <input type="number" name="absent_students" id="absent_students" required readonly class="readonly-input">
+          </div>
+
+          <div class="form-group-field">
+            <label for="exercises_solved" class="field-label">Exercises Solved:</label>
+            <div class="select-wrapper">
+              <select name="exercises_solved" id="exercises_solved" required>
+                <option value="">-- Select --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group-field">
+            <label for="materials_shared" class="field-label">Notes Shared:</label>
+            <div class="select-wrapper">
+              <select name="materials_shared" id="materials_shared" required>
+                <option value="">-- Select --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group-field">
+            <label for="assignments_given" class="field-label">Assignments Given:</label>
+            <div class="select-wrapper">
+              <select name="assignments_given" id="assignments_given" required>
+                <option value="">-- Select --</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 5: Summary -->
+      <div class="glass-card form-section-card">
+        <h3 class="card-section-title">
+          <span class="section-badge">04</span>
+          Session Summary
+        </h3>
+        
+        <div class="form-group-field textarea-field">
+          <label for="summary" class="field-label">Detailed Session Summary:</label>
+          <textarea name="summary" id="summary" rows="4" required placeholder="Describe topics covered, student queries handled, and assignment tasks given..."></textarea>
+        </div>
+      </div>
+
+      <!-- Submit Actions -->
+      <div class="form-submit-actions">
+        <button type="submit" id="submitBtn" class="btn-submit-report">Submit Daily Report</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- History Area (Visible by default) -->
+  <div class="report-list-wrapper">
+    <div class="section-title-bar">
+      <h2>Submitted Reports History</h2>
+      <span class="history-count-badge" id="reportCountBadge">0 submitted</span>
+    </div>
+    
+    <div class="glass-card table-card">
+      <div class="table-scroll" aria-label="Trainer submitted reports table container">
+        <table id="reportTable" class="premium-report-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>College</th>
+              <th>Course</th>
+              <th>Sem</th>
+              <th>Domain</th>
+              <th>Module</th>
+              <th>Present</th>
+              <th>Absent</th>
+              <th>Notes</th>
+              <th>Assignments</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Loaded via AJAX -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script src="{% static 'js/trainer_report.js' %}?v=4.0" nonce="{{ request.csp_nonce }}"></script>
+{% endblock %}

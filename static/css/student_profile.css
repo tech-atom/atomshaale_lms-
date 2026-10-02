@@ -1,0 +1,253 @@
+/* =========================
+GLOBAL STYLE
+========================= */
+
+.profile-container{
+    font-family:"Century Gothic";
+    max-width:820px;
+    margin:60px auto;
+    padding:20px;
+}
+
+
+/* =========================
+TITLE
+========================= */
+
+.profile-container h2{
+    font-size:34px;
+    font-weight:600;
+    margin-bottom:30px;
+    color:#000;
+    position:relative;
+}
+
+.profile-container h2::after{
+    content:"";
+    width:80px;
+    height:4px;
+    background:#008037;
+    display:block;
+    margin-top:8px;
+    border-radius:2px;
+}
+
+
+/* =========================
+GLASS PROFILE CARD
+========================= */
+
+.profile-card{
+
+    position:relative;
+    padding:40px 45px;
+    border-radius:18px;
+
+    background:rgba(255,255,255,0.65);
+    backdrop-filter:blur(12px);
+
+    border:1px solid rgba(0,0,0,0.08);
+
+    box-shadow:
+        0 12px 30px rgba(0,0,0,0.08);
+
+    transition:all .35s ease;
+}
+
+
+/* Animated glowing border */
+
+.profile-card::before{
+
+    content:"";
+    position:absolute;
+    inset:-2px;
+
+    border-radius:18px;
+
+    
+    opacity:0;
+    transition:.4s;
+
+    pointer-events:none;   /* FIXES BUTTON CLICK ISSUE */
+}
+
+.profile-card:hover::before{
+    opacity:1;
+}
+
+.profile-card:hover{
+    transform:translateY(-6px);
+}
+
+
+/* =========================
+PROFILE AVATAR
+========================= */
+
+.profile-card-avatar{
+
+    width:90px;
+    height:90px;
+
+    border-radius:50%;
+
+    background:#008037;
+    color:#fff;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    font-size:36px;
+    font-weight:600;
+
+    margin-bottom:20px;
+
+    box-shadow:
+        0 0 0 6px rgba(0,128,55,.12);
+}
+
+
+/* =========================
+PROFILE DATA ROWS
+========================= */
+
+.profile-card p{
+
+    display:grid;
+    grid-template-columns:140px 1fr;
+
+    margin-bottom:14px;
+    font-size:15px;
+}
+
+.profile-card strong{
+
+    color:#008037;
+    font-weight:600;
+}
+
+/* =========================
+BUTTON
+========================= */
+
+.btn{
+
+    position:relative;
+    z-index:5;
+
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+
+    margin-top:28px;
+    padding:12px 30px;
+
+    border-radius:10px;
+
+    background:#008037;
+
+    color:#ffffff !important;   /* FORCE WHITE TEXT */
+
+    font-family:"Century Gothic";
+    font-weight:600;
+    font-size:15px;
+
+    text-decoration:none;
+
+    border:none;
+
+    cursor:pointer;
+
+    transition:.3s ease;
+}
+
+
+/* Neon glow hover */
+
+.btn:hover{
+
+    background:#000;
+
+    color:#ffffff !important;   /* KEEP TEXT VISIBLE */
+
+    box-shadow:
+        0 0 12px #008037,
+        0 0 22px #008037;
+
+    transform:translateY(-2px);
+}
+/* =========================
+PROFILE PROGRESS BAR
+========================= */
+
+.profile-progress{
+
+    margin:15px 0 25px 0;
+}
+
+.progress-label{
+
+    font-size:13px;
+    margin-bottom:6px;
+}
+
+.progress-bar{
+
+    height:8px;
+    border-radius:10px;
+
+    background:#e5e5e5;
+    overflow:hidden;
+}
+
+.progress-fill{
+
+    height:100%;
+    width:80%;
+
+    background:#008037;
+
+    box-shadow:
+        0 0 10px rgba(0,128,55,.5);
+}
+
+
+/* =========================
+LINKS (RESUME)
+========================= */
+
+.profile-card a{
+
+    color:#008037;
+    font-weight:600;
+    text-decoration:none;
+}
+
+.profile-card a:hover{
+    text-decoration:underline;
+}
+
+
+/* =========================
+DARK MODE SUPPORT
+========================= */
+
+body.dark-mode .profile-card{
+
+    background:rgba(30,30,30,.65);
+    color:#eee;
+}
+
+body.dark-mode .profile-container h2{
+    color:#fff;
+}
+
+body.dark-mode .profile-card strong{
+    color:#00c767;
+}
+
+body.dark-mode .progress-bar{
+    background:#333;
+}

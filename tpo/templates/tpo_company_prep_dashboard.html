@@ -1,0 +1,82 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}TPO Dashboard | Company Q's{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/company_prep.css' %}?v=1.2">
+{% endblock %}
+
+{% block content %}
+<div class="prep-header">
+    <div>
+        {% if request.user.role == 'admin' %}
+        <a href="{% url 'company_prep:admin_placement' %}" class="back-btn-tpo">
+        {% else %}
+        <a href="{% url 'tpo_dashboard' %}" class="back-btn-tpo">
+        {% endif %}
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Back
+        </a>
+        <h1 class="prep-title">Company Q's</h1>
+        <p class="prep-subtitle">Monitor students targeting specific companies and check their job readiness analytics</p>
+    </div>
+</div>
+
+<div class="company-grid">
+    {% for item in companies %}
+    <div class="company-card">
+        <div>
+            <div class="company-card-header">
+                <div>
+                    <h3 class="company-name">{{ item.company.name }}</h3>
+                    <div class="company-meta-item">{{ item.company.job_role }}</div>
+                </div>
+                <div class="company-logo-avatar" style="{% if item.company.logo %}background: #ffffff; padding: 4px; border: 1px solid var(--border);{% else %}background: linear-gradient(135deg, {% if forloop.counter|divisibleby:3 %}#4f46e5, #06b6d4{% elif forloop.counter|divisibleby:2 %}#10b981, #059669{% else %}#f59e0b, #d97706{% endif %});{% endif %}">
+                    {% if item.company.logo %}
+                    <img src="{{ item.company.logo.url }}" alt="{{ item.company.name }} Logo" style="width: 100%; height: 100%; object-fit: contain; border-radius: 6px;">
+                    {% else %}
+                    {{ item.company.name|slice:":1" }}
+                    {% endif %}
+                </div>
+            </div>
+            
+            <ul class="company-details-list">
+                <li>
+                    <span class="company-detail-label">Package Offered</span>
+                    <span class="company-detail-value">{{ item.company.package }}</span>
+                </li>
+                <li>
+                    <span class="company-detail-label">Students Preparing</span>
+                    <span class="company-detail-value">{{ item.student_count }} candidates</span>
+                </li>
+                <li>
+                    <span class="company-detail-label">Average Readiness</span>
+                    <span class="company-detail-value">{{ item.avg_readiness }}%</span>
+                </li>
+            </ul>
+        </div>
+        
+        <div>
+            <div class="progress-container">
+                <div class="progress-label-row">
+                    <span>Average Job-Readiness</span>
+                    <strong>{{ item.avg_readiness }}%</strong>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width: {{ item.avg_readiness }}%; background: var(--secondary);"></div>
+                </div>
+            </div>
+            
+            <a href="{% url 'company_prep:tpo_company_detail' item.company.id %}" class="card-action-btn" style="border-color: var(--secondary); color: var(--secondary); background: transparent;">
+                View Candidates
+            </a>
+        </div>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border);">
+        <p style="color: var(--text-secondary);">No companies loaded. Please run seeding from student panel first.</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

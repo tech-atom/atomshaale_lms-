@@ -1,0 +1,165 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_placement.css' %}">
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto; padding-top: 1rem;">
+    <a href="{% url 'company_prep:admin_placement' %}" style="color: #008037; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+        ← Back to Dashboard
+    </a>
+</div>
+
+<div class="form-card">
+    <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: #0f172a; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">{{ title }}</h2>
+    
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label class="form-label" for="company">Target Company Focus (Optional)</label>
+                <select class="form-control" id="company" name="company">
+                    <option value="">-- General Pool (All Companies) --</option>
+                    {% for c in companies %}
+                    <option value="{{ c.id }}" {% if question.company.id == c.id %}selected{% endif %}>{{ c.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            {% if q_type == 'aptitude' %}
+            <div class="form-group">
+                <label class="form-label" for="difficulty">Difficulty</label>
+                <select class="form-control" id="difficulty" name="difficulty">
+                    <option value="Easy" {% if question.difficulty == 'Easy' %}selected{% endif %}>Easy</option>
+                    <option value="Medium" {% if question.difficulty == 'Medium' or question is None %}selected{% endif %}>Medium</option>
+                    <option value="Hard" {% if question.difficulty == 'Hard' %}selected{% endif %}>Hard</option>
+                </select>
+            </div>
+            {% else %}
+            <div class="form-group">
+                <label class="form-label" for="branch">Target Student Branch</label>
+                <select class="form-control" id="branch" name="branch" required>
+                    <option value="CSE" {% if question.branch == 'CSE' or question is None %}selected{% endif %}>CSE (Computer Science)</option>
+                    <option value="ECE" {% if question.branch == 'ECE' %}selected{% endif %}>ECE (Electronics & Comm)</option>
+                    <option value="Mechanical" {% if question.branch == 'Mechanical' %}selected{% endif %}>Mechanical</option>
+                    <option value="Civil" {% if question.branch == 'Civil' %}selected{% endif %}>Civil</option>
+                    <option value="MBA" {% if question.branch == 'MBA' %}selected{% endif %}>MBA (Business Administration)</option>
+                </select>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="form-row">
+            {% if q_type == 'aptitude' %}
+            <div class="form-group">
+                <label class="form-label" for="topic">Topic Subject</label>
+                <select class="form-control" id="topic" name="topic" required>
+                    <option value="Quantitative Aptitude" {% if question.topic == 'Quantitative Aptitude' %}selected{% endif %}>Quantitative Aptitude</option>
+                    <option value="Logical Reasoning" {% if question.topic == 'Logical Reasoning' %}selected{% endif %}>Logical Reasoning</option>
+                    <option value="Verbal Ability" {% if question.topic == 'Verbal Ability' %}selected{% endif %}>Verbal Ability</option>
+                    <option value="Data Interpretation" {% if question.topic == 'Data Interpretation' %}selected{% endif %}>Data Interpretation</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="type">Question Type</label>
+                <select class="form-control" id="type" name="type" required onchange="toggleOptionsBox()">
+                    <option value="MCQ" {% if question.type == 'MCQ' or question is None %}selected{% endif %}>Multiple Choice (MCQ)</option>
+                    <option value="TF" {% if question.type == 'TF' %}selected{% endif %}>True/False (TF)</option>
+                </select>
+            </div>
+            {% else %}
+            <div class="form-group">
+                <label class="form-label" for="topic">Core Topic Domain</label>
+                <input type="text" class="form-control" id="topic" name="topic" value="{{ question.topic|default:'' }}" required placeholder="e.g. OOPS, Embedded Systems, CAD/CNC">
+            </div>
+            <div class="form-group">
+                <label class="form-label" for="type">Question Type</label>
+                <select class="form-control" id="type" name="type" required onchange="toggleOptionsBox()">
+                    <option value="MCQ" {% if question.type == 'MCQ' or question is None %}selected{% endif %}>Multiple Choice (MCQ)</option>
+                    <option value="Code" {% if question.type == 'Code' %}selected{% endif %}>Compiler Coding Sandbox (Code)</option>
+                    <option value="TF" {% if question.type == 'TF' %}selected{% endif %}>True/False (TF)</option>
+                </select>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="image">Question Image (Optional)</label>
+            {% if question.image %}
+                <div style="margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem;">
+                    <img src="{{ question.image.url }}" alt="Question Image" style="max-height: 100px; border-radius: 6px; border: 1px solid #cbd5e1; padding: 2px;">
+                    <label style="font-size: 0.85rem; color: #dc3545; display: inline-flex; align-items: center; gap: 0.25rem; cursor: pointer;">
+                        <input type="checkbox" name="delete_image" value="true"> Delete Current Image
+                    </label>
+                </div>
+            {% endif %}
+            <input type="file" class="form-control" id="image" name="image" accept="image/*" style="width: 100%; padding: 0.6rem; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #ffffff;">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="question_text">Question Description / Coding Starter Template</label>
+            <textarea class="form-control" id="question_text" name="question_text" rows="5" required style="font-family: monospace;" placeholder="Write your question details here. For code rounds, you can write commentary templates.">{{ question.question_text|default:'' }}</textarea>
+        </div>
+
+        <!-- Options Box -->
+        <div class="form-group" id="options-box" {% if q_type == 'technical' and question.type == 'Code' %}style="display: none;"{% endif %}>
+            <label class="form-label">Multiple Choice Options (Required for MCQs)</label>
+            <div class="options-container">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 0.75rem;">
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: bold; color: #475569;">Option A</label>
+                        <input type="text" class="form-control" name="option_0" value="{{ opt_0|default:'' }}" placeholder="e.g. Option A value">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: bold; color: #475569;">Option B</label>
+                        <input type="text" class="form-control" name="option_1" value="{{ opt_1|default:'' }}" placeholder="e.g. Option B value">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: bold; color: #475569;">Option C</label>
+                        <input type="text" class="form-control" name="option_2" value="{{ opt_2|default:'' }}" placeholder="e.g. Option C value">
+                    </div>
+                    <div>
+                        <label style="font-size: 0.8rem; font-weight: bold; color: #475569;">Option D</label>
+                        <input type="text" class="form-control" name="option_3" value="{{ opt_3|default:'' }}" placeholder="e.g. Option D value">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="correct_answer">Correct Answer / Expected Console Output</label>
+            <input type="text" class="form-control" id="correct_answer" name="correct_answer" value="{{ question.correct_answer|default:'' }}" required placeholder="e.g. Exact text matching the correct option or expected stdout output value">
+            <span style="font-size: 0.75rem; color: #64748b;">For MCQ, input exact correct option value. For Code, input the exact stdout value expected when code executes.</span>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="explanation">Explanation (Optional)</label>
+            <textarea class="form-control" id="explanation" name="explanation" rows="3" placeholder="Provide step-by-step resolution logic">{{ question.explanation|default:'' }}</textarea>
+        </div>
+
+        <div style="margin-top: 2rem; display: flex; justify-content: flex-end; gap: 0.75rem;">
+            <a href="{% url 'company_prep:admin_placement' %}" class="btn-cancel">Cancel</a>
+            <button type="submit" class="btn-submit">Save Question</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    function toggleOptionsBox() {
+        var typeSelect = document.getElementById('type');
+        if (!typeSelect) return;
+        var optionsBox = document.getElementById('options-box');
+        if (typeSelect.value === 'Code' || typeSelect.value === 'TF') {
+            optionsBox.style.display = 'none';
+        } else {
+            optionsBox.style.display = 'block';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', toggleOptionsBox);
+</script>
+{% endblock %}

@@ -1,0 +1,162 @@
+{% extends 'student_base.html' %}
+{% load static %}
+{% block title %}Practice Test Result{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/exam_result.css' %}" nonce="{{ request.csp_nonce }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="result-container">
+    <div id="result-loader" class="loader">
+        <i class="fas fa-spinner fa-spin"></i> Loading your results...
+    </div>
+
+    <div id="result-content" style="display: none;">
+        <!-- Header Section -->
+        <div class="result-header">
+            <div class="result-logo">
+                <i class="fas fa-code"></i>
+            </div>
+            <h1 class="result-title">Practice Test Result Sheet</h1>
+            <p class="institution-name"></p>
+        </div>
+
+        <!-- Student Info -->
+        <div class="student-info-card">
+            <div class="info-row">
+                <div class="info-item">
+                    <span class="info-label">Student Name:</span>
+                    <span class="info-value" id="student-name">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">USN:</span>
+                    <span class="info-value" id="student-usn">-</span>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-item">
+                    <span class="info-label">Practice Test:</span>
+                    <span class="info-value" id="test-title">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Date:</span>
+                    <span class="info-value" id="test-date">-</span>
+                </div>
+            </div>
+            <div class="info-row">
+                <div class="info-item">
+                    <span class="info-label">Duration:</span>
+                    <span class="info-value" id="test-duration">-</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">Time Taken:</span>
+                    <span class="info-value" id="time-taken">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Score Summary -->
+        <div class="score-summary">
+            <div class="score-card total-card">
+                <div class="score-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="score-details">
+                    <div class="score-label">Total Score</div>
+                    <div class="score-value">
+                        <span id="marks-obtained">0</span> / <span id="total-marks">0</span>
+                    </div>
+                    <div class="score-percentage" id="percentage">0%</div>
+                </div>
+            </div>
+
+            <div class="score-card pass-status-card" id="pass-status-card">
+                <div class="score-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="score-details">
+                    <div class="score-label">Performance</div>
+                    <div class="score-value status-text" id="performance-text">-</div>
+                    <div class="score-info" id="accuracy-info">Accuracy: <span id="accuracy">0%</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="statistics-grid">
+            <div class="stat-box">
+                <div class="stat-icon correct">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="correct-answers">0</div>
+                    <div class="stat-label">Correct</div>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-icon wrong">
+                    <i class="fas fa-times-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="wrong-answers">0</div>
+                    <div class="stat-label">Wrong</div>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-icon attempted">
+                    <i class="fas fa-pen"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="attempted-questions">0</div>
+                    <div class="stat-label">Attempted</div>
+                </div>
+            </div>
+
+            <div class="stat-box">
+                <div class="stat-icon unattempted">
+                    <i class="fas fa-minus-circle"></i>
+                </div>
+                <div class="stat-content">
+                    <div class="stat-value" id="unattempted-questions">0</div>
+                    <div class="stat-label">Unattempted</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question-wise Breakdown -->
+        <div class="breakdown-section">
+            <h2 class="section-title">
+                <i class="fas fa-list-alt"></i> Question-wise Analysis
+            </h2>
+            <div id="questions-breakdown" class="questions-list">
+                <!-- Questions will be dynamically inserted here -->
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="action-buttons">
+            <button class="btn btn-primary" onclick="window.print()">
+                <i class="fas fa-print"></i> Print Result
+            </button>
+            <button class="btn btn-secondary" onclick="downloadPDF()">
+                <i class="fas fa-download"></i> Download PDF
+            </button>
+            <a href="{% url 'student_performance_page' %}" class="btn btn-info">
+                <i class="fas fa-chart-bar"></i> View Performance
+            </a>
+            <a href="{% url 'student_home_page' %}" class="btn btn-success">
+                <i class="fas fa-home"></i> Go to Dashboard
+            </a>
+        </div>
+    </div>
+</div>
+
+<script nonce="{{ request.csp_nonce }}">
+    const resultData = {{ result_json| safe }};
+</script>
+<script src="{% static 'js/practice_result.js' %}" nonce="{{ request.csp_nonce }}"></script>
+{% endblock %}

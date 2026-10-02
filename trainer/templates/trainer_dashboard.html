@@ -1,0 +1,609 @@
+{% extends 'trainer_base.html' %}
+
+{% block title %}Trainer Dashboard{% endblock %}
+
+{% block extra_head %}
+<style>
+  /* Global Dashboard Theme Styling */
+  :root {
+    --primary: #008037;
+    --primary-dark: #006028;
+    --primary-light: rgba(0, 128, 55, 0.06);
+    --primary-glow: rgba(0, 128, 55, 0.12);
+    --white: #ffffff;
+    --background: #f8faf9;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --border-light: #e5e7eb;
+    --border-theme: #cce6d7;
+    --warning: #d97706;
+    --warning-light: rgba(217, 119, 6, 0.05);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
+    --shadow-md: 0 4px 20px rgba(0, 0, 0, 0.06);
+    --font-stack: "Century Gothic";
+  }
+
+  body.dark-mode {
+    --white: #111c15;
+    --background: #080f0b;
+    --text-main: #f3f4f6;
+    --text-muted: #9ca3af;
+    --border-light: #1b2e22;
+    --border-theme: #008037;
+    --primary-light: rgba(0, 128, 55, 0.15);
+    --primary-glow: rgba(0, 128, 55, 0.3);
+    --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.25);
+    --shadow-md: 0 4px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  body.dark-mode .main-content {
+    background: var(--background) !important;
+  }
+
+  .trainer-dash {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 10px 16px 30px;
+    font-family: var(--font-stack);
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    background: var(--background);
+    min-height: 100vh;
+    box-sizing: border-box;
+  }
+
+  /* Hero Section */
+  .dashboard-hero {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    border-radius: 20px;
+    padding: 30px 40px;
+    color: var(--white);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 10px 30px rgba(0, 128, 55, 0.15);
+    position: relative;
+    overflow: hidden;
+    animation: fadeInDown 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .dashboard-hero::before {
+    content: "";
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.06);
+    pointer-events: none;
+  }
+
+  .hero-content h1 {
+    margin: 0;
+    font-size: clamp(1.6rem, 3vw, 2.2rem);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .hero-content p {
+    margin: 8px 0 0;
+    font-size: clamp(0.9rem, 1.8vw, 1.05rem);
+    opacity: 0.9;
+  }
+
+  .hero-date {
+    background: rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(8px);
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: right;
+  }
+
+  /* Metrics Panel */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+  }
+
+  .metric-card {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .metric-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--border-theme);
+  }
+
+  .metric-value {
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--primary);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .metric-card.warning-state .metric-value {
+    color: var(--warning);
+  }
+
+  .metric-card.warning-state {
+    border-color: rgba(217, 119, 6, 0.2);
+    background: var(--warning-light);
+  }
+
+  .metric-label {
+    font-size: 0.85rem;
+    font-weight: bold;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* Two Column Dashboard Content */
+  .dash-main-layout {
+    display: grid;
+    grid-template-columns: 2fr 1.1fr;
+    gap: 24px;
+    align-items: start;
+    animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+  }
+
+  .dash-section-card {
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .section-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1.5px dashed var(--border-light);
+    padding-bottom: 12px;
+  }
+
+  .section-header-row h2 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  /* Timeline Session cards */
+  .timeline-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .timeline-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border: 1px solid var(--border-light);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.25s ease;
+    background: var(--white);
+  }
+
+  .timeline-item:hover {
+    border-color: var(--border-theme);
+    box-shadow: 0 4px 12px rgba(0, 128, 55, 0.04);
+  }
+
+  .timeline-info-block {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .timeline-title-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .timeline-title-txt {
+    font-weight: 800;
+    color: var(--text-main);
+    font-size: 1rem;
+  }
+
+  .timeline-slot-badge {
+    background: var(--primary-light);
+    color: var(--primary);
+    font-size: 0.72rem;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1.5px solid var(--border-theme);
+    text-transform: uppercase;
+  }
+
+  .timeline-meta-desc {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .timeline-action-btn {
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: bold;
+    padding: 8px 16px;
+    border-radius: 8px;
+    text-align: center;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+
+  .timeline-action-btn.pending-action {
+    background: var(--primary);
+    color: var(--white);
+    border: 1.5px solid var(--primary);
+  }
+
+  .timeline-action-btn.pending-action:hover {
+    background: var(--primary-dark);
+    border-color: var(--primary-dark);
+    box-shadow: 0 4px 12px rgba(0, 128, 55, 0.15);
+  }
+
+  .timeline-action-btn.completed-action {
+    background: var(--white);
+    color: var(--primary);
+    border: 1.5px solid var(--border-theme);
+    pointer-events: none;
+  }
+
+  /* Recent Activity Feed */
+  .reports-feed {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .feed-item {
+    border-left: 3px solid var(--primary);
+    background: var(--background);
+    padding: 12px 16px;
+    border-radius: 0 10px 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .feed-details h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text-main);
+  }
+
+  .feed-details p {
+    margin: 4px 0 0;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+  }
+
+  .feed-meta-students {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: var(--primary);
+    background: var(--primary-light);
+    border: 1.5px solid var(--border-theme);
+    border-radius: 6px;
+    padding: 4px 8px;
+  }
+
+  /* Right Column Action grid */
+  .action-tiles-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .action-tile-card {
+    text-decoration: none;
+    background: var(--white);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  .action-tile-card:hover {
+    transform: translateX(4px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .tile-icon-container {
+    width: 44px;
+    height: 44px;
+    background: var(--primary-light);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--primary);
+    transition: all 0.25s ease;
+  }
+
+  .action-tile-card:hover .tile-icon-container {
+    background: var(--primary);
+    color: var(--white);
+  }
+
+  .tile-info-block h3 {
+    margin: 0;
+    font-size: 0.98rem;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  .tile-info-block p {
+    margin: 2px 0 0;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+  }
+
+  /* Animations */
+  @keyframes fadeInDown {
+    from { opacity: 0; transform: translateY(-20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Responsive styling definitions */
+  @media (max-width: 1000px) {
+    .metrics-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dash-main-layout {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (max-width: 600px) {
+    .dashboard-hero {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 16px;
+      padding: 24px;
+    }
+
+    .hero-date {
+      text-align: left;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .metrics-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .timeline-item {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    .timeline-action-btn {
+      width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="trainer-dash">
+  
+  <!-- Hero Section -->
+  <div class="dashboard-hero">
+    <div class="hero-content">
+      <h1>Welcome back, {{ request.user.get_full_name }}</h1>
+      <p>Manage your schedules, classes attendance, daily reports, and live exams.</p>
+    </div>
+    <div class="hero-date">
+      <div>{% now "l" %}</div>
+      <div style="font-size: 1.15rem; margin-top: 2px;">{% now "d M Y" %}</div>
+    </div>
+  </div>
+
+  <!-- Metrics Grid -->
+  <div class="metrics-grid">
+    <div class="metric-card">
+      <div class="metric-value">{{ conducted_count }}</div>
+      <div class="metric-label">Classes Conducted</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ attendance_rate }}%</div>
+      <div class="metric-label">Avg Attendance</div>
+    </div>
+    <div class="metric-card {% if pending_reports_count > 0 %}warning-state{% endif %}">
+      <div class="metric-value">{{ pending_reports_count }}</div>
+      <div class="metric-label">Pending Reports</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-value">{{ reports_submitted }}</div>
+      <div class="metric-label">Reports Submitted</div>
+    </div>
+  </div>
+
+  <!-- Two Column Layout -->
+  <div class="dash-main-layout">
+    
+    <!-- Left Column: Tasks and Logs -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+      
+      <!-- Upcoming Schedule -->
+      <div class="dash-section-card">
+        <div class="section-header-row">
+          <h2>Upcoming Training Sessions</h2>
+        </div>
+        
+        <div class="timeline-list">
+          {% if upcoming_sessions %}
+            {% for s in upcoming_sessions %}
+              <div class="timeline-item">
+                <div class="timeline-info-block">
+                  <div class="timeline-title-row">
+                    <span class="timeline-title-txt">{{ s.college }}</span>
+                    <span class="timeline-slot-badge">Slot {{ s.slot }}</span>
+                  </div>
+                  <div class="timeline-meta-desc">
+                    {{ s.course }} (Sec {{ s.section }}) | Domain: <strong>{{ s.domain }}</strong>
+                  </div>
+                  <div class="timeline-meta-desc" style="font-size: 0.78rem; opacity: 0.8; margin-top: 2px;">
+                     Scheduled Date: {{ s.date }}
+                  </div>
+                </div>
+                
+                {% if s.is_marked %}
+                  <span class="timeline-action-btn completed-action">Attendance Marked</span>
+                {% else %}
+                  <a href="{% url 'trainer_attendance' %}" class="timeline-action-btn pending-action">Mark Attendance</a>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% else %}
+            <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 0.9rem;">
+              No upcoming scheduled training sessions found.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Recent Reports Feed -->
+      <div class="dash-section-card">
+        <div class="section-header-row">
+          <h2>Recent Activity (Submitted Reports)</h2>
+        </div>
+        
+        <div class="reports-feed">
+          {% if recent_reports %}
+            {% for r in recent_reports %}
+              <div class="feed-item">
+                <div class="feed-details">
+                  <h4>{{ r.college }} — {{ r.course }}</h4>
+                  <p>Module: <strong>{{ r.module }}</strong> | Domain: {{ r.domain }}</p>
+                  <p style="font-size: 0.75rem; opacity: 0.8; margin-top: 2px;">Submitted Date: {{ r.date }}</p>
+                </div>
+                <div class="feed-meta-students">
+                  {{ r.present }} / {{ r.total }} Pres.
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <div style="text-align: center; padding: 24px; color: var(--text-muted); font-size: 0.9rem;">
+              No session reports submitted yet.
+            </div>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Right Column: Control Center Panels -->
+    <div style="display: flex; flex-direction: column; gap: 24px;">
+      
+      <div class="dash-section-card" style="padding: 20px;">
+        <div class="section-header-row" style="margin-bottom: 8px;">
+          <h2>Trainer Operations</h2>
+        </div>
+        
+        <div class="action-tiles-grid">
+          
+          <a class="action-tile-card" href="{% url 'trainer_profile' %}">
+            <div class="tile-icon-container">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            </div>
+            <div class="tile-info-block">
+              <h3>Profile</h3>
+              <p>Upload professional docs, view details</p>
+            </div>
+          </a>
+
+          <a class="action-tile-card" href="{% url 'trainer_attendance' %}">
+            <div class="tile-icon-container">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+            </div>
+            <div class="tile-info-block">
+              <h3>Mark Attendance</h3>
+              <p>Mark slot/section rosters</p>
+            </div>
+          </a>
+
+          <a class="action-tile-card" href="{% url 'trainer_schedule' %}">
+            <div class="tile-icon-container">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            </div>
+            <div class="tile-info-block">
+              <h3>View Schedule</h3>
+              <p>Check weekly slot assignments</p>
+            </div>
+          </a>
+
+          <a class="action-tile-card" href="{% url 'trainer_exam_monitor' %}">
+            <div class="tile-icon-container">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+            </div>
+            <div class="tile-info-block">
+              <h3>Live Exam Monitor</h3>
+              <p>Oversee online student assessments</p>
+            </div>
+          </a>
+
+          <a class="action-tile-card" href="{% url 'trainer_report' %}">
+            <div class="tile-icon-container">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+            </div>
+            <div class="tile-info-block">
+              <h3>Session Daily Report</h3>
+              <p>Submit training slot records</p>
+            </div>
+          </a>
+
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</section>
+{% endblock %}

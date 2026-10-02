@@ -1,0 +1,181 @@
+{% extends "admin_base.html" %}
+{% load static %}
+
+{% block title %}Feedback Session Detail{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_feedback.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="feedback-detail-container animate-fade-in">
+    <!-- Header Section -->
+    <div class="feedback-header">
+        <div class="header-text-group">
+            <h1><span class="gradient-text">Session Feedback Analytics</span></h1>
+            <p class="subtitle-text">Granular student evaluation reviews for a single slot training session.</p>
+        </div>
+        <button type="button" class="btn btn-neutral flex-center gap-2" onclick="history.back();">
+            <span>&larr;</span> Back to Dashboard
+        </button>
+    </div>
+
+    <!-- Session Metrics Summary Grid -->
+    <div class="session-info-grid animate-fade-in" style="animation-delay: 0.05s;">
+        <div class="info-item">
+            <div class="info-label">Trainer Profile</div>
+            <div class="info-value">{{ session_info.trainer }}</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">College</div>
+            <div class="info-value">{{ session_info.college }}</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">Course Module</div>
+            <div class="info-value"><span class="text-tag">{{ session_info.course }}</span></div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">Class Year/Sem</div>
+            <div class="info-value">Year {{ session_info.year }} | Sem {{ session_info.semester }}</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">Section / Slot</div>
+            <div class="info-value"><span class="section-tag">{{ session_info.section }}</span> / Slot {{ session_info.slot }}</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">Date (D-M-Y)</div>
+            <div class="info-value">{{ session_info.date|date:"d-m-Y" }}</div>
+        </div>
+        <div class="info-item">
+            <div class="info-label">Total Feedbacks</div>
+            <div class="info-value">
+                <span class="badge" style="background: #ecfdf5; color: #047857; font-weight: 800;">
+                    {{ session_info.total_feedbacks }} submissions
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Feedbacks List Card -->
+    <div class="card animate-slide-up" style="animation-delay: 0.1s;">
+        <div class="card-header table-header-flex">
+            <div class="header-left">
+                <h3><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c0 2 2 3 6 3s6-1 6-3v-5"/></svg> Student Submissions</h3>
+            </div>
+            <div class="header-right">
+                <div class="search-wrapper">
+                    <span class="search-icon" style="display: flex; align-items: center;"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                    <input type="text" id="student-search" placeholder="Search by student name or USN..." class="form-input search-input">
+                </div>
+            </div>
+        </div>
+
+        <div class="feedback-table-wrapper">
+            <table id="student-feedback-table">
+                <thead>
+                    <tr>
+                        <th>USN</th>
+                        <th>Student Name</th>
+                        <th>Content</th>
+                        <th>Clarity</th>
+                        <th>Structure</th>
+                        <th>Satisfaction</th>
+                        <th>Engagement</th>
+                        <th>Future Int.</th>
+                        <th>Pace</th>
+                        <th>Knowledge</th>
+                        <th>Queries</th>
+                        <th>Participation</th>
+                        <th>Examples</th>
+                        <th>Takeaways Summary</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in feedbacks %}
+                    <tr class="hover-row-effect">
+                        <td class="td-bold td-usn">{{ row.usn }}</td>
+                        <td class="td-name">{{ row.student_name }}</td>
+                        
+                        <!-- Ratings with colored badges -->
+                        <td><span class="rating-badge {% if row.content >= 4 %}rating-badge-high{% elif row.content == 3 %}rating-badge-mid{% else %}rating-badge-low{% endif %}">{{ row.content }}</span></td>
+                        <td><span class="rating-badge {% if row.clarity >= 4 %}rating-badge-high{% elif row.clarity == 3 %}rating-badge-mid{% else %}rating-badge-low{% endif %}">{{ row.clarity }}</span></td>
+                        <td><span class="rating-badge {% if row.structure >= 4 %}rating-badge-high{% elif row.structure == 3 %}rating-badge-mid{% else %}rating-badge-low{% endif %}">{{ row.structure }}</span></td>
+                        <td><span class="rating-badge {% if row.satisfaction >= 4 %}rating-badge-high{% elif row.satisfaction == 3 %}rating-badge-mid{% else %}rating-badge-low{% endif %}">{{ row.satisfaction }}</span></td>
+                        <td><span class="rating-badge {% if row.engagement >= 4 %}rating-badge-high{% elif row.engagement == 3 %}rating-badge-mid{% else %}rating-badge-low{% endif %}">{{ row.engagement }}</span></td>
+                        <td><span class="rating-badge {% if row.future_interest >= 4 %}rating-badge-high{% elif row.future_interest == 3 %}rating-badge-mid{% else %}rating-badge-low{% endif %}">{{ row.future_interest }}</span></td>
+                        <td><span class="rating-badge {% if row.pace_rating >= 4 %}rating-badge-high{% elif row.pace_rating == 3 %}rating-badge-mid{% else %}rating-badge-low{% endif %}">{{ row.pace_rating }}</span></td>
+                        <td><span class="rating-badge {% if row.knowledge >= 4 %}rating-badge-high{% elif row.knowledge == 3 %}rating-badge-mid{% else %}rating-badge-low{% endif %}">{{ row.knowledge }}</span></td>
+                        <td><span class="rating-badge {% if row.queries >= 4 %}rating-badge-high{% elif row.queries == 3 %}rating-badge-mid{% else %}rating-badge-low{% endif %}">{{ row.queries }}</span></td>
+                        <td><span class="rating-badge {% if row.participation >= 4 %}rating-badge-high{% elif row.participation == 3 %}rating-badge-mid{% else %}rating-badge-low{% endif %}">{{ row.participation }}</span></td>
+                        <td><span class="rating-badge {% if row.examples >= 4 %}rating-badge-high{% elif row.examples == 3 %}rating-badge-mid{% else %}rating-badge-low{% endif %}">{{ row.examples }}</span></td>
+                        
+                        <td style="white-space: normal; word-break: break-word; min-width: 180px;">
+                            {{ row.takeaways|default:"-" }}
+                        </td>
+                        <td>
+                            <a href="{% url 'admin_feedback_detail' row.feedback_id %}" class="btn btn-primary-sm" style="white-space: nowrap;">
+                                View Detail
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr id="no-student-records">
+                        <td colspan="15" class="no-data-td">
+                            <div class="no-data-wrapper">
+                                <span class="no-data-icon"><svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg></span>
+                                <p>No student feedback submissions found for this session.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <tr id="no-student-records" style="display: none;">
+                        <td colspan="15" class="no-data-td">
+                            <div class="no-data-wrapper">
+                                <span class="no-data-icon"><svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                                <p>No students match your search text.</p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script nonce="{{ request.csp_nonce }}" defer>
+document.addEventListener("DOMContentLoaded", () => {
+    const studentSearch = document.getElementById("student-search");
+    const rows = document.querySelectorAll("#student-feedback-table tbody tr");
+    const noFilteredRecords = document.querySelector("#student-feedback-table tbody tr[style*='display: none']");
+
+    studentSearch?.addEventListener("input", () => {
+        const val = studentSearch.value.toLowerCase().trim();
+        let visibleCount = 0;
+        let totalRecords = 0;
+
+        rows.forEach(row => {
+            if (row.id === "no-student-records") return;
+            totalRecords++;
+            const usn = row.querySelector(".td-usn")?.textContent.toLowerCase() || "";
+            const name = row.querySelector(".td-name")?.textContent.toLowerCase() || "";
+            
+            if (usn.includes(val) || name.includes(val)) {
+                row.style.display = "";
+                visibleCount++;
+            } else {
+                row.style.display = "none";
+            }
+        });
+
+        // Toggle the filtered search error row
+        const filterErrorRow = document.querySelectorAll("#no-student-records")[1];
+        if (filterErrorRow) {
+            filterErrorRow.style.display = (visibleCount === 0 && totalRecords > 0) ? "" : "none";
+        }
+    });
+});
+</script>
+{% endblock %}

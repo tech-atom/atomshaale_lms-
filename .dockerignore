@@ -1,0 +1,11 @@
+.env
+.env.*
+.venv*
+env/
+__pycache__/
+*.pyc
+.git/
+media/
+staticfiles/
+Compiler/portable_compilers/
+*.sqlite3

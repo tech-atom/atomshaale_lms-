@@ -1,0 +1,2 @@
+question_text,type,marks,negative_mark,options,correct_answer,test_cases
+What is 2+2?,MCQ,2,0,"[""1"",""2"",""3"",""4""]",4,[]

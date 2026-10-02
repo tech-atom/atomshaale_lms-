@@ -1,0 +1,664 @@
+{% extends "trainer_base.html" %}
+{% load static %}
+
+{% block title %}Live Exam Monitor - Trainer{% endblock %}
+
+{% block extra_head %}
+<style>
+  body.dark-mode {
+    background-color: #080f0b;
+    color: #f3f4f6;
+  }
+
+  body.dark-mode .main-content {
+    background: #080f0b !important;
+  }
+
+  body.dark-mode .live-monitor-page {
+    background: #080f0b;
+  }
+
+  body.dark-mode .page-header h2 {
+    color: #ffffff;
+  }
+
+  body.dark-mode .monitor-select,
+  body.dark-mode .search-input {
+    background-color: #111c15;
+    border-color: #1b2e22;
+    color: #f3f4f6;
+  }
+
+  body.dark-mode .monitor-summary div {
+    background: #111c15;
+    border-color: #1b2e22;
+    color: #f3f4f6;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  }
+
+  body.dark-mode .monitor-filters button {
+    background: #111c15;
+    border-color: #1b2e22;
+    color: #f3f4f6;
+  }
+
+  body.dark-mode .monitor-filters button.active {
+    background: #0c7a35;
+    border-color: #0c7a35;
+    color: #ffffff;
+  }
+
+  body.dark-mode .refresh-status {
+    color: #9ca3af;
+  }
+
+  body.dark-mode .exam-table-wrapper {
+    border-color: #1b2e22;
+    background: #111c15;
+  }
+
+  body.dark-mode .exam-table thead th {
+    background: #1b2e22;
+    color: #f3f4f6;
+  }
+
+  body.dark-mode .exam-table td {
+    border-bottom-color: #1b2e22;
+    color: #f3f4f6;
+  }
+
+  body.dark-mode tr.submitted {
+    background: rgba(12, 122, 53, 0.15);
+  }
+
+  body.dark-mode tr.active {
+    background: rgba(12, 122, 53, 0.25);
+  }
+
+  body.dark-mode tr.retake-allowed,
+  body.dark-mode tr.retake_allowed {
+    background: rgba(255, 193, 7, 0.15);
+  }
+
+  body.dark-mode .status-not-started {
+    background: #1e293b;
+    color: #9ca3af;
+  }
+
+  body.dark-mode .empty-note {
+    background: #111c15;
+    border-color: #1b2e22;
+    color: #9ca3af;
+  }
+
+  .live-monitor-page {
+    width: 100%;
+    min-height: calc(100vh - 40px);
+    padding: 20px;
+    background: #ffffff;
+    box-sizing: border-box;
+  }
+
+  .page-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+
+  .page-header h2 {
+    margin: 0;
+    font-size: 24px;
+    color: #102317;
+  }
+
+  .monitor-select {
+    min-width: 270px;
+    max-width: 520px;
+    padding: 8px 10px;
+    border: 1px solid #cddfd2;
+    border-radius: 8px;
+    outline: none;
+  }
+
+  .monitor-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(150px, 1fr));
+    gap: 14px;
+    margin: 16px 0 20px;
+  }
+
+  .monitor-summary div {
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #d7e7dc;
+    background: #ffffff;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    text-align: center;
+    font-size: 16px;
+    font-weight: 700;
+  }
+
+  .live-status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 600;
+    margin: 8px 0 12px;
+    color: #0c7a35;
+  }
+
+  .live-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #0c7a35;
+    animation: pulse 1.2s infinite;
+  }
+
+  @keyframes pulse {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.35); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+
+  .monitor-filters {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .monitor-filters button {
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid #d6e7d9;
+    background: #ffffff;
+    color: #1f2b22;
+    cursor: pointer;
+  }
+
+  .monitor-filters button.active {
+    background: #0c7a35;
+    border-color: #0c7a35;
+    color: #ffffff;
+  }
+
+  .search-input {
+    min-width: 220px;
+    max-width: 320px;
+    padding: 8px 10px;
+    border: 1px solid #d6e7d9;
+    border-radius: 8px;
+  }
+
+  .refresh-status {
+    text-align: right;
+    margin-bottom: 8px;
+    font-size: 13px;
+    opacity: 0.75;
+  }
+
+  .exam-table-wrapper {
+    max-height: 68vh;
+    overflow: auto;
+    border: 1px solid #d6e7d9;
+    border-radius: 10px;
+  }
+
+  .exam-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+  }
+
+  .exam-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: #0c7a35;
+    color: #ffffff;
+    text-align: left;
+    padding: 11px 10px;
+    font-size: 13px;
+  }
+
+  .exam-table td {
+    padding: 10px;
+    border-bottom: 1px solid #e7eee9;
+    font-size: 13px;
+  }
+
+  tr.submitted {
+    background: rgba(12, 122, 53, 0.04);
+  }
+
+  tr.active {
+    background: rgba(12, 122, 53, 0.08);
+  }
+
+  tr.retake_allowed,
+  tr.retake-allowed {
+    background: rgba(255, 193, 7, 0.08);
+  }
+
+  .risk-alert {
+    font-weight: 700;
+    border-left: 4px solid #d97706;
+  }
+
+  .risk-high {
+    font-weight: 700;
+    border-left: 4px solid #b91c1c;
+  }
+
+  .status-chip {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .status-submitted {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .status-active {
+    background: #dbeafe;
+    color: #1e40af;
+  }
+
+  .status-not-started {
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  .status-retake {
+    background: #fef3c7;
+    color: #92400e;
+  }
+
+  .empty-note,
+  .error-note {
+    padding: 16px;
+    border-radius: 10px;
+    margin-top: 10px;
+  }
+
+  .empty-note {
+    background: #f7faf8;
+    border: 1px solid #deebe2;
+  }
+
+  .error-note {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    color: #991b1b;
+  }
+
+  @media (max-width: 900px) {
+    .monitor-summary {
+      grid-template-columns: repeat(2, minmax(140px, 1fr));
+    }
+
+    .page-header {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .monitor-select,
+    .search-input {
+      min-width: 100%;
+      max-width: 100%;
+    }
+  }
+
+  .refresh-monitor-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: #0c7a35;
+    border: 1px solid #0c7a35;
+    border-radius: 8px;
+    color: #ffffff;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 13px;
+    height: 38px;
+  }
+  
+  .refresh-monitor-btn:hover {
+    background: #ffffff;
+    color: #0c7a35;
+    box-shadow: 0 4px 10px rgba(12, 122, 53, 0.15);
+  }
+  
+  .refresh-monitor-btn:disabled {
+    background: #a3d3b5;
+    border-color: #a3d3b5;
+    cursor: not-allowed;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="live-monitor-page">
+  <div class="page-header">
+    <h2>Live Exam Monitor</h2>
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-left: auto;" class="header-controls">
+      <select id="examScheduleSelect" class="monitor-select" style="min-height: 38px;">
+        <option value="">Select scheduled exam</option>
+      </select>
+      <button id="refreshMonitorBtn" class="refresh-monitor-btn" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+        Refresh
+      </button>
+    </div>
+  </div>
+
+  <div id="liveMonitorContent" class="empty-note">Loading assigned exams...</div>
+</div>
+
+<div id="monitor-api"
+     data-list-url="{% url 'trainer_exam_monitor_list' %}"
+     data-detail-url="{% url 'trainer_exam_monitor_detail' '00000000-0000-0000-0000-000000000000' %}">
+</div>
+
+<script>
+  let currentScheduleId = '';
+  let currentStudents = [];
+  let liveMonitorFilter = 'all';
+  let liveSectionFilter = '';
+  let liveCourseFilter = '';
+  let liveSearchText = '';
+  let autoRefreshInterval = null;
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
+  function getStatusMeta(statusKey) {
+    const key = String(statusKey || 'not_started').toLowerCase();
+    if (key === 'submitted') return { label: 'Submitted', className: 'status-chip status-submitted' };
+    if (key === 'active') return { label: 'Active', className: 'status-chip status-active' };
+    if (key === 'not_submitted') return { label: 'Not Submitted', className: 'status-chip status-not-started' };
+    if (key === 'retake_allowed' || key === 'retake') return { label: 'Retake', className: 'status-chip status-retake' };
+    return { label: 'Not Started', className: 'status-chip status-not-started' };
+  }
+
+  function formatTimeSpent(timeSpentMap) {
+    if (!timeSpentMap || typeof timeSpentMap !== 'object') return '-';
+    const entries = Object.entries(timeSpentMap);
+    if (!entries.length) return '-';
+     return `<div class="time-spent-scroll">${entries.map(([q, sec]) => `Q${q}: ${escapeHtml(sec)}s`).join('<br>')}</div>`;
+  }
+
+  function renderLiveTable() {
+    const container = document.getElementById('liveMonitorContent');
+
+    if (!currentScheduleId) {
+      container.innerHTML = '<div class="empty-note">Select an exam to start monitoring.</div>';
+      return;
+    }
+
+    const all = Array.isArray(currentStudents) ? currentStudents : [];
+    const totalStudents = all.length;
+    const activeStudents = all.filter(s => s.status_key === 'active').length;
+    const submittedStudents = all.filter(s => s.status_key === 'submitted').length;
+    const notStartedStudents = all.filter(s => s.status_key === 'not_started').length;
+
+    const sections = [...new Set(all.map(s => s.section || '').filter(Boolean))];
+    const courses = [...new Set(all.map(s => s.course || '').filter(Boolean))];
+
+    let filtered = all.filter(student => {
+      const status = String(student.status_key || '').toLowerCase();
+      if (liveMonitorFilter !== 'all') {
+        if (liveMonitorFilter === 'retake') {
+          if (!(status === 'retake_allowed' || status === 'retake')) return false;
+        } else if (liveMonitorFilter === 'not_started') {
+          if (!(status === 'not_started' || status === 'not_submitted')) return false;
+        } else if (status !== liveMonitorFilter) {
+          return false;
+        }
+      }
+
+      if (liveSectionFilter && (student.section || '') !== liveSectionFilter) return false;
+      if (liveCourseFilter && (student.course || '') !== liveCourseFilter) return false;
+
+      const blob = `${student.usn || ''} ${student.name || ''}`.toLowerCase();
+      if (liveSearchText && !blob.includes(liveSearchText)) return false;
+
+      return true;
+    });
+
+    const rows = filtered.map(student => {
+      const statusMeta = getStatusMeta(student.status_key);
+      const rawStatus = String(student.status_key || '').replace(/\s+/g, '-');
+      const totalQuestions = Number(student.total_questions || 0);
+      const currentQuestion = Number(student.current_question || 0);
+      const progressDisplay = currentQuestion > 0 && totalQuestions > 0
+        ? `Q ${currentQuestion} / ${totalQuestions}`
+        : '-';
+      const riskScore = Number(student.risk_score || 0);
+
+      return `
+        <tr class="student-row ${escapeHtml(rawStatus)}">
+          <td>${escapeHtml(student.usn || '-')}</td>
+          <td>${escapeHtml(student.name || '-')}</td>
+          <td><span class="${statusMeta.className}">${escapeHtml(statusMeta.label)}</span></td>
+          <td>${escapeHtml(progressDisplay)}</td>
+          <td class="${student.tab_limit_crossed ? 'risk-alert' : ''}">${escapeHtml(student.tab_switch_count ?? 0)}</td>
+          <td>${formatTimeSpent(student.time_spent)}</td>
+          <td class="${riskScore > 60 ? 'risk-high' : ''}">${escapeHtml(riskScore)}%</td>
+          <td>-</td>
+        </tr>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <div class="monitor-summary">
+        <div>Total: ${totalStudents}</div>
+        <div>Active: ${activeStudents}</div>
+        <div>Submitted: ${submittedStudents}</div>
+        <div>Not Started: ${notStartedStudents}</div>
+      </div>
+
+      <div class="live-status-bar">
+        <span class="live-dot"></span>
+        Live Monitoring Active
+      </div>
+
+      <div class="monitor-filters">
+        <select id="sectionFilter" class="monitor-select">
+          <option value="">All Sections</option>
+          ${sections.map(s => `<option value="${escapeHtml(s)}" ${liveSectionFilter === s ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
+        </select>
+
+        <select id="courseFilter" class="monitor-select">
+          <option value="">All Courses</option>
+          ${courses.map(c => `<option value="${escapeHtml(c)}" ${liveCourseFilter === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
+        </select>
+
+        <input type="search" id="studentSearch" class="search-input" placeholder="Search by USN / Name" value="${escapeHtml(liveSearchText)}">
+      </div>
+
+      <div class="monitor-filters">
+        <button class="monitor-filter-btn ${liveMonitorFilter === 'all' ? 'active' : ''}" data-filter="all" type="button">All</button>
+        <button class="monitor-filter-btn ${liveMonitorFilter === 'submitted' ? 'active' : ''}" data-filter="submitted" type="button">Submitted</button>
+        <button class="monitor-filter-btn ${liveMonitorFilter === 'active' ? 'active' : ''}" data-filter="active" type="button">Active</button>
+        <button class="monitor-filter-btn ${liveMonitorFilter === 'not_started' ? 'active' : ''}" data-filter="not_started" type="button">Not Started</button>
+        <button class="monitor-filter-btn ${liveMonitorFilter === 'retake' ? 'active' : ''}" data-filter="retake" type="button">Retake</button>
+      </div>
+
+      <div class="refresh-status">Last updated: ${new Date().toLocaleTimeString()}</div>
+
+      <div class="exam-table-wrapper">
+        <table class="exam-table">
+          <thead>
+            <tr>
+              <th>USN</th>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Current Question</th>
+              <th>Tab Switch</th>
+              <th>Time Spent</th>
+              <th>Risk Score</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows || '<tr><td colspan="8" class="empty-note">No students found for selected filters.</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    `;
+
+    const sectionFilter = container.querySelector('#sectionFilter');
+    if (sectionFilter) {
+      sectionFilter.addEventListener('change', () => {
+        liveSectionFilter = sectionFilter.value || '';
+        renderLiveTable();
+      });
+    }
+
+    const courseFilter = container.querySelector('#courseFilter');
+    if (courseFilter) {
+      courseFilter.addEventListener('change', () => {
+        liveCourseFilter = courseFilter.value || '';
+        renderLiveTable();
+      });
+    }
+
+    const studentSearch = container.querySelector('#studentSearch');
+    if (studentSearch) {
+      studentSearch.addEventListener('input', () => {
+        liveSearchText = (studentSearch.value || '').toLowerCase().trim();
+        renderLiveTable();
+      });
+    }
+
+    container.querySelectorAll('.monitor-filter-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const next = this.dataset.filter || 'all';
+        if (next === liveMonitorFilter) return;
+        liveMonitorFilter = next;
+        renderLiveTable();
+      });
+    });
+  }
+
+  async function loadExamDetail(scheduleId) {
+    const api = document.getElementById('monitor-api');
+    const detailUrl = api.dataset.detailUrl.replace('00000000-0000-0000-0000-000000000000', scheduleId);
+
+    const response = await fetch(detailUrl, { credentials: 'same-origin' });
+    const data = await response.json();
+    if (data.status !== 'success') {
+      throw new Error(data.message || 'Unable to load monitoring data');
+    }
+
+    currentStudents = Array.isArray(data.students) ? data.students : [];
+    renderLiveTable();
+  }
+
+  async function loadExamList() {
+    const container = document.getElementById('liveMonitorContent');
+    const api = document.getElementById('monitor-api');
+    const select = document.getElementById('examScheduleSelect');
+
+    const response = await fetch(api.dataset.listUrl, { credentials: 'same-origin' });
+    const data = await response.json();
+
+    if (data.status !== 'success') {
+      throw new Error(data.message || 'Unable to load assigned exams');
+    }
+
+    const exams = Array.isArray(data.exams) ? data.exams : [];
+    if (!exams.length) {
+      select.innerHTML = '<option value="">No assigned exams</option>';
+      container.innerHTML = '<div class="empty-note">No exams assigned for monitoring.</div>';
+      return;
+    }
+
+    select.innerHTML = '<option value="">Select scheduled exam</option>' + exams.map(exam => {
+      const label = `${exam.exam_title} | ${exam.college_name} | ${exam.course_name} | ${exam.start_datetime}`;
+      return `<option value="${escapeHtml(exam.id)}">${escapeHtml(label)}</option>`;
+    }).join('');
+
+    if (!currentScheduleId) {
+      currentScheduleId = exams[0].id;
+      select.value = currentScheduleId;
+    }
+
+    await loadExamDetail(currentScheduleId);
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const select = document.getElementById('examScheduleSelect');
+
+    select.addEventListener('change', async function () {
+      currentScheduleId = this.value || '';
+      liveMonitorFilter = 'all';
+      liveSectionFilter = '';
+      liveCourseFilter = '';
+      liveSearchText = '';
+
+      if (!currentScheduleId) {
+        currentStudents = [];
+        renderLiveTable();
+        return;
+      }
+
+      try {
+        await loadExamDetail(currentScheduleId);
+      } catch (err) {
+        document.getElementById('liveMonitorContent').innerHTML = `<div class="error-note">${escapeHtml(err.message)}</div>`;
+      }
+    });
+
+    try {
+      await loadExamList();
+    } catch (err) {
+      document.getElementById('liveMonitorContent').innerHTML = `<div class="error-note">${escapeHtml(err.message)}</div>`;
+    }
+
+    const refreshBtn = document.getElementById('refreshMonitorBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', async () => {
+        refreshBtn.disabled = true;
+        const originalText = refreshBtn.innerHTML;
+        refreshBtn.innerHTML = `
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="animation: spin 1s linear infinite; margin-right:4px;"><path d="M23 4v6h-6"></path><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          Refreshing...
+        `;
+        try {
+          if (currentScheduleId) {
+            await loadExamDetail(currentScheduleId);
+          } else {
+            await loadExamList();
+          }
+        } catch (err) {
+          alert("Refresh failed: " + err.message);
+        } finally {
+          refreshBtn.disabled = false;
+          refreshBtn.innerHTML = originalText;
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

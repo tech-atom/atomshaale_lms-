@@ -1,0 +1,718 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}Student Performance Dashboard{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/admin_student_performance.css' %}">
+<style>
+  .performers-list {
+    max-height: 250px;
+    overflow-y: auto;
+  }
+  
+  /* Highlight styles for results table */
+  tr.highlight-fail {
+    background-color: rgba(239, 68, 68, 0.08) !important; /* soft red */
+  }
+  tr.highlight-autosubmit {
+    background-color: rgba(245, 158, 11, 0.08) !important; /* soft yellow/amber */
+  }
+  /* Combined highlight */
+  tr.highlight-fail.highlight-autosubmit {
+    background-color: rgba(239, 68, 68, 0.08) !important;
+  }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"
+        integrity="sha384-DhxhYObIMeMNGyAG7iK11OHzBIKyEIeRL0ad1iFPAOwZB8iirUlTT0O/WJJUk8+o"
+        crossorigin="anonymous"></script>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-header-bar">
+  <h1><i class="fas fa-analytics"></i> Student Performance Analytics Console</h1>
+  <p class="subtitle">Real-time dynamic academic insights & database-driven reporting</p>
+</div>
+
+<!-- FILTERS PANEL -->
+<div class="filters-card-wrapper">
+  <div class="filters-header">
+    <h3><i class="fas fa-filter"></i> Cohort & Test Filters</h3>
+    <span class="active-indicator">Ready</span>
+  </div>
+  <div class="filters-grid">
+    <div class="filter-group">
+      <label for="collegeSelect">College</label>
+      <div class="select-wrapper-custom">
+        <i class="fas fa-university icon-left"></i>
+        <select id="collegeSelect"><option value="">Select College</option></select>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>Course</label>
+      <div class="multiselect-container disabled" id="courseMultiselect">
+        <div class="multiselect-trigger">
+          <i class="fas fa-graduation-cap icon-left"></i>
+          <span class="multiselect-selected-text">Select Course</span>
+          <i class="fas fa-chevron-down icon-right"></i>
+        </div>
+        <div class="multiselect-dropdown">
+          <div class="multiselect-search-wrapper">
+            <input type="text" placeholder="Search Course..." class="multiselect-search-input">
+          </div>
+          <div class="multiselect-options">
+            <div class="multiselect-empty">Select a college first</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>Year</label>
+      <div class="multiselect-container" id="yearMultiselect">
+        <div class="multiselect-trigger">
+          <i class="fas fa-calendar-alt icon-left"></i>
+          <span class="multiselect-selected-text">Select Year</span>
+          <i class="fas fa-chevron-down icon-right"></i>
+        </div>
+        <div class="multiselect-dropdown">
+          <div class="multiselect-search-wrapper">
+            <input type="text" placeholder="Search Year..." class="multiselect-search-input">
+          </div>
+          <div class="multiselect-options"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>Semester</label>
+      <div class="multiselect-container" id="semesterMultiselect">
+        <div class="multiselect-trigger">
+          <i class="fas fa-book-reader icon-left"></i>
+          <span class="multiselect-selected-text">Select Semester</span>
+          <i class="fas fa-chevron-down icon-right"></i>
+        </div>
+        <div class="multiselect-dropdown">
+          <div class="multiselect-search-wrapper">
+            <input type="text" placeholder="Search Semester..." class="multiselect-search-input">
+          </div>
+          <div class="multiselect-options"></div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label>Section</label>
+      <div class="multiselect-container disabled" id="sectionMultiselect">
+        <div class="multiselect-trigger">
+          <i class="fas fa-users icon-left"></i>
+          <span class="multiselect-selected-text">Select Section</span>
+          <i class="fas fa-chevron-down icon-right"></i>
+        </div>
+        <div class="multiselect-dropdown">
+          <div class="multiselect-search-wrapper">
+            <input type="text" placeholder="Search Section..." class="multiselect-search-input">
+          </div>
+          <div class="multiselect-options">
+            <div class="multiselect-empty">Select college & course first</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label for="typeSelect">Test Type</label>
+      <div class="select-wrapper-custom">
+        <i class="fas fa-tasks icon-left"></i>
+        <select id="typeSelect">
+          <option value="">Select Type</option>
+          <option value="exam">Exam</option>
+          <option value="practice">Practice Test</option>
+          <option value="pre_assessment">One time Assessment</option>
+        </select>
+      </div>
+    </div>
+    <div class="filter-group">
+      <label for="testSelect">Scheduled Test</label>
+      <div class="select-wrapper-custom">
+        <i class="fas fa-file-signature icon-left"></i>
+        <select id="testSelect" disabled><option value="">Select Test</option></select>
+      </div>
+    </div>
+  </div>
+  <div class="filters-action-row">
+    <button id="loadBtn" class="btn-primary-glow"><i class="fas fa-sync-alt"></i> Load Results</button>
+  </div>
+</div>
+
+
+
+<!-- SUMMARY CARDS -->
+<div class="summary-cards">
+  <div class="card card-total-blue" id="card-total">
+    <div class="card-icon"><i class="fas fa-user-friends"></i></div>
+    <div class="card-content">
+      <span class="label">Total Students</span>
+      <span class="val">0</span>
+    </div>
+  </div>
+  <div class="card card-pass-green" id="card-pass">
+    <div class="card-icon"><i class="fas fa-check-circle"></i></div>
+    <div class="card-content">
+      <span class="label">Passed</span>
+      <span class="val">0</span>
+    </div>
+  </div>
+  <div class="card card-fail-red" id="card-fail">
+    <div class="card-icon"><i class="fas fa-times-circle"></i></div>
+    <div class="card-content">
+      <span class="label">Failed</span>
+      <span class="val">0</span>
+    </div>
+  </div>
+  <div class="card card-avg-indigo" id="card-avg">
+    <div class="card-icon"><i class="fas fa-chart-line"></i></div>
+    <div class="card-content">
+      <span class="label">Average Score</span>
+      <span class="val">0%</span>
+    </div>
+  </div>
+  <div class="card card-best-gold" id="card-best">
+    <div class="card-icon"><i class="fas fa-trophy"></i></div>
+    <div class="card-content">
+      <span class="label">Highest Score</span>
+      <span class="val">0%</span>
+    </div>
+  </div>
+  <div class="card card-worst-orange" id="card-worst">
+    <div class="card-icon"><i class="fas fa-chevron-circle-down"></i></div>
+    <div class="card-content">
+      <span class="label">Lowest Score</span>
+      <span class="val">0%</span>
+    </div>
+  </div>
+</div>
+
+<!-- CHART GRID / NEW WIDGETS -->
+<div class="new-dashboard-grid">
+  <!-- Left Side: Performance Overview Circular Gauge -->
+  <div class="dash-card performance-overview-card">
+    <h4 class="dash-card-title"><i class="fas fa-chart-pie"></i> Performance Overview</h4>
+    <div class="performance-overview-content">
+      <div class="gauge-container">
+        <canvas id="overviewGauge"></canvas>
+        <div class="gauge-center-text">
+          <span class="gauge-score-val" id="overview-avg-score">0%</span>
+          <span class="gauge-score-lbl">Average Score</span>
+        </div>
+      </div>
+      <div class="tiers-list-container">
+        <div class="tier-item">
+          <span class="tier-dot excellent"></span>
+          <span class="tier-name">Excellent (90-100%)</span>
+          <span class="tier-stats" id="tier-excellent-val">0 (0%)</span>
+        </div>
+        <div class="tier-item">
+          <span class="tier-dot good"></span>
+          <span class="tier-name">Good (75-89%)</span>
+          <span class="tier-stats" id="tier-good-val">0 (0%)</span>
+        </div>
+        <div class="tier-item">
+          <span class="tier-dot average"></span>
+          <span class="tier-name">Average (50-74%)</span>
+          <span class="tier-stats" id="tier-average-val">0 (0%)</span>
+        </div>
+        <div class="tier-item">
+          <span class="tier-dot poor"></span>
+          <span class="tier-name">Poor (25-49%)</span>
+          <span class="tier-stats" id="tier-poor-val">0 (0%)</span>
+        </div>
+        <div class="tier-item">
+          <span class="tier-dot very-poor"></span>
+          <span class="tier-name">Very Poor (0-24%)</span>
+          <span class="tier-stats" id="tier-very-poor-val">0 (0%)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Middle: Test Summary -->
+  <div class="dash-card test-summary-card">
+    <h4 class="dash-card-title"><i class="fas fa-file-alt"></i> Test Summary</h4>
+    <div class="test-summary-list">
+      <div class="summary-item">
+        <span class="summary-lbl"><i class="far fa-question-circle"></i> Total Questions</span>
+        <span class="summary-val" id="summary-total-questions">0</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-lbl"><i class="far fa-check-square"></i> Attempted (Avg)</span>
+        <span class="summary-val" id="summary-attempted">0</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-lbl"><i class="far fa-times-circle"></i> Not Attempted (Avg)</span>
+        <span class="summary-val" id="summary-unattempted">0</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-lbl"><i class="fas fa-star"></i> Total Marks</span>
+        <span class="summary-val" id="summary-total-marks">0</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-lbl"><i class="fas fa-minus-circle"></i> Negative Marking</span>
+        <span class="summary-val" id="summary-negative-marking">No</span>
+      </div>
+      <div class="summary-item">
+        <span class="summary-lbl"><i class="far fa-clock"></i> Total Time</span>
+        <span class="summary-val" id="summary-total-time">0 mins</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right Side: Insights & Leaders -->
+  <div class="dash-card insights-leaders-card">
+    <!-- Insights Sub-card -->
+    <div class="insights-section">
+      <h5 class="section-title"><i class="fas fa-lightbulb"></i> Performance Insights</h5>
+      <div class="insight-item item-red" id="insight-improvement">
+        <div class="insight-icon"><i class="fas fa-users-cog"></i></div>
+        <div class="insight-content">
+          <strong id="insight-improvement-title">0% students need improvement</strong>
+          <p id="insight-improvement-desc">Score analysis is currently pending results.</p>
+        </div>
+      </div>
+      <div class="insight-item item-yellow" id="insight-time">
+        <div class="insight-icon"><i class="fas fa-hourglass-half"></i></div>
+        <div class="insight-content">
+          <strong>Time Management</strong>
+          <p id="insight-time-desc">Average time taken is 00:00 minutes.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaders Sub-card -->
+    <div class="leaders-section">
+      <div class="leader-block block-top">
+        <h5 class="section-title success-color"><i class="fas fa-award"></i> Top Performers</h5>
+        <div id="top-performers-list" class="performers-list">
+          <div class="performer-item empty-state">No data available</div>
+        </div>
+      </div>
+      <div class="leader-block block-poor">
+        <h5 class="section-title danger-color"><i class="fas fa-exclamation-triangle"></i> Needs Improvement</h5>
+        <div id="needs-improvement-list" class="performers-list">
+          <div class="performer-item empty-state">No data available</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SEARCH & SEARCH BAR -->
+<div class="action-bar-wrapper" style="display: flex; gap: 15px; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+  <div class="search-bar-custom" style="flex: 1; min-width: 250px; margin-bottom: 0;">
+    <i class="fas fa-search search-icon"></i>
+    <input type="text" id="searchInput" placeholder="Search by student name or USN...">
+  </div>
+  <div class="filter-group-status" style="width: 250px;">
+    <div class="select-wrapper-custom" style="position: relative;">
+      <i class="fas fa-filter icon-left" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #888; z-index: 10;"></i>
+      <select id="statusFilterSelect" style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 8px; border: 1px solid #ddd; background: #fff; font-family: inherit; cursor: pointer; appearance: none; -webkit-appearance: none;">
+        <option value="">All Results</option>
+        <option value="autosubmit">Auto Submitted</option>
+        <option value="passed">Passed Students</option>
+        <option value="failed">Failed Students</option>
+      </select>
+      <i class="fas fa-chevron-down" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); color: #888; pointer-events: none;"></i>
+    </div>
+  </div>
+</div>
+
+<!-- DOWNLOAD BUTTON -->
+<div class="action-bar-wrapper" style="margin-top: 1.5rem; justify-content: flex-end; gap: 1rem;">
+  <button id="downloadBtn" class="btn-secondary-glow"><i class="fas fa-file-excel"></i> Export Report (Excel)</button>
+  <button id="downloadPdfBtn" class="btn-secondary-glow" style="background: linear-gradient(135deg, #e11d48, #be123c); border: none; color: white;"><i class="fas fa-file-pdf"></i> Export Report (PDF)</button>
+</div>
+
+<!-- RESULTS TABLE -->
+<div class="results-table-card">
+  <div class="table-header-custom">
+    <h3><i class="fas fa-table"></i> Student Marks & Activity Log</h3>
+  </div>
+  <div class="results-table-wrapper">
+    <table class="results-table" id="resultsTable">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Test</th>
+          <th>Marks</th>
+          <th>%</th>
+          <th>Status</th>
+          <th>Attempted</th>
+          <th>Correct</th>
+          <th>Wrong</th>
+          <th>Unattempted</th>
+          <th>Tab Switch</th>
+          <th>Time Spent (Each Question)</th>
+          <th>Submission Mode</th>
+          <th>Section / Topic Analysis</th>
+          <th>Submitted At</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- API URLs -->
+<div id="admin-perf-api"
+     data-dropdowns-url="{% url 'admin_perf_dropdowns' %}"
+     data-tests-url="{% url 'admin_perf_tests' %}"
+     data-results-url="{% url 'admin_perf_results' %}"
+     data-result-detail-url="{% url 'admin_perf_result_detail' %}"
+     data-download-url="{% url 'admin_perf_download' %}"
+     data-semesters-url="{% url 'get_semester_choices' %}"
+     data-sections-url="{% url 'get_sections' %}">
+</div>
+
+<div id="topicPanelBackdrop" class="topic-panel-backdrop hidden"></div>
+<aside id="topicStudentPanel" class="topic-student-panel hidden" aria-hidden="true">
+  <div class="topic-panel-header">
+    <h3 id="topicPanelTitle">Topic Students</h3>
+    <button id="topicPanelCloseBtn" type="button" class="topic-panel-close" aria-label="Close">x</button>
+  </div>
+  <div class="topic-panel-meta" id="topicPanelCount">0 students</div>
+  <ul id="topicPanelList" class="topic-student-list"></ul>
+</aside>
+
+<!-- STUDENT DETAIL MODAL DRAWER -->
+<div id="detailModalBackdrop" class="detail-modal-backdrop hidden"></div>
+<aside id="studentDetailDrawer" class="student-detail-drawer hidden" aria-hidden="true">
+  <div class="drawer-header">
+    <div>
+      <h2 id="detailDrawerTitle" style="margin: 0; color: #0b2540;">Student Detailed Report</h2>
+      <span class="badge" id="detailDrawerType" style="margin-top: 4px; display: inline-block;">EXAM</span>
+    </div>
+    <button id="detailDrawerCloseBtn" type="button" class="drawer-close" aria-label="Close"><i class="fas fa-times"></i></button>
+  </div>
+  
+  <div class="drawer-content">
+    <!-- General Info Card -->
+    <div class="drawer-card">
+      <h3 class="drawer-card-title"><i class="fas fa-user-circle"></i> Student Profile</h3>
+      <div class="drawer-info-grid">
+        <div><strong>Name:</strong> <span id="detailStudentName">—</span></div>
+        <div><strong>USN:</strong> <span id="detailStudentUsn">—</span></div>
+        <div><strong>Email:</strong> <span id="detailStudentEmail">—</span></div>
+        <div><strong>College:</strong> <span id="detailStudentCollege">—</span></div>
+        <div><strong>Course:</strong> <span id="detailStudentCourse">—</span></div>
+        <div><strong>Year:</strong> <span id="detailStudentYear">—</span></div>
+        <div><strong>Semester:</strong> <span id="detailStudentSemester">—</span></div>
+        <div><strong>Section:</strong> <span id="detailStudentSection">—</span></div>
+      </div>
+    </div>
+
+    <!-- Test Overview Card -->
+    <div class="drawer-card">
+      <h3 class="drawer-card-title"><i class="fas fa-chart-bar"></i> Attempt Summary</h3>
+      <div class="drawer-info-grid">
+        <div><strong>Marks Obtained:</strong> <span id="detailMarksObtained">—</span></div>
+        <div><strong>Percentage:</strong> <span id="detailPercentage">—</span></div>
+        <div><strong>Status:</strong> <span id="detailStatusBadge">—</span></div>
+        <div><strong>Attempted:</strong> <span id="detailAttemptedCount">—</span></div>
+        <div><strong>Correct:</strong> <span id="detailCorrectCount">—</span></div>
+        <div><strong>Wrong:</strong> <span id="detailWrongCount">—</span></div>
+        <div><strong>Time Spent:</strong> <span id="detailTimeSpent">—</span></div>
+        <div><strong>Submitted At:</strong> <span id="detailSubmittedAt">—</span></div>
+        <div id="detailTabSwitchesGroup"><strong>Tab Switches:</strong> <span id="detailTabSwitches">—</span></div>
+        <div id="detailSubmissionModeGroup"><strong>Submission Mode:</strong> <span id="detailSubmissionMode">—</span></div>
+      </div>
+    </div>
+
+    <!-- Question Breakdown Card -->
+    <div class="drawer-card">
+      <h3 class="drawer-card-title"><i class="fas fa-list-ol"></i> Question-by-Question Detailing</h3>
+      <div id="drawerQuestionContainer" class="drawer-question-list">
+        <!-- Populated dynamically via JS -->
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container"></div>
+
+<!-- HIDDEN PDF REPORT CONTAINER FOR EXPORTS -->
+<div style="position: absolute; left: -9999px; top: -9999px;">
+  <div id="pdfReportContainer" style="width: 794px; background: #f8fafc; font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; box-sizing: border-box;">
+    
+    <!-- PAGE 1: ANALYTICS DASHBOARD -->
+    <div id="pdfPage1" style="padding: 30px; box-sizing: border-box; min-height: 1123px; display: flex; flex-direction: column; justify-content: space-between; background: #f8fafc;">
+      <div>
+        <!-- HEADER BANNER -->
+        <div class="pdf-header" style="background: #008037; color: white; padding: 25px; border-radius: 8px; display: flex; align-items: center; gap: 20px; margin-bottom: 25px;">
+          <div style="background: rgba(255,255,255,0.2); width: 60px; height: 60px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 28px;">
+            <i class="fas fa-file-invoice"></i>
+          </div>
+          <div>
+            <h1 style="margin: 0; font-size: 26px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Student Performance Report</h1>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">
+              Exam Type: <span id="pdfExamType">Exam</span> | Generated On: <span id="pdfGeneratedDate">-</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- METRIC CARDS (6 in one row) -->
+        <div class="pdf-metrics-row" style="display: flex; gap: 10px; margin-bottom: 25px;">
+          <!-- CARD 1 -->
+          <div style="flex: 1; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div style="background: #e0f2fe; color: #0284c7; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; font-size: 14px;">
+              <i class="fas fa-user-friends"></i>
+            </div>
+            <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">Total Students</div>
+            <div id="pdfTotalStudents" style="font-size: 20px; font-weight: bold; color: #0f172a; margin-top: 4px;">0</div>
+          </div>
+          <!-- CARD 2 -->
+          <div style="flex: 1; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div style="background: #dcfce7; color: #16a34a; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; font-size: 14px;">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">Passed</div>
+            <div id="pdfPassedVal" style="font-size: 20px; font-weight: bold; color: #16a34a; margin-top: 4px;">0</div>
+            <div id="pdfPassedPct" style="font-size: 10px; color: #16a34a; font-weight: bold; margin-top: 2px;">0%</div>
+          </div>
+          <!-- CARD 3 -->
+          <div style="flex: 1; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div style="background: #fee2e2; color: #dc2626; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; font-size: 14px;">
+              <i class="fas fa-times-circle"></i>
+            </div>
+            <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">Failed</div>
+            <div id="pdfFailedVal" style="font-size: 20px; font-weight: bold; color: #dc2626; margin-top: 4px;">0</div>
+            <div id="pdfFailedPct" style="font-size: 10px; color: #dc2626; font-weight: bold; margin-top: 2px;">0%</div>
+          </div>
+          <!-- CARD 4 -->
+          <div style="flex: 1; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div style="background: #e0e7ff; color: #4f46e5; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; font-size: 14px;">
+              <i class="fas fa-chart-line"></i>
+            </div>
+            <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">Avg Score</div>
+            <div id="pdfAvgScore" style="font-size: 20px; font-weight: bold; color: #4f46e5; margin-top: 4px;">0%</div>
+          </div>
+          <!-- CARD 5 -->
+          <div style="flex: 1; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div style="background: #fef3c7; color: #d97706; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; font-size: 14px;">
+              <i class="fas fa-trophy"></i>
+            </div>
+            <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">Highest</div>
+            <div id="pdfHighestScore" style="font-size: 20px; font-weight: bold; color: #d97706; margin-top: 4px;">0%</div>
+          </div>
+          <!-- CARD 6 -->
+          <div style="flex: 1; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <div style="background: #fee2e2; color: #b91c1c; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; font-size: 14px;">
+              <i class="fas fa-chart-bar"></i>
+            </div>
+            <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">Lowest</div>
+            <div id="pdfLowestScore" style="font-size: 20px; font-weight: bold; color: #b91c1c; margin-top: 4px;">0%</div>
+          </div>
+        </div>
+
+        <!-- DISTRIBUTION & TEST SUMMARY -->
+        <div style="display: flex; gap: 20px; margin-bottom: 25px;">
+          <!-- LEFT: PERFORMANCE DISTRIBUTION -->
+          <div style="flex: 1.2; background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <h3 style="margin: 0 0 15px 0; font-size: 13px; font-weight: bold; color: #008037; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #008037; padding-bottom: 5px;">
+              Performance Distribution
+            </h3>
+            <!-- DISTRIBUTION BARS -->
+            <div style="display: flex; flex-direction: column; gap: 12px;">
+              <!-- Excellent -->
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 11px; width: 120px; color: #475569;">Excellent (90-100%)</span>
+                <div style="flex: 1; height: 10px; background: #e2e8f0; border-radius: 6px; margin: 0 12px; overflow: hidden;">
+                  <div id="pdfExcellentBar" style="height: 100%; background: #15803d; border-radius: 6px; width: 0%;"></div>
+                </div>
+                <span id="pdfExcellentText" style="font-size: 11px; font-weight: bold; color: #334155; width: 70px; text-align: right;">0 (0.0%)</span>
+              </div>
+              <!-- Good -->
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 11px; width: 120px; color: #475569;">Good (75-89%)</span>
+                <div style="flex: 1; height: 10px; background: #e2e8f0; border-radius: 6px; margin: 0 12px; overflow: hidden;">
+                  <div id="pdfGoodBar" style="height: 100%; background: #94a3b8; border-radius: 6px; width: 0%;"></div>
+                </div>
+                <span id="pdfGoodText" style="font-size: 11px; font-weight: bold; color: #334155; width: 70px; text-align: right;">0 (0.0%)</span>
+              </div>
+              <!-- Average -->
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 11px; width: 120px; color: #475569;">Average (50-74%)</span>
+                <div style="flex: 1; height: 10px; background: #e2e8f0; border-radius: 6px; margin: 0 12px; overflow: hidden;">
+                  <div id="pdfAverageBar" style="height: 100%; background: #94a3b8; border-radius: 6px; width: 0%;"></div>
+                </div>
+                <span id="pdfAverageText" style="font-size: 11px; font-weight: bold; color: #334155; width: 70px; text-align: right;">0 (0.0%)</span>
+              </div>
+              <!-- Poor -->
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 11px; width: 120px; color: #475569;">Poor (25-49%)</span>
+                <div style="flex: 1; height: 10px; background: #e2e8f0; border-radius: 6px; margin: 0 12px; overflow: hidden;">
+                  <div id="pdfPoorBar" style="height: 100%; background: #94a3b8; border-radius: 6px; width: 0%;"></div>
+                </div>
+                <span id="pdfPoorText" style="font-size: 11px; font-weight: bold; color: #334155; width: 70px; text-align: right;">0 (0.0%)</span>
+              </div>
+              <!-- Very Poor -->
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 11px; width: 120px; color: #475569;">Very Poor (0-24%)</span>
+                <div style="flex: 1; height: 10px; background: #e2e8f0; border-radius: 6px; margin: 0 12px; overflow: hidden;">
+                  <div id="pdfVeryPoorBar" style="height: 100%; background: #b91c1c; border-radius: 6px; width: 0%;"></div>
+                </div>
+                <span id="pdfVeryPoorText" style="font-size: 11px; font-weight: bold; color: #334155; width: 70px; text-align: right;">0 (0.0%)</span>
+              </div>
+            </div>
+            <!-- CHART SCALE -->
+            <div style="display: flex; justify-content: space-between; margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 10px; font-size: 10px; color: #94a3b8;">
+              <span style="width: 120px;"></span>
+              <span style="flex: 1; text-align: left; margin-left: 12px;">0%</span>
+              <span style="flex: 1; text-align: center;">50%</span>
+              <span style="flex: 1; text-align: right; margin-right: 12px;">100%</span>
+              <span style="width: 70px;"></span>
+            </div>
+          </div>
+
+          <!-- RIGHT: TEST SUMMARY -->
+          <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+            <h3 style="margin: 0 0 15px 0; font-size: 13px; font-weight: bold; color: #008037; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #008037; padding-bottom: 5px;">
+              Test Summary
+            </h3>
+            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 6px 0; color: #64748b;"><i class="far fa-list-alt" style="margin-right: 8px; color: #008037;"></i> Total Qs</td>
+                <td id="pdfSummaryQuestions" style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">0</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 6px 0; color: #64748b;"><i class="far fa-edit" style="margin-right: 8px; color: #008037;"></i> Attempted (Avg)</td>
+                <td id="pdfSummaryAttempted" style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">0.0</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 6px 0; color: #64748b;"><i class="far fa-check-square" style="margin-right: 8px; color: #008037;"></i> Unattempted (Avg)</td>
+                <td id="pdfSummaryUnattempted" style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">0.0</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 6px 0; color: #64748b;"><i class="fas fa-medal" style="margin-right: 8px; color: #008037;"></i> Total Marks</td>
+                <td id="pdfSummaryTotalMarks" style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">0.0</td>
+              </tr>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 6px 0; color: #64748b;"><i class="fas fa-exclamation-triangle" style="margin-right: 8px; color: #008037;"></i> Neg Marking</td>
+                <td id="pdfSummaryNegative" style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">No</td>
+              </tr>
+              <tr>
+                <td style="padding: 6px 0; color: #64748b;"><i class="far fa-clock" style="margin-right: 8px; color: #008037;"></i> Total Time</td>
+                <td id="pdfSummaryTotalTime" style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">0 mins</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+
+        <!-- KEY INSIGHTS -->
+        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
+          <h3 style="margin: 0 0 15px 0; font-size: 13px; font-weight: bold; color: #008037; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #008037; padding-bottom: 5px;">
+            Key Insights
+          </h3>
+          <div style="display: flex; gap: 15px;">
+            <!-- Insight 1 -->
+            <div style="flex: 1; border-right: 1px solid #f1f5f9; padding-right: 10px; display: flex; gap: 8px;">
+              <div style="color: #008037; font-size: 16px;"><i class="fas fa-sync-alt"></i></div>
+              <div>
+                <div style="font-weight: bold; font-size: 11px; color: #334155;" id="pdfInsightImprovementTitle">Improvement Needed</div>
+                <p id="pdfInsightImprovementDesc" style="margin: 3px 0 0 0; font-size: 10px; color: #64748b; line-height: 1.3;">-</p>
+              </div>
+            </div>
+            <!-- Insight 2 -->
+            <div style="flex: 1; border-right: 1px solid #f1f5f9; padding-right: 10px; display: flex; gap: 8px;">
+              <div style="color: #008037; font-size: 16px;"><i class="far fa-clock"></i></div>
+              <div>
+                <div style="font-weight: bold; font-size: 11px; color: #334155;">Time Management</div>
+                <p id="pdfInsightTimeDesc" style="margin: 3px 0 0 0; font-size: 10px; color: #64748b; line-height: 1.3;">-</p>
+              </div>
+            </div>
+            <!-- Insight 3 -->
+            <div style="flex: 1; border-right: 1px solid #f1f5f9; padding-right: 10px; display: flex; gap: 8px;">
+              <div style="color: #008037; font-size: 16px;"><i class="far fa-star"></i></div>
+              <div>
+                <div style="font-weight: bold; font-size: 11px; color: #334155;">Top Performers</div>
+                <p id="pdfInsightTopPerformers" style="margin: 3px 0 0 0; font-size: 10px; color: #64748b; line-height: 1.3;">-</p>
+              </div>
+            </div>
+            <!-- Insight 4 -->
+            <div style="flex: 1; display: flex; gap: 8px;">
+              <div style="color: #dc2626; font-size: 16px;"><i class="fas fa-arrow-down"></i></div>
+              <div>
+                <div style="font-weight: bold; font-size: 11px; color: #334155;">Needs Improvement</div>
+                <p id="pdfInsightNeedsImprovement" style="margin: 3px 0 0 0; font-size: 10px; color: #64748b; line-height: 1.3;">-</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FOOTER FOR PAGE 1 -->
+      <div style="border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #64748b;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="background: #e2e8f0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 11px;">
+            <i class="fas fa-graduation-cap"></i>
+          </div>
+          <span>Report generated by <strong>ATOM LMS</strong></span>
+        </div>
+        <div id="pdfFooterDate1">-</div>
+      </div>
+    </div>
+
+    <!-- PAGE BREAK FOR HTML2PDF -->
+    <div class="html2pdf__page-break"></div>
+
+    <!-- PAGE 2+: STUDENT SUMMARY TABLE (PAGINATED AUTOMATICALLY) -->
+    <div id="pdfPage2" style="padding: 30px; box-sizing: border-box; background: #f8fafc; min-height: 1123px; display: flex; flex-direction: column; justify-content: space-between;">
+      <div>
+        <!-- STUDENT SUMMARY TABLE -->
+        <div style="background: white; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); break-inside: avoid; page-break-inside: avoid;">
+          <h3 style="margin: 0; font-size: 13px; font-weight: bold; color: white; background: #008037; padding: 12px 20px; text-transform: uppercase; letter-spacing: 0.5px;">
+            Student Summary
+          </h3>
+          <table id="pdfResultsTable" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 10px;">
+            <thead>
+              <tr style="background: #006026; color: white; text-transform: uppercase; font-size: 9px;">
+                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">#</th>
+                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Student Name</th>
+                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Marks</th>
+                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">%</th>
+                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Result</th>
+                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Attempted</th>
+                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Correct</th>
+                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Wrong</th>
+                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Unattempted</th>
+                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Time Spent</th>
+              </tr>
+            </thead>
+            <tbody>
+              <!-- Populated via Javascript -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- FOOTER FOR PAGE 2+ -->
+      <div style="border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #64748b; margin-top: 20px;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="background: #e2e8f0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 11px;">
+            <i class="fas fa-graduation-cap"></i>
+          </div>
+          <span>Report generated by <strong>ATOM LMS</strong></span>
+        </div>
+        <div id="pdfFooterDate2">-</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<script src="{% static 'js/admin_student_performance.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'student_base.html' %}
+{% load static %}
+
+{% block title %}No Profile Found{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 4rem auto; padding: 2rem; background: rgba(255, 255, 255, 0.05); border-radius: 12px; text-align: center; border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(10px);">
+    <h2 style="color: #ff4d4d; margin-bottom: 1rem;">Student Profile Not Found</h2>
+    <p style="color: #ccc; margin-bottom: 2rem;">It looks like you don't have an active student profile yet. A student profile is required to access the Placement Hub and match your branch with targeting companies.</p>
+    <a href="{% url 'student_profile_edit' %}" class="btn" style="background: linear-gradient(135deg, #4f46e5, #06b6d4); color: white; padding: 0.75rem 1.5rem; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">Create Student Profile</a>
+</div>
+{% endblock %}

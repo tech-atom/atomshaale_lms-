@@ -1,0 +1,634 @@
+/* 🌟 Global Font and Layout */
+* {
+  font-family: "Century Gothic";
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f9fafb;
+  color: #222;
+  transition: background 0.4s, color 0.4s;
+}
+
+/* 🌈 Wrapper Card */
+.schedule-wrapper {
+  width: 85%;
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 2.5rem 3rem;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08);
+  transition: background 0.4s, color 0.4s, box-shadow 0.4s;
+}
+
+/* 💫 Page Title */
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  color: #004d40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 🧩 Form Grid */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.2rem 1rem;
+  margin-top: 1rem;
+}
+
+/* 🧾 Input Fields */
+select,
+input {
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 0.95rem;
+  color: #222;
+  outline: none;
+  transition: all 0.3s ease;
+}
+
+input:focus,
+select:focus {
+  border-color: #007a3d;
+  box-shadow: 0 0 8px rgba(0, 122, 61, 0.3);
+}
+
+/* ✅ Submit Button */
+.btn-submit {
+  grid-column: 1 / -1;
+  background: #008037;
+  color: #fff;
+  border: none;
+  padding: 0.9rem 1.8rem;
+  border-radius: 10px;
+  font-size: 1.05rem;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: all 0.3s ease;
+}
+
+.btn-submit:hover {
+  background: black;
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* 📢 Message Box */
+.message-box {
+  margin-top: 1.5rem;
+  padding: 0.9rem;
+  border-radius: 10px;
+  font-weight: 500;
+  text-align: center;
+}
+
+.message-box.success {
+  background: #e6f5ec;
+  color: #1b5e20;
+  border: 1px solid #a5d6a7;
+}
+
+.message-box.error {
+  background: #fdeaea;
+  color: #008037;
+  border: 1px solid black;
+}
+
+.message-box.loading {
+  background: #f0f7ff;
+  color: #008037;
+  border: 1px solid #80cbc4;
+}
+
+/* 🧾 Table Section */
+.table-title {
+  margin-top: 40px;
+  font-size: 1.3rem;
+  font-weight: bold;
+  color: #004d40;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* 📋 Table */
+.session-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1.5rem;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+}
+
+.session-table th,
+.session-table td {
+  border: 1px solid #e0e0e0;
+  padding: 10px 12px;
+  text-align: center;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.session-table th {
+  background: #f2f2f2;
+  color: #004d40;
+  font-weight: 600;
+}
+
+.session-table tr:nth-child(even) {
+  background: #fafafa;
+}
+
+.session-table tr:hover {
+  background: #e8f5e9;
+}
+
+/* 🔍 Search Bar Styling */
+.table-controls {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+#sessionSearch {
+  width: 300px;
+  padding: 0.6rem 0.9rem;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 0.95rem;
+  outline: none;
+  transition: all 0.3s ease;
+  background: #fff;
+  color: #222;
+}
+
+#sessionSearch:focus {
+  border-color: #008037;
+  box-shadow: 0 0 8px rgba(0, 128, 55, 0.25);
+}
+
+/* 🎨 Table Action Buttons */
+.edit-btn,
+.delete-btn {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease-in-out;
+}
+
+.edit-btn {
+  background: #008037;
+  color: #fff;
+}
+
+.edit-btn:hover {
+  background: black;
+}
+
+.delete-btn {
+  background: #008037;
+  color: #fff;
+  margin-left: 5px;
+}
+
+.delete-btn:hover {
+  background: black;
+}
+
+/* 🌙 Dark Mode - Fully Enhanced */
+body.dark {
+  background: #101213;
+  color: #f1f1f1;
+}
+
+body.dark .schedule-wrapper {
+  background: #181a1b;
+  box-shadow: 0 5px 25px rgba(255, 255, 255, 0.05);
+}
+
+body.dark select,
+body.dark input {
+  background: #242728;
+  color: #f1f1f1;
+  border: 1px solid #3a3d3e;
+}
+
+body.dark .btn-submit {
+  background: #00b853;
+  color: #fff;
+}
+
+body.dark .btn-submit:hover {
+  background: #008f40;
+  box-shadow: 0 0 10px rgba(0, 184, 83, 0.4);
+}
+
+body.dark .session-table {
+  background: #1b1c1d;
+  color: #eaeaea;
+  border-color: #2a2a2a;
+}
+
+/* 🌗 Toggle */
+.dark-toggle {
+  float: right;
+  background: #222;
+  color: #fff;
+  padding: 6px 12px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: -1.5rem;
+  transition: all 0.3s ease;
+}
+
+.dark-toggle:hover {
+  background: #00b853;
+  color: #fff;
+}
+
+/* 🪟 Modal Styling */
+.edit-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: #fff;
+  color: #000;
+  padding: 25px 20px;
+  border-radius: 14px;
+  width: 420px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1.5rem;
+}
+
+.modal-actions button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: bold;
+  transition: all 0.3s ease;
+}
+
+/* 🌟 Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* 📱 Mobile Responsive Enhancements */
+@media (max-width: 480px) {
+  .schedule-wrapper {
+    width: 94%;
+    padding: 1.2rem;
+    border-radius: 12px;
+  }
+
+  .page-title {
+    font-size: 1.4rem;
+    text-align: center;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    gap: 0.8rem;
+  }
+
+  select, input {
+    font-size: 0.9rem;
+    padding: 0.6rem 0.8rem;
+  }
+
+  .btn-submit {
+    width: 100%;
+    font-size: 1rem;
+    padding: 0.8rem;
+  }
+
+  .table-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  #sessionSearch {
+    width: 100%;
+    font-size: 0.9rem;
+    padding: 0.6rem;
+  }
+
+  .session-table {
+    display: block;
+    overflow-x: auto;
+    font-size: 0.85rem;
+  }
+
+  .session-table th, .session-table td {
+    padding: 8px;
+  }
+
+  .edit-btn, .delete-btn {
+    font-size: 0.85rem;
+    padding: 5px 8px;
+  }
+
+  .modal-content {
+    width: 95%;
+    padding: 15px;
+    font-size: 0.9rem;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-actions button {
+    width: 100%;
+    font-size: 0.9rem;
+  }
+
+  .dark-toggle {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    margin-top: 0;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+  }
+}
+
+/* 🌟 Tab Navigation styles */
+.schedule-tabs {
+  display: flex;
+  gap: 10px;
+  border-bottom: 2px solid #e0e0e0;
+  margin-bottom: 2rem;
+  padding-bottom: 5px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #666;
+  cursor: pointer;
+  border-radius: 8px 8px 0 0;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.tab-btn:hover {
+  color: #008037;
+  background: rgba(0, 128, 55, 0.05);
+}
+
+.tab-btn.active {
+  color: #008037;
+}
+
+.tab-btn.active::after {
+  content: "";
+  position: absolute;
+  bottom: -7px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #008037;
+  border-radius: 3px;
+}
+
+.tab-content {
+  display: none;
+}
+
+.tab-content.active {
+  display: block;
+  animation: fadeIn 0.4s ease;
+}
+
+/* 💡 Bulk instructions styling */
+.bulk-instructions {
+  background: #eaf6ed;
+  border-left: 4px solid #008037;
+  padding: 12px 16px;
+  border-radius: 0 8px 8px 0;
+  margin-bottom: 1.5rem;
+  color: #1b5e20;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+/* Table scroll wrapper */
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+}
+
+/* 🛠️ Bulk Grid Table Styling */
+.bulk-grid-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 1200px;
+}
+
+.bulk-grid-table th,
+.bulk-grid-table td {
+  border: 1px solid #e0e0e0;
+  padding: 8px;
+  text-align: center;
+}
+
+.bulk-grid-table th {
+  background: #f5f5f5;
+  color: #004d40;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.bulk-grid-table select,
+.bulk-grid-table input {
+  padding: 5px 8px;
+  font-size: 0.85rem;
+  border-radius: 6px;
+}
+
+.grid-actions {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  margin-top: 1.5rem;
+}
+
+.btn-grid-action {
+  background: #004d40;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-grid-action:hover {
+  background: #00796b;
+  transform: translateY(-1px);
+}
+
+.btn-grid-action.btn-danger {
+  background: #c62828;
+}
+
+.btn-grid-action.btn-danger:hover {
+  background: #b71c1c;
+}
+
+/* ⬇️ Excel Template Download button */
+.btn-template-download {
+  background: #008037;
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.btn-template-download:hover {
+  background: #000;
+}
+
+/* 📁 File Upload Drag Zone */
+.file-upload-zone {
+  border: 2px dashed #008037;
+  border-radius: 12px;
+  padding: 2.5rem;
+  text-align: center;
+  background: #fafafa;
+  cursor: pointer;
+  transition: background 0.3s, border-color 0.3s;
+  margin-bottom: 1.5rem;
+  position: relative;
+}
+
+.file-upload-zone:hover {
+  background: #eaf6ed;
+}
+
+.file-upload-zone input[type="file"] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.file-upload-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  color: #004d40;
+  font-weight: 600;
+  pointer-events: none;
+}
+
+.file-name-display {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
+
+/* Dark mode for tabs & bulk upload */
+body.dark .schedule-tabs {
+  border-bottom-color: #333;
+}
+
+body.dark .tab-btn {
+  color: #aaa;
+}
+
+body.dark .tab-btn:hover {
+  color: #00b853;
+  background: rgba(0, 184, 83, 0.05);
+}
+
+body.dark .tab-btn.active {
+  color: #00b853;
+}
+
+body.dark .tab-btn.active::after {
+  background: #00b853;
+}
+
+body.dark .bulk-instructions {
+  background: rgba(0, 184, 83, 0.05);
+  border-left-color: #00b853;
+  color: #a5d6a7;
+}
+
+body.dark .bulk-grid-table th {
+  background: #242728;
+  color: #eaeaea;
+}
+
+body.dark .file-upload-zone {
+  border-color: #00b853;
+  background: #181a1b;
+}
+
+body.dark .file-upload-zone:hover {
+  background: rgba(0, 184, 83, 0.05);
+}
+
+body.dark .file-upload-label {
+  color: #a5d6a7;
+}

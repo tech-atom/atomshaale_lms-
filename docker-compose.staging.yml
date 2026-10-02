@@ -1,0 +1,17 @@
+services:
+  web:
+    env_file: ${STAGING_ENV_FILE:-.env.staging}
+    ports:
+      - "${STAGING_WEB_PORT:-8001}:8000"
+
+  celery-email:
+    env_file: ${STAGING_ENV_FILE:-.env.staging}
+
+  celery-compiler:
+    env_file: ${STAGING_ENV_FILE:-.env.staging}
+
+  postgres:
+    env_file: ${STAGING_ENV_FILE:-.env.staging}
+
+  redis:
+    env_file: ${STAGING_ENV_FILE:-.env.staging}

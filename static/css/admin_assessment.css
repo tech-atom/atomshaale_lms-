@@ -1,0 +1,1369 @@
+/* ===========================
+   ADMIN ASSESSMENT CSS (Mobile-Optimized)
+   With Light/Dark Toggle & Animations
+=========================== */
+
+:root {
+  --bg: #ffffff;
+  --text: #000000;
+  --card-bg: #ffffff;
+  --table-border: #cbd5e1;
+  --btn-bg: #008037;
+  --btn-text: #ffffff;
+  --hover-bg: #f3faf5;
+  --toast-success: #008037;
+  --toast-error: #000000;
+  --font-family: 'Century Gothic';
+}
+
+body.dark-mode {
+  --bg: #121212;
+  --text: #ffffff;
+  --card-bg: #1e1e1e;
+  --table-border: #2d2d2d;
+  --btn-bg: #008037;
+  --btn-text: #ffffff;
+  --hover-bg: #1a2a1a;
+  --toast-success: #008037;
+  --toast-error: #ffffff;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+body, input, textarea, select, button, table, td, th, label, span, div, .modal-content, p, h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family) !important;
+}
+
+#assessment-root {
+  padding: 24px 0;
+  background: var(--bg);
+  color: var(--text);
+  transition: background 0.4s, color 0.4s;
+}
+
+/* ---------------------------
+   Dark Mode Toggle Button
+--------------------------- */
+#theme-toggle {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+  transition: background 0.4s, transform 0.3s;
+  z-index: 10000;
+}
+#theme-toggle:hover {
+  transform: scale(1.05);
+}
+
+/* ---------------------------
+   Tables
+--------------------------- */
+.exam-table,
+.question-table,
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  background: var(--card-bg);
+  border-radius: 6px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  animation: fadeIn 0.6s ease-in-out;
+}
+
+.exam-table th, .exam-table td,
+.question-table th, .question-table td,
+.schedule-table th, .schedule-table td {
+  padding: 12px 10px;
+  border: 1px solid var(--table-border);
+  text-align: left;
+  transition: background 0.3s;
+}
+
+.exam-table th, .schedule-table th {
+  background: #008037;
+  color: #fff;
+}
+
+.exam-table tr:nth-child(even),
+.question-table tr:nth-child(even),
+.schedule-table tr:nth-child(even) {
+  background: rgba(0,0,0,0.02);
+}
+
+.exam-table tr:hover,
+.question-table tr:hover,
+.schedule-table tr:hover {
+  background: var(--hover-bg);
+  transition: background 0.3s ease;
+}
+
+/* ---------------------------
+   Buttons
+--------------------------- */
+.action-btn {
+  margin-right: 6px;
+  padding: 6px 14px;
+  border: none;
+  border-radius: 4px;
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.4s;
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+}
+
+.action-btn.delete { background: #000000; color: #ffffff; }
+.action-btn.edit   { background: #008037; color: #ffffff; }
+.action-btn.schedule { background: #000000; color: #ffffff; }
+.action-btn.preview-exam { background: #008037; color: #ffffff; }
+
+body.dark-mode .action-btn.delete { background: #2a2a2a; color: #ffffff; border: 1px solid #444; }
+body.dark-mode .action-btn.schedule { background: #2a2a2a; color: #ffffff; border: 1px solid #444; }
+
+/* Keep action buttons aligned and evenly spaced in table action cells */
+.action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.action-group .action-btn {
+  margin-right: 0;
+}
+
+/* Scheduled exam actions should stay in one row: Edit | Delete | Submissions */
+#scheduledExamTable th:last-child,
+#scheduledExamTable td:last-child {
+  min-width: 245px;
+}
+
+#scheduledExamTable td:last-child .action-group {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.add-btn {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  padding: 7px 18px;
+  border: none;
+  border-radius: 4px;
+  font-weight: bold;
+  margin-bottom: 14px;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.4s;
+}
+.add-btn:hover {
+  transform: scale(1.04);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* ---------------------------
+   Inputs & Labels
+--------------------------- */
+input[type="search"],
+input[type="text"],
+input[type="number"],
+textarea,
+select {
+  padding: 7px 10px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  margin-bottom: 13px;
+  width: 100%;
+  background: var(--card-bg);
+  color: var(--text);
+  transition: border 0.3s, box-shadow 0.3s, background 0.4s, color 0.4s;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #008037;
+  box-shadow: 0 0 6px rgba(0,128,55,0.35);
+  outline: none;
+}
+
+label { margin-top: 9px; font-weight: 500; }
+
+/* ---------------------------
+   Toast Notifications
+--------------------------- */
+.toast {
+  position: fixed;
+  top: 25px;
+  right: 25px;
+  min-width: 220px;
+  padding: 13px 26px;
+  border-radius: 7px;
+  opacity: 0;
+  transform: translateX(120%);
+  transition: all 0.4s ease;
+  z-index: 9999;
+  font-weight: 500;
+  color: #fff;
+}
+.toast.toast-success { background: var(--toast-success); }
+.toast.toast-error { background: var(--toast-error); }
+.toast.show {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* ---------------------------
+   Mobile Button Sizing Fix
+   Keep assessment action buttons compact instead of full-width.
+--------------------------- */
+@media (max-width: 991px) {
+  #assessment-root button,
+  #assessment-root .add-btn,
+  #assessment-root .action-btn {
+    width: auto !important;
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+  }
+
+  #assessment-root .action-group {
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+}
+
+/* ---------------------------
+   Modals
+--------------------------- */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0; top: 0;
+  width: 100vw; height: 100vh;
+  overflow: auto;
+  background: rgba(0,0,0,0.35);
+  animation: fadeIn 0.4s;
+}
+.modal.modal-show { display: block; }
+
+/* FULL SCREEN LIVE MONITOR */
+.fullscreen-modal {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.fullscreen-content {
+  width: 100vw;
+  height: 100vh;
+  background: #fff;
+  overflow-y: auto;
+  padding: 20px;
+  border-radius: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.fullscreen-content h2 {
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 10px 0;
+  z-index: 10;
+}
+
+.live-monitor-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 20px;
+  background: white;
+  box-sizing: border-box;
+}
+
+.page-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.monitor-summary {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+  margin: 20px 0 25px;
+}
+
+.monitor-summary div {
+  padding: 22px;
+  border-radius: 14px;
+  border: 1px solid #d7e7dc;
+  background: #ffffff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  text-align: center;
+  font-size: 20px;
+  font-weight: 700;
+  transition: transform 0.2s ease;
+}
+
+.monitor-summary div:hover {
+  transform: translateY(-2px);
+}
+
+.live-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+  margin: 18px 0;
+}
+
+.live-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: green;
+  animation: pulse 1.2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(1.4); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+.monitor-filters {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.monitor-filters button {
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid #d6e7d9;
+  background: white;
+  color: #1f2b22;
+  cursor: pointer;
+}
+
+.monitor-filters button.active {
+  background: #0c7a35;
+  border-color: #0c7a35;
+  color: #ffffff;
+}
+
+.monitor-select {
+  min-width: 170px;
+  margin-bottom: 0;
+}
+
+.search-input {
+  max-width: 280px;
+  margin-bottom: 0;
+}
+
+.time-spent-scroll {
+  max-height: 84px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  white-space: normal;
+  line-height: 1.4;
+  padding-right: 4px;
+}
+
+.time-spent-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.time-spent-scroll::-webkit-scrollbar-thumb {
+  background: #c7d9cc;
+  border-radius: 999px;
+}
+
+body.dark-mode .monitor-filters button {
+  background: #1f2a22;
+  border-color: #3c5546;
+  color: #e7f5ec;
+}
+
+body.dark-mode .monitor-filters button.active {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #ffffff;
+}
+
+.refresh-status {
+  text-align: right;
+  margin-bottom: 10px;
+  font-size: 14px;
+  opacity: 0.7;
+}
+
+.exam-table-wrapper {
+  max-height: 70vh;
+  overflow-y: auto;
+  border-radius: 12px;
+}
+
+.exam-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+tr.submitted {
+  background: rgba(0, 128, 0, 0.04);
+}
+
+tr.active {
+  background: rgba(0, 128, 0, 0.08);
+}
+
+tr.retake_allowed,
+tr.retake-allowed {
+  background: rgba(255, 193, 7, 0.08);
+}
+
+.risk-alert {
+  font-weight: 700;
+  border-left: 4px solid #d97706;
+}
+
+.risk-high {
+  font-weight: 700;
+  border-left: 4px solid #b91c1c;
+}
+
+.fullscreen-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.fullscreen-content {
+  width: 98vw;
+  height: 95vh;
+  margin: 1vh auto;
+  overflow: auto;
+  border-radius: 12px;
+  padding: 20px;
+  background: #fff;
+}
+
+.modal-content {
+  background: var(--card-bg);
+  color: var(--text);
+  margin: 48px auto;
+  padding: 25px 20px 18px 20px;
+  border: 1px solid #888;
+  border-radius: 8px;
+  width: 95%;
+  max-width: 520px;
+  box-shadow: 0 3px 24px rgba(0,0,0,0.14);
+  animation: scaleIn 0.4s ease;
+}
+
+/* ---------------------------
+   Schedule Modal UX Refresh
+--------------------------- */
+#schedule-modal .modal-content {
+  max-width: 760px;
+  width: 96%;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.16);
+}
+
+#schedule-modal h3 {
+  margin-top: 2px;
+  margin-bottom: 10px;
+}
+
+.schedule-form {
+  margin-top: 6px;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px 14px;
+  align-items: start;
+}
+
+.schedule-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-field.full {
+  grid-column: 1 / -1;
+}
+
+.schedule-label {
+  display: block;
+  margin-top: 0;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+#schedule-modal .schedule-field input,
+#schedule-modal .schedule-field select,
+#schedule-modal .schedule-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  margin-bottom: 0;
+  min-height: 40px;
+}
+
+#schedule-modal .schedule-field input[type="datetime-local"] {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+#schedule-modal .schedule-field input[type="number"] {
+  text-align: left;
+}
+
+.section-checkbox-group {
+  border: 1px solid var(--table-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(0, 128, 55, 0.04) 0%, rgba(0, 128, 55, 0.015) 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 128, 55, 0.06);
+  margin-bottom: 0;
+}
+
+.section-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--table-border);
+  border-radius: 999px;
+  padding: 9px 12px;
+  cursor: pointer;
+  background: var(--card-bg);
+  min-height: 44px;
+  transition: border-color 0.25s, box-shadow 0.25s, transform 0.2s, background 0.25s;
+}
+
+.section-chip:hover {
+  border-color: #008037;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px rgba(0, 128, 55, 0.12);
+}
+
+#schedule-modal .section-chip input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  min-height: 14px;
+  padding: 0;
+  flex: 0 0 14px;
+  border: 2px solid #9bb7a8;
+  border-radius: 4px;
+  background: #fff;
+  display: grid;
+  place-content: center;
+  margin: 0;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+#schedule-modal .section-chip input[type="checkbox"]::before {
+  content: "";
+  width: 3px;
+  height: 6px;
+  border-right: 1.5px solid #fff;
+  border-bottom: 1.5px solid #fff;
+  transform: rotate(45deg) scale(0);
+  transform-origin: center;
+  transition: transform 0.16s ease;
+}
+
+#schedule-modal .section-chip input[type="checkbox"]:checked {
+  background: #008037;
+  border-color: #008037;
+  box-shadow: 0 0 0 2px rgba(0, 128, 55, 0.18);
+}
+
+#schedule-modal .section-chip input[type="checkbox"]:checked::before {
+  transform: rotate(45deg) scale(1);
+}
+
+.section-chip span {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.section-chip:has(input:checked) {
+  border-color: #008037;
+  background: rgba(0, 128, 55, 0.08);
+  box-shadow: 0 8px 16px rgba(0, 128, 55, 0.14);
+}
+
+.section-chip.all span {
+  line-height: 1.1;
+}
+
+.section-chip.all:has(input:checked) {
+  background: rgba(0, 128, 55, 0.12);
+}
+
+/* Dropdown Multi-Select Styles */
+.dropdown-multi-select {
+  position: relative;
+  width: 100%;
+}
+
+.dropdown-button {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--card-bg);
+  border: 1.5px solid var(--table-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  font-family: "Century Gothic";
+  color: #333;
+  transition: all 0.25s ease;
+  position: relative;
+  padding-right: 32px;
+}
+
+.dropdown-button::after {
+  content: "▼";
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  color: #666;
+  pointer-events: none;
+  transition: transform 0.25s ease;
+}
+
+.dropdown-button:hover {
+  border-color: #008037;
+  background-color: rgba(0, 128, 55, 0.03);
+  box-shadow: 0 2px 6px rgba(0, 128, 55, 0.08);
+}
+
+.dropdown-button:focus {
+  outline: none;
+  border-color: #008037;
+  box-shadow: 0 0 0 3px rgba(0, 128, 55, 0.1);
+}
+
+.dropdown-button.open {
+  border-color: #008037;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  background: rgba(0, 128, 55, 0.04);
+  box-shadow: inset 0 0 0 1px rgba(0, 128, 55, 0.1);
+}
+
+.dropdown-button.open::after {
+  transform: translateY(-50%) rotateZ(180deg);
+}
+
+.dropdown-content {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background-color: var(--card-bg);
+  border: 1.5px solid var(--table-border);
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  margin-top: 0;
+  padding: 0;
+  display: none;
+  z-index: 1000;
+  max-height: 450px;
+  overflow-y: auto;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  animation: slideDown 0.2s ease;
+}
+
+.dropdown-content input[type="text"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: none;
+  border-bottom: 1px solid var(--table-border);
+  border-radius: 0;
+  font-size: 13px;
+  box-sizing: border-box;
+  background: rgba(0, 128, 55, 0.02);
+  font-family: "Century Gothic";
+  transition: all 0.2s ease;
+}
+
+.dropdown-content input[type="text"]:focus {
+  outline: none;
+  background: rgba(0, 128, 55, 0.05);
+  border-bottom-color: #008037;
+}
+
+.dropdown-content input[type="text"]::placeholder {
+  color: #9bb7a8;
+  opacity: 0.7;
+}
+
+/* Checkbox Grid for Large Lists */
+.checkbox-grid-large {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  align-items: start;
+}
+
+@media (min-width: 1200px) {
+  .checkbox-grid-large {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .checkbox-grid-large {
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  }
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dropdown-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dropdown-content::-webkit-scrollbar-track {
+  background: rgba(0, 128, 55, 0.02);
+  border-radius: 4px;
+}
+
+.dropdown-content::-webkit-scrollbar-thumb {
+  background: rgba(0, 128, 55, 0.25);
+  border-radius: 4px;
+  border: 2px solid rgba(0, 128, 55, 0.05);
+}
+
+.dropdown-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 128, 55, 0.45);
+}
+
+/* Checkbox Group Styles for Multi-Select Fields */
+.checkbox-group {
+  border: 1px solid var(--table-border);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 10px;
+  background: linear-gradient(180deg, rgba(0, 128, 55, 0.04) 0%, rgba(0, 128, 55, 0.015) 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 128, 55, 0.06);
+  margin-bottom: 0;
+}
+
+.dropdown-content .checkbox-option {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  border: none !important;
+  border-radius: 6px;
+  background: transparent !important;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  margin: 0 !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropdown-content .checkbox-option:hover {
+  background: rgba(0, 128, 55, 0.08) !important;
+  box-shadow: 0 2px 6px rgba(0, 128, 55, 0.1);
+  transform: none;
+}
+
+.dropdown-content .checkbox-option input[type="checkbox"] {
+  flex: 0 0 16px !important;
+  min-width: 16px !important;
+  min-height: 16px !important;
+}
+
+.dropdown-content .checkbox-option span {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.dropdown-content .checkbox-option:hover {
+  background: rgba(0, 128, 55, 0.08) !important;
+  border-radius: 6px;
+  transform: none;
+  box-shadow: none;
+}
+
+.checkbox-option:not(.dropdown-content .checkbox-option) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--table-border);
+  border-radius: 8px;
+  background: var(--card-bg);
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.checkbox-option:not(.dropdown-content .checkbox-option):hover {
+  border-color: #008037;
+  background: rgba(0, 128, 55, 0.05);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 128, 55, 0.1);
+}
+
+.multi-select-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--table-border);
+  border-radius: 12px;
+  background: linear-gradient(180deg, rgba(0, 128, 55, 0.04) 0%, rgba(0, 128, 55, 0.015) 100%);
+  box-shadow: inset 0 0 0 1px rgba(0, 128, 55, 0.06);
+}
+
+.multi-select-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--table-border);
+  border-radius: 10px;
+  background: var(--card-bg);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.multi-select-option:hover {
+  border-color: #008037;
+  background: rgba(0, 128, 55, 0.05);
+}
+
+.multi-select-option input[type="checkbox"] {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+}
+
+.multi-select-option span {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.checkbox-option input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  min-height: 16px;
+  min-width: 16px;
+  padding: 0;
+  flex: 0 0 16px;
+  border: 2px solid #9bb7a8;
+  border-radius: 4px;
+  background: #fff;
+  cursor: pointer;
+  display: grid;
+  place-content: center;
+  transition: all 0.2s;
+}
+
+.checkbox-option input[type="checkbox"]:hover {
+  border-color: #008037;
+  box-shadow: 0 0 4px rgba(0, 128, 55, 0.2);
+}
+
+.checkbox-option input[type="checkbox"]:checked {
+  background: #008037;
+  border-color: #008037;
+  box-shadow: 0 0 0 2px rgba(0, 128, 55, 0.18);
+}
+
+.checkbox-option input[type="checkbox"]::after {
+  content: "✓";
+  color: white;
+  font-size: 11px;
+  font-weight: bold;
+  display: grid;
+  place-content: center;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.checkbox-option input[type="checkbox"]:checked::after {
+  opacity: 1;
+}
+
+.checkbox-option:has(input:checked) {
+  border-color: #008037;
+  background: rgba(0, 128, 55, 0.08);
+  box-shadow: 0 6px 14px rgba(0, 128, 55, 0.12);
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--table-border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: rgba(0, 128, 55, 0.03);
+  min-height: 42px;
+}
+
+.toggle-hint {
+  font-size: 13px;
+  color: #444;
+}
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 52px;
+  height: 28px;
+  flex: 0 0 auto;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  background: #cfd7d2;
+  border-radius: 999px;
+  transition: 0.25s;
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  left: 3px;
+  top: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.25s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+}
+
+.switch input:checked + .slider {
+  background: #008037;
+}
+
+.switch input:checked + .slider::before {
+  transform: translateX(24px);
+}
+
+#schedule-modal .schedule-form .add-btn {
+  margin-top: 14px;
+  margin-bottom: 0;
+  align-self: flex-start;
+}
+
+/* ---------------------------
+   Dynamic Question Rows
+--------------------------- */
+.mcq-opt-row, .tc-row, .kw-row {
+  display: flex;
+  gap: .5em;
+  align-items: center;
+  margin-bottom: 2px;
+}
+.add-mcq-opt, .remove-mcq-opt,
+.add-tc-btn, .remove-tc-btn,
+.add-kw-btn, .remove-kw-btn {
+  font-size: 0.9em;
+  transition: transform 0.2s;
+}
+.add-mcq-opt:hover, .remove-mcq-opt:hover,
+.add-tc-btn:hover, .remove-tc-btn:hover,
+.add-kw-btn:hover, .remove-kw-btn:hover {
+  transform: scale(1.1);
+}
+
+#mcq-options-list, #tc-list, #kw-list {
+  margin-bottom: 10px;
+}
+
+/* ---------------------------
+   Keyframes
+--------------------------- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleIn {
+  from { transform: scale(0.9); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ---------------------------
+   Responsive (Tablets)
+--------------------------- */
+@media (max-width: 600px) {
+  #assessment-root {
+    padding: 12px 8px;
+  }
+  #theme-toggle {
+    top: 10px;
+    right: 10px;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  .modal-content { width: 99vw; padding: 13px 3vw; }
+  .exam-table, .question-table, .schedule-table { font-size: 12px; overflow-x: auto; display: block; }
+  .add-btn, .action-btn { width: 100%; margin-bottom: 8px; }
+  .schedule-grid { grid-template-columns: 1fr; }
+  #schedule-modal .schedule-form .add-btn { width: 100%; }
+}
+
+/* === Bulk Upload Format Modal === */
+#bulk-format-modal .modal-content {
+  max-width: 680px;
+  width: 96%;
+  background: var(--card-bg);
+  color: var(--text);
+  padding: 20px 25px;
+  border-radius: 10px;
+  box-shadow: 0 4px 22px rgba(0, 0, 0, 0.18);
+  animation: scaleIn 0.3s ease-out;
+  font-family: var(--font-family);
+}
+
+/* Title and description */
+#bulk-format-modal h3 {
+  margin-top: 5px;
+  margin-bottom: 8px;
+  font-size: 1.4em;
+  font-weight: 600;
+  color: var(--btn-bg);
+  text-align: left;
+}
+
+#bulk-format-modal p {
+  margin-bottom: 14px;
+  font-size: 0.96em;
+  color: var(--text);
+}
+
+/* Table styling inside modal */
+#bulk-format-modal table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0 16px 0;
+  border-radius: 6px;
+  overflow: hidden;
+  font-size: 0.9em;
+}
+
+#bulk-format-modal th {
+  background: #008037;
+  color: #fff;
+  text-transform: lowercase;
+  padding: 10px 8px;
+  border: 1px solid var(--table-border);
+}
+
+#bulk-format-modal td {
+  background: var(--card-bg);
+  color: var(--text);
+  border: 1px solid var(--table-border);
+  padding: 8px 10px;
+  line-height: 1.4;
+  text-align: left;
+}
+
+/* Links for template downloads */
+#bulk-format-modal a {
+  display: inline-block;
+  color: #0044cc;
+  font-weight: 500;
+  text-decoration: none;
+  margin: 4px 0;
+}
+
+#bulk-format-modal a:hover {
+  text-decoration: underline;
+  color: #002d80;
+}
+
+/* Buttons area */
+#bulk-format-modal div[style*="text-align: right"] {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+/* Cancel and Continue buttons */
+#bulk-format-modal .action-btn {
+  background: #c62828;
+  color: #fff;
+  border: none;
+  padding: 7px 14px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.3s, transform 0.2s;
+}
+
+#bulk-format-modal .action-btn:hover {
+  background: #a71d1d;
+  transform: translateY(-1px);
+}
+
+#bulk-format-modal .add-btn {
+  background: #008037;
+  color: #fff;
+  border: none;
+  padding: 7px 18px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s, transform 0.2s;
+}
+
+#bulk-format-modal .add-btn:hover {
+  background: #00682b;
+  transform: translateY(-1px);
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  #bulk-format-modal .modal-content {
+    padding: 14px;
+  }
+  #bulk-format-modal th, #bulk-format-modal td {
+    font-size: 0.8em;
+  }
+  #bulk-format-modal h3 {
+    font-size: 1.2em;
+  }
+}
+
+/* === Search highlight styles (CSP-safe) === */
+.search-match {
+  background: rgba(255, 255, 0, 0.06);
+  transition: background 180ms;
+}
+.search-wrap {
+  margin: 8px 0 12px;
+}
+.search-wrap input[type="search"] {
+  width: 100%;
+  max-width: 420px;
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+.no-results-row td {
+  text-align: center;
+  font-style: italic;
+  color: #666;
+  padding: 10px;
+}
+
+/* ---------------------------
+   Extra Responsive (≤480px)
+--------------------------- */
+@media (max-width: 480px) {
+  #assessment-root {
+    padding: 10px 5px;
+  }
+
+  #theme-toggle {
+    font-size: 11px;
+    padding: 5px 10px;
+  }
+
+  .exam-table, .question-table, .schedule-table {
+    font-size: 11.5px;
+    overflow-x: auto;
+    display: block;
+    border-radius: 4px;
+  }
+
+  th, td {
+    padding: 6px 8px;
+  }
+
+  .add-btn, .action-btn {
+    width: 100%;
+    margin: 4px 0;
+    font-size: 13px;
+  }
+
+  input[type="text"], input[type="number"], select, textarea {
+    font-size: 13px;
+    padding: 6px;
+  }
+
+  label {
+    font-size: 13px;
+  }
+
+  .modal-content {
+    padding: 12px;
+    border-radius: 6px;
+  }
+
+  #bulk-format-modal .modal-content {
+    padding: 10px;
+  }
+
+  #bulk-format-modal h3 {
+    font-size: 1em;
+  }
+
+  #bulk-format-modal th, #bulk-format-modal td {
+    font-size: 0.75em;
+  }
+
+  .toast {
+    top: 15px;
+    right: 15px;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+}
+.submission-table-wrapper {
+  max-height: 500px;
+  overflow-y: auto;
+  overflow-x: auto;
+  width: 100%;
+}
+
+.live-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(110px, 1fr));
+  gap: 10px;
+  margin: 10px 0 14px;
+}
+
+.live-summary > div {
+  background: rgba(0, 128, 55, 0.08);
+  border: 1px solid var(--table-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.status-active {
+  color: green;
+  font-weight: 600;
+}
+
+.status-submitted {
+  color: blue;
+}
+
+.status-not-started {
+  color: gray;
+}
+
+.status-suspicious {
+  color: red;
+  font-weight: 600;
+}
+
+.summary-box {
+  background: rgba(0, 128, 55, 0.08);
+  border: 1px solid var(--table-border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.submission-table {
+  width: 100%;
+  min-width: 900px;
+  border-collapse: collapse;
+}
+
+.submission-table th,
+.submission-table td {
+  padding: 12px 14px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.allow-retake-btn {
+  min-width: 120px;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+@media (max-width: 768px) {
+  .live-summary {
+    grid-template-columns: repeat(2, minmax(120px, 1fr));
+  }
+}

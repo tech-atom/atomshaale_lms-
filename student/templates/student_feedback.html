@@ -1,0 +1,274 @@
+{% extends 'student_base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/student_feedback.css' %}?v=5.0" nonce="{{ request.csp_nonce }}">
+<link rel="stylesheet" href="{% static 'css/star_radio.css' %}?v=5.0" nonce="{{ request.csp_nonce }}">
+<!-- Premium Font -->
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" nonce="{{ request.csp_nonce }}">
+{% endblock %}
+
+{% block content %}
+<div class="feedback-page-container">
+
+  <!-- Header Banner (Visible when listing only) -->
+  {% if not show_form %}
+    <div class="feedback-header-card">
+      <div class="header-content-left">
+        <span class="category-tag">Student Evaluations</span>
+        <h1>Session <span class="accent-color">Feedback</span></h1>
+        <p class="subtitle-text">Your feedback helps us maintain high training standards. Select a session date below to complete your evaluation.</p>
+      </div>
+      <div class="header-illustration">
+        <svg viewBox="0 0 200 200" class="abstract-shape">
+          <defs>
+            <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style="stop-color:#008037;stop-opacity:0.2" />
+              <stop offset="100%" style="stop-color:#008037;stop-opacity:0" />
+            </linearGradient>
+          </defs>
+          <circle cx="100" cy="100" r="80" fill="url(#grad)" />
+          <path d="M70,110 L90,130 L130,80" fill="none" stroke="#008037" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" class="draw-check" />
+        </svg>
+      </div>
+    </div>
+  {% endif %}
+
+  <!-- Messages / Toasts (Visible when listing only) -->
+  {% if message and not show_form %}
+    <div class="toast-alert alert-{{ message_class }}">
+      <div class="toast-icon">
+        {% if message_class == 'success' %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+        {% else %}
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        {% endif %}
+      </div>
+      <span class="toast-text">{{ message }}</span>
+    </div>
+  {% endif %}
+
+  <!-- Main Content Areas (Conditional) -->
+  {% if show_form and feedback_form %}
+    <!-- Evaluation Form In-Place Container -->
+    <div class="evaluation-form-wrapper">
+      
+      <!-- Back Navigation Header -->
+      <div class="form-navigation-header">
+        <a href="{% url 'student_feedback_page' %}" class="btn-back-to-list">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
+          <span>Back to evaluations</span>
+        </a>
+        <div class="form-progress-indicator">
+          <span class="pulse-indicator-filling"></span>
+          <span>Filling Evaluation Form</span>
+        </div>
+      </div>
+
+      <!-- General Title Card -->
+      <div class="form-title-banner">
+        <span class="banner-subtext">Training Session Evaluation</span>
+        <h2>Feedback for {{ selected_day|date:"l, F d, Y" }}</h2>
+      </div>
+
+      <!-- General Form -->
+      <form method="post" id="studentFeedbackForm" autocomplete="off" class="feedback-inpage-form">
+        {% csrf_token %}
+        
+        <!-- General Feedback Card -->
+        <div class="form-section-card-panel">
+          <h3 class="section-title-header">01. General Session Feedback</h3>
+          
+          <div class="question-row-card">
+            <label class="form-label-title">The training content was:</label>
+            <div class="rating-field-widget">
+              {{ feedback_form.content_rating }}
+            </div>
+          </div>
+
+          <div class="question-row-card">
+            <label class="form-label-title">The training sessions were:</label>
+            <div class="select-field-widget">
+              {{ feedback_form.session_engagement }}
+            </div>
+          </div>
+
+          <div class="question-row-card">
+            <label class="form-label-title">Would you like to attend more such sessions in the future?</label>
+            <div class="select-field-widget">
+              {{ feedback_form.future_interest }}
+            </div>
+          </div>
+
+          <div class="question-row-card">
+            <label class="form-label-title">The overall training objectives were clearly defined:</label>
+            <div class="rating-field-widget">
+              {{ feedback_form.objectives_clarity }}
+            </div>
+          </div>
+
+          <div class="question-row-card">
+            <label class="form-label-title">The topics were structured logically and progressively:</label>
+            <div class="rating-field-widget">
+              {{ feedback_form.structure_logic }}
+            </div>
+          </div>
+
+          <div class="question-row-card">
+            <label class="form-label-title">Overall satisfaction with the training session:</label>
+            <div class="rating-field-widget">
+              {{ feedback_form.satisfaction }}
+            </div>
+          </div>
+
+          <div class="question-row-card textarea-stretch-card">
+            <label class="form-label-title">Key takeaways (What did you learn? What was most useful?):</label>
+            <div class="textarea-field-widget">
+              {{ feedback_form.takeaways }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Trainer Performance Card -->
+        {% if trainer_formset %}
+          <div class="form-section-card-panel">
+            <h3 class="section-title-header">02. Trainer Performance Rating</h3>
+            
+            {{ trainer_formset.management_form }}
+            
+            <div class="trainers-grid-stack">
+              {% for form in trainer_formset.forms %}
+                {% if form.session %}
+                  <div class="inpage-trainer-card">
+                    <div class="trainer-header-details">
+                      <div class="trainer-icon-avatar">
+                        {{ form.session.trainer.user.first_name|slice:":1" }}
+                      </div>
+                      <div class="trainer-name-meta">
+                        <span class="trainer-slot-badge">Slot {{ form.session.slot_no }}</span>
+                        <h4>{{ form.session.trainer.user.get_full_name|default:form.session.trainer.user.first_name }}</h4>
+                      </div>
+                    </div>
+
+                    <div class="trainer-questions-layout">
+                      <div class="question-row-card">
+                        <label class="form-label-title">Rate the trainer based on the pace of their training:</label>
+                        <div class="rating-field-widget">
+                          {{ form.pace_rating }}
+                        </div>
+                      </div>
+
+                      <div class="question-row-card">
+                        <label class="form-label-title">The trainer was knowledgeable about the subject matter:</label>
+                        <div class="rating-field-widget">
+                          {{ form.knowledge_rating }}
+                        </div>
+                      </div>
+
+                      <div class="question-row-card">
+                        <label class="form-label-title">The trainer encouraged participation and interaction:</label>
+                        <div class="select-field-widget">
+                          {{ form.participation }}
+                        </div>
+                      </div>
+
+                      <div class="question-row-card">
+                        <label class="form-label-title">The examples and explanations provided by the trainer were:</label>
+                        <div class="select-field-widget">
+                          {{ form.examples }}
+                        </div>
+                      </div>
+
+                      <div class="question-row-card">
+                        <label class="form-label-title">The trainer handled queries and doubts effectively:</label>
+                        <div class="rating-field-widget">
+                          {{ form.queries_rating }}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                {% endif %}
+              {% empty %}
+                <p class="no-trainers-txt">No trainer sessions scheduled for this day.</p>
+              {% endfor %}
+            </div>
+          </div>
+        {% endif %}
+
+        <input type="hidden" name="day" value="{{ selected_day|date:'Y-m-d' }}">
+        
+        <!-- Form Actions -->
+        <div class="form-action-buttons">
+          <a href="{% url 'student_feedback_page' %}" class="btn-cancel-form">Cancel</a>
+          <button type="submit" class="btn-submit-form">
+            <span>Submit Session Feedback</span>
+            <svg class="submit-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+              <polyline points="12 5 19 12 12 19"></polyline>
+            </svg>
+          </button>
+        </div>
+      </form>
+    </div>
+  {% else %}
+    <!-- Pending evaluations list (Outer Design) -->
+    <div class="evaluations-outer-section">
+      <div class="section-title-row">
+        <h2>Pending Evaluations</h2>
+        {% if pending_days %}
+          <span class="pending-badge-count">{{ pending_days|length }} Pending</span>
+        {% endif %}
+      </div>
+
+      {% if pending_days %}
+        <div class="evaluations-grid">
+          {% for d in pending_days %}
+            <div class="evaluation-session-card">
+              <div class="card-top-accent"></div>
+              <div class="card-body">
+                <div class="calendar-icon-block">
+                  <span class="cal-month">{{ d|date:"M"|upper }}</span>
+                  <span class="cal-date">{{ d|date:"d" }}</span>
+                  <span class="cal-year">{{ d|date:"Y" }}</span>
+                </div>
+                <div class="session-info-block">
+                  <h3 class="session-card-title">Training Session Evaluation</h3>
+                  <p class="session-card-date">{{ d|date:"l, F d, Y" }}</p>
+                  <div class="card-status-row">
+                    <span class="status-dot-pending"></span>
+                    <span class="status-label-text">Evaluation Pending</span>
+                  </div>
+                </div>
+              </div>
+              <div class="card-footer-action">
+                <a href="?day={{ d|date:'Y-m-d' }}" class="btn-start-eval">
+                  <span>Start Evaluation</span>
+                  <svg class="btn-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="all-clear-card">
+          <div class="clear-icon-wrapper">✓</div>
+          <h2>All Caught Up!</h2>
+          <p>You have submitted feedback for all attended days. Keep up the good work!</p>
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script src="{% static 'js/student_feedback.js' %}?v=5.0" nonce="{{ request.csp_nonce }}"></script>
+<script src="{% static 'js/star_radio.js' %}?v=5.0" nonce="{{ request.csp_nonce }}"></script>
+{% endblock %}

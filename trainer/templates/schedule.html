@@ -1,0 +1,35 @@
+{% extends 'trainer_base.html' %}
+{% load static %}
+
+{% block title %}Trainer Schedule{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/schedule.css' %}?v=2.0" nonce="{{ request.csp_nonce }}">
+{% endblock %}
+
+{% block content %}
+<div class="schedule-container">
+  <h2>Trainer Schedule</h2>
+
+  <div class="table-scroll" aria-label="Trainer schedule table container">
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>College Name</th>
+          <th>Batch</th>
+          <th>Session</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="scheduleTableBody">
+        <tr><td colspan="5" class="centered-text">Loading schedule...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+  <script src="{% static 'js/schedule.js' %}" nonce="{{ request.csp_nonce }}"></script>
+{% endblock %}

@@ -1,0 +1,268 @@
+.verify-wrapper {
+  min-height: calc(100vh - 180px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+}
+
+.container.glass > .alert {
+  display: none;
+}
+
+.verify-card {
+  width: 100%;
+  max-width: 430px;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, 0.12);
+  padding: 28px 24px 24px;
+}
+
+.verify-header {
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.verify-header .logo {
+  width: 180px;
+  max-width: 80%;
+  height: auto;
+  display: block;
+  margin: 0 auto 8px;
+}
+
+.verify-header h2 {
+  margin: 0;
+  color: #008037;
+  font-size: 2rem;
+  font-weight: 600;
+}
+
+.verify-header p {
+  margin: 10px 0 0;
+  color: #55606c;
+  font-size: 0.95rem;
+  line-height: 1.45;
+}
+
+.verify-form {
+  margin-top: 8px;
+}
+
+.input-group,
+.field-group {
+  margin-bottom: 14px;
+}
+
+.input-group label,
+.field-group label {
+  display: block;
+  margin-bottom: 6px;
+  color: #23313d;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.password-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.password-wrapper input {
+  width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.verify-input {
+  width: 100%;
+  border: 1.4px solid #cfd7df;
+  border-radius: 10px;
+  padding: 11px 70px 11px 12px;
+  font-size: 0.95rem;
+  color: #1d2730;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-sizing: border-box;
+}
+
+.verify-input:focus {
+  border-color: #008037;
+  box-shadow: 0 0 0 3px rgba(0, 128, 55, 0.15);
+}
+
+.toggle-password {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  border-radius: 7px;
+  background: #e8f6ee;
+  color: #008037;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.toggle-password:hover {
+  background: #d4efdf;
+}
+
+.field-error {
+  margin-top: 6px;
+  color: #b42318;
+  font-size: 0.82rem;
+}
+
+.password-guidelines {
+  margin: 8px 0 14px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid #dce4eb;
+  background: #f8fafc;
+}
+
+.guidelines-title {
+  margin: 0 0 6px;
+  color: #314256;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.password-guidelines ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.password-guidelines li {
+  color: #6b7480;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  margin: 2px 0;
+}
+
+.password-guidelines li.valid {
+  color: #0f8f4d;
+  font-weight: 600;
+}
+
+.password-guidelines li.invalid {
+  color: #b42318;
+}
+
+.verify-btn {
+  width: 100%;
+  border: none;
+  border-radius: 10px;
+  background: #008037;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  padding: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.verify-btn:hover {
+  background: #006a2e;
+  transform: translateY(-1px);
+}
+
+.hidden-popups {
+  display: none;
+}
+
+.verify-popup-host {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.verify-popup {
+  min-width: 260px;
+  max-width: 360px;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 11px 12px;
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  opacity: 0;
+  transform: translateY(-8px);
+  transition: opacity 0.22s ease, transform 0.22s ease;
+}
+
+.verify-popup.show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.popup-success {
+  background: rgba(0, 128, 55, 0.96);
+}
+
+.popup-error {
+  background: rgba(180, 28, 38, 0.96);
+}
+
+.popup-warning {
+  background: rgba(179, 108, 8, 0.96);
+}
+
+.popup-info {
+  background: rgba(25, 84, 141, 0.96);
+}
+
+@media (max-width: 768px) {
+  .verify-wrapper {
+    min-height: auto;
+    padding: 8px;
+  }
+
+  .verify-card {
+    max-width: 100%;
+    padding: 20px 14px 18px;
+  }
+
+  .verify-header h2 {
+    font-size: 1.7rem;
+  }
+
+  .verify-popup-host {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+  }
+
+  .verify-popup {
+    min-width: 0;
+    max-width: 100%;
+  }
+}
+
+.back-link-wrapper {
+  margin-top: 18px;
+  text-align: center;
+}
+
+.back-to-login {
+  display: inline-block;
+  color: #008037;
+  font-size: 0.92rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.back-to-login:hover {
+  color: #006a2e;
+  text-decoration: underline;
+  transform: translateX(-2px);
+}

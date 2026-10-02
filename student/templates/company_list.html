@@ -1,0 +1,166 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}Placement Hub | Company Q's{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/company_prep.css' %}?v=1.2">
+<style>
+    .no-results {
+        display: none;
+        text-align: center;
+        padding: 3rem;
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        color: var(--text-secondary);
+        font-size: 1.1rem;
+        margin-top: 2rem;
+    }
+    .company-grid-new {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    .company-card-new {
+        background: #ffffff;
+        border: 1.5px solid rgba(226, 232, 240, 0.8);
+        border-radius: 20px;
+        padding: 1.5rem;
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        height: 240px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .company-card-new:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 128, 55, 0.08);
+        border-color: rgba(0, 128, 55, 0.15);
+    }
+    .company-card-new img {
+        transition: transform 0.3s ease;
+    }
+    .company-card-new:hover img {
+        transform: scale(1.04);
+    }
+    body.dark-mode .company-card-new {
+        background: #1e293b !important;
+        border-color: #334155 !important;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2) !important;
+    }
+    .assessment-btn-tpo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 44px;
+        background-color: var(--primary);
+        border: none;
+        border-radius: 30px;
+        color: #ffffff !important;
+        text-decoration: none;
+        font-size: 0.88rem;
+        font-weight: 700;
+        gap: 6px;
+        box-shadow: 0 4px 12px rgba(0, 128, 55, 0.15);
+        transition: all 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+        z-index: 2;
+        position: relative;
+    }
+    .assessment-btn-tpo:hover {
+        background-color: var(--primary-light) !important;
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(0, 128, 55, 0.3) !important;
+    }
+    .assessment-btn-tpo svg {
+        transition: transform 0.25s ease;
+    }
+    .assessment-btn-tpo:hover svg {
+        transform: translateX(4px);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="prep-header">
+    <div>
+        <h1 class="prep-title">Company Q's</h1>
+        <p class="prep-subtitle">Explore target hiring companies, review eligibility, and complete company-specific placement assessments.</p>
+    </div>
+    
+    <div class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="search-company" class="search-input" placeholder="Search targeted company..." value="{{ q }}">
+    </div>
+</div>
+
+<div class="company-grid-new" id="companies-grid">
+    {% for item in companies %}
+    <div class="company-card-new" data-name="{{ item.name|lower }}">
+        <!-- Top-Left Radial Glow -->
+        <div style="position: absolute; top: -30px; left: -30px; width: 150px; height: 150px; background: radial-gradient(circle, {% if forloop.counter|divisibleby:4 %}rgba(251, 191, 36, 0.18){% elif forloop.counter|divisibleby:3 %}rgba(244, 63, 94, 0.18){% elif forloop.counter|divisibleby:2 %}rgba(14, 165, 233, 0.18){% else %}rgba(168, 85, 247, 0.18){% endif %} 0%, rgba(255,255,255,0) 70%); pointer-events: none; z-index: 1; filter: blur(8px);"></div>
+        
+        <!-- Centered Logo Area -->
+        <div style="flex-grow: 1; display: flex; align-items: center; justify-content: center; height: 130px; position: relative; z-index: 2; margin-bottom: 1rem; padding: 10px;">
+            {% if item.logo %}
+                <img src="{{ item.logo.url }}" alt="{{ item.name }} Logo" style="max-width: 90%; max-height: 95px; object-fit: contain; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.02));">
+            {% else %}
+                <div style="width: 90px; height: 90px; border-radius: 50%; background: linear-gradient(135deg, {% if forloop.counter|divisibleby:3 %}#4f46e5, #06b6d4{% elif forloop.counter|divisibleby:2 %}#10b981, #059669{% else %}#f59e0b, #d97706{% endif %}); display: flex; align-items: center; justify-content: center; font-weight: 800; color: #ffffff; font-size: 2.2rem; box-shadow: 0 8px 18px rgba(0,0,0,0.12);">
+                    {{ item.name|slice:":1"|upper }}
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Action Button -->
+        <a href="{% url 'company_prep:company_dashboard' item.latest_paper_id %}" class="assessment-btn-tpo">
+            Take Assessment
+            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </a>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1/-1; text-align: center; padding: 3rem; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border);">
+        <p style="color: var(--text-secondary);">No targeted companies found.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div id="no-results-msg" class="no-results">
+    No companies match your search query. Try searching for another company like Google, Bosch, or TCS.
+</div>
+
+{% endblock %}
+
+{% block extra_script %}
+<script>
+    document.getElementById('search-company').addEventListener('keyup', function(e) {
+        const query = e.target.value.toLowerCase().trim();
+        const cards = document.querySelectorAll('#companies-grid .company-card-new');
+        let visibleCount = 0;
+        
+        cards.forEach(card => {
+            const name = card.getAttribute('data-name');
+            if (name.includes(query)) {
+                card.style.display = 'flex';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        const noResults = document.getElementById('no-results-msg');
+        if (visibleCount === 0) {
+            noResults.style.display = 'block';
+        } else {
+            noResults.style.display = 'none';
+        }
+    });
+</script>
+{% endblock %}

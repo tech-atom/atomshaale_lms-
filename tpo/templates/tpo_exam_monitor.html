@@ -1,0 +1,1142 @@
+{% extends "tpo_base.html" %}
+{% load static %}
+
+{% block title %}Live Exam Monitor - TPO{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" nonce="{{ request.csp_nonce }}">
+<style>
+  .live-monitor-page {
+    --primary: #008037;
+    --primary-dark: #005c27;
+    --primary-light: #e6f6ec;
+    --primary-glow: rgba(0, 128, 55, 0.12);
+    
+    --bg-card: #ffffff;
+    --bg-page: #f8fafc;
+    --border: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-muted: #64748b;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 16px -8px rgba(0, 0, 0, 0.05);
+    --shadow-lg: 0 20px 40px -15px rgba(0, 0, 0, 0.1);
+    
+    --status-active: #dbeafe;
+    --status-active-text: #1e40af;
+    --status-away: #fef3c7;
+    --status-away-text: #b45309;
+    --status-submitted: #dcfce7;
+    --status-submitted-text: #15803d;
+    --status-retake: #fae8ff;
+    --status-retake-text: #a21caf;
+    --status-notstarted: #f1f5f9;
+    --status-notstarted-text: #475569;
+
+    font-family:  'Century Gothic';
+    color: var(--text-primary);
+    background: var(--bg-page);
+    padding: 24px;
+    min-height: calc(100vh - 60px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  body.dark-mode .live-monitor-page {
+    --primary: #10b981;
+    --primary-dark: #059669;
+    --primary-light: #064e3b;
+    --primary-glow: rgba(16, 185, 129, 0.15);
+    
+    --bg-card: #1e293b;
+    --bg-page: #0f172a;
+    --border: #334155;
+    --text-primary: #f8fafc;
+    --text-muted: #94a3b8;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 16px -8px rgba(0, 0, 0, 0.3);
+    --shadow-lg: 0 20px 40px -15px rgba(0, 0, 0, 0.4);
+    
+    --status-active: #1e3a8a;
+    --status-active-text: #93c5fd;
+    --status-away: #78350f;
+    --status-away-text: #fcd34d;
+    --status-submitted: #064e3b;
+    --status-submitted-text: #34d399;
+    --status-retake: #581c87;
+    --status-retake-text: #f5d0fe;
+    --status-notstarted: #334155;
+    --status-notstarted-text: #cbd5e1;
+  }
+
+  /* Command Center Hero Block */
+  .monitor-hero {
+    background: linear-gradient(135deg, var(--primary-dark) 0%, #064e3b 100%);
+    color: #ffffff;
+    padding: 32px;
+    border-radius: 20px;
+    box-shadow: 0 10px 30px var(--primary-glow);
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .monitor-hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .hero-pulse-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .hero-subtitle {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.8);
+    text-transform: uppercase;
+  }
+
+  .hero-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 20px 0;
+    letter-spacing: -0.5px;
+  }
+
+  .select-wrapper {
+    max-width: 500px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 10px 16px;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s ease;
+  }
+
+  .select-wrapper:focus-within {
+    border-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .select-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 4px;
+  }
+
+  .monitor-select {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    color: #ffffff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .monitor-select option {
+    background: #0f172a;
+    color: #ffffff;
+  }
+
+  /* Summary Grid */
+  .monitor-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .summary-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .summary-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+  }
+
+  .summary-icon-wrapper {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+  }
+
+  /* Card Colors */
+  .card-total .summary-icon-wrapper { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+  .card-active .summary-icon-wrapper { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+  .card-submitted .summary-icon-wrapper { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+  .card-notstarted .summary-icon-wrapper { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+
+  .summary-details {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .summary-value {
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+
+  .summary-label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  /* Live Connection status */
+  .live-status-bar {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 18px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 14px;
+    color: var(--primary);
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+  }
+
+  .live-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--primary);
+    position: relative;
+  }
+
+  .live-dot::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    animation: radarPulse 1.5s infinite;
+  }
+
+  @keyframes radarPulse {
+    0% { transform: scale(0.6); opacity: 1; }
+    100% { transform: scale(1.6); opacity: 0; }
+  }
+
+  /* Filters panel */
+  .monitor-controls-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: var(--shadow-sm);
+    margin-bottom: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .filters-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .filter-select-wrapper {
+    flex: 1;
+    min-width: 180px;
+    position: relative;
+  }
+
+  .filter-select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-select:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+  }
+
+  .filter-select-wrapper::after {
+    content: '▼';
+    font-size: 9px;
+    color: var(--text-muted);
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  .search-wrapper {
+    flex: 2;
+    min-width: 250px;
+    position: relative;
+  }
+
+  .search-input {
+    width: 100%;
+    padding: 10px 14px 10px 40px;
+    border: 1px solid var(--border);
+    background: var(--bg-page);
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .search-input:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px var(--primary-glow);
+  }
+
+  .search-icon {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* Status Button Capsules */
+  .capsule-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .monitor-filter-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    border-radius: 30px;
+    background: var(--bg-card);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .monitor-filter-btn:hover {
+    background: var(--bg-page);
+    transform: translateY(-1px);
+  }
+
+  .monitor-filter-btn.active {
+    background: var(--primary);
+    border-color: var(--primary);
+    color: #ffffff;
+    box-shadow: 0 4px 12px var(--primary-glow);
+  }
+
+  .refresh-indicator {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .refresh-indicator i {
+    animation: spin 3s linear infinite;
+  }
+
+  @keyframes spin { 100% { transform: rotate(360deg); } }
+
+  /* Table design */
+  .table-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    box-shadow: var(--shadow-sm);
+    overflow: hidden;
+  }
+
+  .exam-table-wrapper {
+    overflow-x: auto;
+    max-height: 60vh;
+  }
+
+  .exam-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 950px;
+    text-align: left;
+  }
+
+  .exam-table th {
+    position: sticky;
+    top: 0;
+    background: var(--bg-card);
+    border-bottom: 2px solid var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 16px 20px;
+    letter-spacing: 0.5px;
+    z-index: 10;
+  }
+
+  .exam-table td {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s ease;
+  }
+
+  .student-row:hover {
+    background: rgba(0, 128, 55, 0.02) !important;
+  }
+  
+  body.dark-mode .student-row:hover {
+    background: rgba(16, 185, 129, 0.04) !important;
+  }
+
+  /* Status Chips */
+  .status-chip {
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .status-submitted { background: var(--status-submitted); color: var(--status-submitted-text); }
+  .status-active { background: var(--status-active); color: var(--status-active-text); }
+  .status-away { background: var(--status-away); color: var(--status-away-text); }
+  .status-retake { background: var(--status-retake); color: var(--status-retake-text); }
+  .status-not-started { background: var(--status-notstarted); color: var(--status-notstarted-text); }
+
+  /* Online / Offline badge indicator */
+  .online-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .online-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .online-indicator.online { color: #10b981; }
+  .online-indicator.online .online-dot { background: #10b981; box-shadow: 0 0 8px #10b981; }
+  
+  .online-indicator.offline { color: var(--text-muted); }
+  .online-indicator.offline .online-dot { background: #94a3b8; }
+
+  /* Horizontal Progress Bar */
+  .progress-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-width: 140px;
+  }
+
+  .progress-bar-wrapper {
+    height: 6px;
+    background: var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--primary);
+    border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+
+  .progress-text {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  /* Risk threat levels */
+  .risk-badge {
+    padding: 6px 12px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .risk-low { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+  .risk-medium { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+  .risk-high { 
+    background: rgba(239, 68, 68, 0.1); 
+    color: #ef4444; 
+    animation: borderGlow 1.5s ease-in-out infinite alternate;
+  }
+
+  @keyframes borderGlow {
+    0% { box-shadow: 0 0 2px rgba(239, 68, 68, 0.2); }
+    100% { box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+  }
+
+  /* Tab Warning Badge */
+  .tab-switch-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .tab-normal { background: var(--bg-page); color: var(--text-muted); }
+  .tab-limit-crossed { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px dashed #ef4444; }
+  
+  .warning-pulse {
+    animation: warningPulse 1s infinite alternate;
+  }
+  @keyframes warningPulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.15); }
+  }
+
+  /* Tooltip spent styling */
+  .time-spent-container {
+    position: relative;
+    display: inline-block;
+    cursor: pointer;
+  }
+
+  .time-summary-badge {
+    background: var(--bg-page);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    color: var(--text-muted);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .time-spent-tooltip {
+    visibility: hidden;
+    position: absolute;
+    bottom: 125%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #0f172a;
+    color: #f8fafc;
+    border-radius: 10px;
+    padding: 10px 14px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    min-width: 140px;
+    max-height: 180px;
+    overflow-y: auto;
+    opacity: 0;
+    transition: opacity 0.2s, visibility 0.2s;
+    font-size: 12px;
+    border: 1px solid #334155;
+  }
+  
+  .time-spent-tooltip::-webkit-scrollbar {
+    width: 4px;
+  }
+  .time-spent-tooltip::-webkit-scrollbar-thumb {
+    background: #475569;
+    border-radius: 2px;
+  }
+
+  .time-spent-container:hover .time-spent-tooltip {
+    visibility: visible;
+    opacity: 1;
+  }
+
+  .time-spent-item {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 4px 0;
+    border-bottom: 1px solid #1e293b;
+  }
+  .time-spent-item:last-child {
+    border-bottom: none;
+  }
+
+  .q-num { font-weight: 700; color: #38bdf8; }
+  .q-sec { font-weight: 600; color: #cbd5e1; }
+
+  /* Action badge */
+  .no-action-badge {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    background: var(--bg-page);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 6px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .empty-note, .error-note {
+    padding: 24px;
+    border-radius: 16px;
+    font-weight: 700;
+    text-align: center;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .empty-note {
+    background: var(--bg-card);
+    border: 1px dashed var(--border);
+    color: var(--text-muted);
+  }
+
+  .error-note {
+    background: rgba(239, 68, 68, 0.05);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+  }
+
+  @media (max-width: 900px) {
+    .monitor-summary {
+      grid-template-columns: repeat(2, minmax(140px, 1fr));
+    }
+    
+    .filters-row {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .filter-select-wrapper,
+    .search-wrapper {
+      min-width: 100%;
+    }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="live-monitor-page">
+  <!-- Command Center Header Block -->
+  <div class="monitor-hero">
+    <div class="hero-pulse-container">
+      <span class="live-dot"></span>
+      <!-- <span class="hero-subtitle">Exam Monitoring System</span> -->
+    </div>
+    <h1 class="hero-title">Live Proctoring Command Center</h1>
+    
+    <div class="select-wrapper">
+      <label for="examScheduleSelect" class="select-label"><i class="fas fa-layer-group"></i> Active Scheduled Exam</label>
+      <select id="examScheduleSelect" class="monitor-select">
+        <option value="">Select scheduled exam</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Main live content render target -->
+  <div id="liveMonitorContent" class="empty-note">
+    <i class="fas fa-circle-notch fa-spin fa-2x" style="margin-bottom: 12px; color: var(--primary);"></i>
+    <div>Initializing assigned exams list...</div>
+  </div>
+</div>
+
+<div id="monitor-api"
+     data-list-url="{% url 'tpo_exam_monitor_list' %}"
+     data-detail-url="{% url 'tpo_exam_monitor_detail' '00000000-0000-0000-0000-000000000000' %}">
+</div>
+
+<script>
+  let currentScheduleId = '';
+  let currentStudents = [];
+  let liveMonitorFilter = 'all';
+  let liveSectionFilter = '';
+  let liveCourseFilter = '';
+  let liveSearchText = '';
+
+  function escapeHtml(value) {
+    return String(value ?? '')
+      .replaceAll('&', '&amp;')
+      .replaceAll('<', '&lt;')
+      .replaceAll('>', '&gt;')
+      .replaceAll('"', '&quot;')
+      .replaceAll("'", '&#39;');
+  }
+
+  function getStatusMeta(statusKey, isOnline) {
+    const key = String(statusKey || 'not_started').toLowerCase();
+    if (key === 'submitted') {
+      return { 
+        label: 'Submitted', 
+        className: 'status-chip status-submitted', 
+        icon: '<i class="fas fa-check-circle"></i>' 
+      };
+    }
+    if (key === 'active') {
+      if (isOnline) {
+        return { 
+          label: 'Active (Online)', 
+          className: 'status-chip status-active', 
+          icon: '<i class="fas fa-spinner fa-spin"></i>' 
+        };
+      } else {
+        return { 
+          label: 'Active (Away)', 
+          className: 'status-chip status-away', 
+          icon: '<i class="fas fa-moon"></i>' 
+        };
+      }
+    }
+    if (key === 'retake_allowed' || key === 'retake') {
+      return { 
+        label: 'Retake Allowed', 
+        className: 'status-chip status-retake', 
+        icon: '<i class="fas fa-undo-alt"></i>' 
+      };
+    }
+    if (key === 'not_submitted') {
+      return { 
+        label: 'Not Submitted', 
+        className: 'status-chip status-not-started', 
+        icon: '<i class="fas fa-times-circle"></i>' 
+      };
+    }
+    return { 
+      label: 'Not Started', 
+      className: 'status-chip status-not-started', 
+      icon: '<i class="fas fa-hourglass-start"></i>' 
+    };
+  }
+
+  function formatTimeSpent(timeSpentMap) {
+    if (!timeSpentMap || typeof timeSpentMap !== 'object') return '<span class="text-muted">-</span>';
+    const entries = Object.entries(timeSpentMap);
+    if (!entries.length) return '<span class="text-muted">-</span>';
+    
+    // Sort keys numerically
+    entries.sort((a, b) => parseInt(a[0]) - parseInt(b[0]));
+    
+    const items = entries.map(([q, sec]) => `
+      <div class="time-spent-item">
+        <span class="q-num">Q${escapeHtml(q)}</span>
+        <span class="q-sec">${escapeHtml(sec)}s</span>
+      </div>
+    `).join('');
+    
+    return `
+      <div class="time-spent-container">
+        <span class="time-summary-badge"><i class="far fa-clock"></i> ${entries.length} Qs</span>
+        <div class="time-spent-tooltip">${items}</div>
+      </div>
+    `;
+  }
+
+  function renderLiveTable() {
+    const container = document.getElementById('liveMonitorContent');
+
+    if (!currentScheduleId) {
+      container.innerHTML = '<div class="empty-note"><i class="fas fa-mouse-pointer fa-2x" style="margin-bottom: 12px;"></i><div>Select an exam to start live monitoring.</div></div>';
+      return;
+    }
+
+    const all = Array.isArray(currentStudents) ? currentStudents : [];
+    const totalStudents = all.length;
+    const activeStudents = all.filter(s => s.status_key === 'active').length;
+    const submittedStudents = all.filter(s => s.status_key === 'submitted').length;
+    const notStartedStudents = all.filter(s => s.status_key === 'not_started').length;
+
+    const sections = [...new Set(all.map(s => s.section || '').filter(Boolean))];
+    const courses = [...new Set(all.map(s => s.course || '').filter(Boolean))];
+
+    let filtered = all.filter(student => {
+      const status = String(student.status_key || '').toLowerCase();
+      if (liveMonitorFilter !== 'all') {
+        if (liveMonitorFilter === 'retake') {
+          if (!(status === 'retake_allowed' || status === 'retake')) return false;
+        } else if (liveMonitorFilter === 'not_started') {
+          if (!(status === 'not_started' || status === 'not_submitted')) return false;
+        } else if (status !== liveMonitorFilter) {
+          return false;
+        }
+      }
+
+      if (liveSectionFilter && (student.section || '') !== liveSectionFilter) return false;
+      if (liveCourseFilter && (student.course || '') !== liveCourseFilter) return false;
+
+      const blob = `${student.usn || ''} ${student.name || ''}`.toLowerCase();
+      if (liveSearchText && !blob.includes(liveSearchText)) return false;
+
+      return true;
+    });
+
+    const rows = filtered.map(student => {
+      const statusMeta = getStatusMeta(student.status_key, student.is_online);
+      const rawStatus = String(student.status_key || '').replace(/\s+/g, '-');
+      const totalQuestions = Number(student.total_questions || 0);
+      const currentQuestion = Number(student.current_question || 0);
+      
+      // Dynamic Progress Display
+      const progressPercent = totalQuestions > 0 ? Math.round((currentQuestion / totalQuestions) * 100) : 0;
+      const progressDisplay = totalQuestions > 0 
+        ? `
+          <div class="progress-container">
+            <div class="progress-bar-wrapper">
+              <div class="progress-bar-fill" style="width: ${progressPercent}%"></div>
+            </div>
+            <span class="progress-text">Q${currentQuestion} / ${totalQuestions} (${progressPercent}%)</span>
+          </div>
+        `
+        : '<span class="text-muted">-</span>';
+      
+      // Online Connection Badge Display
+      let onlineBadge = '';
+      if (student.status_key === 'active') {
+        onlineBadge = student.is_online 
+          ? '<div class="online-indicator online"><span class="online-dot animate-pulse"></span>Online</div>'
+          : '<div class="online-indicator offline"><span class="online-dot"></span>Away</div>';
+      } else {
+        onlineBadge = '<span class="text-muted">-</span>';
+      }
+
+      // Tab Switch Warnings
+      const tabWarningClass = student.tab_limit_crossed ? 'tab-limit-crossed' : 'tab-normal';
+      const tabIcon = student.tab_limit_crossed 
+        ? '<i class="fas fa-exclamation-triangle warning-pulse"></i>' 
+        : '<i class="fas fa-desktop"></i>';
+      const tabHtml = `
+        <span class="tab-switch-badge ${tabWarningClass}">
+          ${tabIcon} ${student.tab_switch_count ?? 0} / ${student.tab_switch_limit}
+        </span>
+      `;
+
+      // Risk score badges
+      const riskScore = Number(student.risk_score || 0);
+      let riskClass = 'risk-low';
+      let riskText = 'Low';
+      let riskIcon = '<i class="fas fa-shield-alt"></i>';
+      if (riskScore > 60) {
+        riskClass = 'risk-high';
+        riskText = 'High';
+        riskIcon = '<i class="fas fa-exclamation-triangle"></i>';
+      } else if (riskScore > 30) {
+        riskClass = 'risk-medium';
+        riskText = 'Medium';
+        riskIcon = '<i class="fas fa-exclamation-circle"></i>';
+      }
+      const riskHtml = `
+        <span class="risk-badge ${riskClass}">
+          ${riskIcon} ${riskScore}% (${riskText})
+        </span>
+      `;
+
+      // Action Badge (Read Only / Monitored for TPO role)
+      const actionHtml = `
+        <span class="no-action-badge">
+          <i class="fas fa-lock"></i> Monitored
+        </span>
+      `;
+
+      return `
+        <tr class="student-row ${escapeHtml(rawStatus)}">
+          <td>${escapeHtml(student.usn || '-')}</td>
+          <td>${escapeHtml(student.name || '-')}</td>
+          <td>
+            <span class="${statusMeta.className}">
+              ${statusMeta.icon} ${escapeHtml(statusMeta.label)}
+            </span>
+          </td>
+          <td>${onlineBadge}</td>
+          <td>${progressDisplay}</td>
+          <td>${tabHtml}</td>
+          <td>${formatTimeSpent(student.time_spent)}</td>
+          <td>${riskHtml}</td>
+          <td>${actionHtml}</td>
+        </tr>
+      `;
+    }).join('');
+
+    container.innerHTML = `
+      <!-- Stats Cards Block -->
+      <div class="monitor-summary">
+        <div class="summary-card card-total">
+          <div class="summary-icon-wrapper"><i class="fas fa-users"></i></div>
+          <div class="summary-details">
+            <span class="summary-value">${totalStudents}</span>
+            <span class="summary-label">Total Candidates</span>
+          </div>
+        </div>
+        <div class="summary-card card-active">
+          <div class="summary-icon-wrapper"><i class="fas fa-running"></i></div>
+          <div class="summary-details">
+            <span class="summary-value">${activeStudents}</span>
+            <span class="summary-label">Active Attempting</span>
+          </div>
+        </div>
+        <div class="summary-card card-submitted">
+          <div class="summary-icon-wrapper"><i class="fas fa-clipboard-check"></i></div>
+          <div class="summary-details">
+            <span class="summary-value">${submittedStudents}</span>
+            <span class="summary-label">Submitted</span>
+          </div>
+        </div>
+        <div class="summary-card card-notstarted">
+          <div class="summary-icon-wrapper"><i class="fas fa-clock"></i></div>
+          <div class="summary-details">
+            <span class="summary-value">${notStartedStudents}</span>
+            <span class="summary-label">Not Started</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Filters & Control center card -->
+      <div class="monitor-controls-card">
+        <div class="filters-row">
+          <div class="filter-select-wrapper">
+            <select id="sectionFilter" class="filter-select">
+              <option value="">All Sections</option>
+              ${sections.map(s => `<option value="${escapeHtml(s)}" ${liveSectionFilter === s ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('')}
+            </select>
+          </div>
+
+          <div class="filter-select-wrapper">
+            <select id="courseFilter" class="filter-select">
+              <option value="">All Courses</option>
+              ${courses.map(c => `<option value="${escapeHtml(c)}" ${liveCourseFilter === c ? 'selected' : ''}>${escapeHtml(c)}</option>`).join('')}
+            </select>
+          </div>
+
+          <div class="search-wrapper">
+            <i class="fas fa-search search-icon"></i>
+            <input type="search" id="studentSearch" class="search-input" placeholder="Search by USN or Student Name..." value="${escapeHtml(liveSearchText)}">
+          </div>
+        </div>
+
+        <div class="filters-row" style="margin-top: 4px;">
+          <div class="capsule-group">
+            <button class="monitor-filter-btn ${liveMonitorFilter === 'all' ? 'active' : ''}" data-filter="all" type="button">
+              <i class="fas fa-globe"></i> All Candidates
+            </button>
+            <button class="monitor-filter-btn ${liveMonitorFilter === 'active' ? 'active' : ''}" data-filter="active" type="button">
+              <i class="fas fa-laptop-code"></i> Active
+            </button>
+            <button class="monitor-filter-btn ${liveMonitorFilter === 'submitted' ? 'active' : ''}" data-filter="submitted" type="button">
+              <i class="fas fa-check-circle"></i> Submitted
+            </button>
+            <button class="monitor-filter-btn ${liveMonitorFilter === 'not_started' ? 'active' : ''}" data-filter="not_started" type="button">
+              <i class="fas fa-hourglass-start"></i> Not Started
+            </button>
+            <button class="monitor-filter-btn ${liveMonitorFilter === 'retake' ? 'active' : ''}" data-filter="retake" type="button">
+              <i class="fas fa-undo-alt"></i> Retake Allowed
+            </button>
+          </div>
+
+          <button id="manualRefreshBtn" class="monitor-filter-btn" type="button" style="margin-left: auto;">
+            <i class="fas fa-sync-alt"></i> Refresh Data
+          </button>
+        </div>
+      </div>
+
+      <!-- Realtime Monitoring Table Card -->
+      <div class="table-card">
+        <div class="exam-table-wrapper">
+          <table class="exam-table">
+            <thead>
+              <tr>
+                <th>USN</th>
+                <th>Candidate Name</th>
+                <th>Exam Status</th>
+                <th>Connection</th>
+                <th>Progress Status</th>
+                <th>Tab Switches</th>
+                <th>Time Spent</th>
+                <th>Risk Profile</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rows || '<tr><td colspan="9" class="empty-note"><i class="fas fa-search-minus fa-2x" style="margin-bottom: 12px;"></i><div>No candidates matched the selected filters.</div></td></tr>'}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+
+    const sectionFilter = container.querySelector('#sectionFilter');
+    if (sectionFilter) {
+      sectionFilter.addEventListener('change', () => {
+        liveSectionFilter = sectionFilter.value || '';
+        renderLiveTable();
+      });
+    }
+
+    const courseFilter = container.querySelector('#courseFilter');
+    if (courseFilter) {
+      courseFilter.addEventListener('change', () => {
+        liveCourseFilter = courseFilter.value || '';
+        renderLiveTable();
+      });
+    }
+
+    const studentSearch = container.querySelector('#studentSearch');
+    if (studentSearch) {
+      studentSearch.addEventListener('input', () => {
+        liveSearchText = (studentSearch.value || '').toLowerCase().trim();
+        renderLiveTable();
+      });
+    }
+
+    container.querySelectorAll('.monitor-filter-btn').forEach(btn => {
+      btn.addEventListener('click', function () {
+        const next = this.dataset.filter || 'all';
+        if (next === liveMonitorFilter) return;
+        liveMonitorFilter = next;
+        renderLiveTable();
+      });
+    });
+
+    const manualRefreshBtn = container.querySelector('#manualRefreshBtn');
+    if (manualRefreshBtn) {
+      manualRefreshBtn.addEventListener('click', async () => {
+        const icon = manualRefreshBtn.querySelector('i');
+        if (icon) icon.classList.add('fa-spin');
+        manualRefreshBtn.disabled = true;
+        try {
+          await loadExamDetail(currentScheduleId);
+        } catch (err) {
+          console.error(err);
+        } finally {
+          if (icon) icon.classList.remove('fa-spin');
+          manualRefreshBtn.disabled = false;
+        }
+      });
+    }
+  }
+
+  async function loadExamDetail(scheduleId) {
+    const api = document.getElementById('monitor-api');
+    const detailUrl = api.dataset.detailUrl.replace('00000000-0000-0000-0000-000000000000', scheduleId);
+
+    const response = await fetch(detailUrl, { credentials: 'same-origin' });
+    const data = await response.json();
+    if (data.status !== 'success') {
+      throw new Error(data.message || 'Unable to load monitoring data');
+    }
+
+    currentStudents = Array.isArray(data.students) ? data.students : [];
+    renderLiveTable();
+  }
+
+  async function loadExamList() {
+    const container = document.getElementById('liveMonitorContent');
+    const api = document.getElementById('monitor-api');
+    const select = document.getElementById('examScheduleSelect');
+
+    const response = await fetch(api.dataset.listUrl, { credentials: 'same-origin' });
+    const data = await response.json();
+
+    if (data.status !== 'success') {
+      throw new Error(data.message || 'Unable to load assigned exams');
+    }
+
+    const exams = Array.isArray(data.exams) ? data.exams : [];
+    if (!exams.length) {
+      select.innerHTML = '<option value="">No assigned exams</option>';
+      container.innerHTML = '<div class="empty-note"><i class="fas fa-calendar-times fa-2x" style="margin-bottom: 12px;"></i><div>No exams assigned for monitoring.</div></div>';
+      return;
+    }
+
+    select.innerHTML = '<option value="">Select scheduled exam</option>' + exams.map(exam => {
+      const label = `${exam.exam_title} | ${exam.college_name} | ${exam.course_name} | ${exam.start_datetime}`;
+      return `<option value="${escapeHtml(exam.id)}">${escapeHtml(label)}</option>`;
+    }).join('');
+
+    if (!currentScheduleId) {
+      currentScheduleId = exams[0].id;
+      select.value = currentScheduleId;
+    }
+
+    await loadExamDetail(currentScheduleId);
+  }
+
+  document.addEventListener('DOMContentLoaded', async () => {
+    const select = document.getElementById('examScheduleSelect');
+
+    select.addEventListener('change', async function () {
+      currentScheduleId = this.value || '';
+      liveMonitorFilter = 'all';
+      liveSectionFilter = '';
+      liveCourseFilter = '';
+      liveSearchText = '';
+
+      if (!currentScheduleId) {
+        currentStudents = [];
+        renderLiveTable();
+        return;
+      }
+
+      try {
+        await loadExamDetail(currentScheduleId);
+      } catch (err) {
+        document.getElementById('liveMonitorContent').innerHTML = `<div class="error-note"><i class="fas fa-exclamation-triangle fa-2x" style="margin-bottom: 12px;"></i><div>${escapeHtml(err.message)}</div></div>`;
+      }
+    });
+
+    try {
+      await loadExamList();
+    } catch (err) {
+      document.getElementById('liveMonitorContent').innerHTML = `<div class="error-note"><i class="fas fa-exclamation-triangle fa-2x" style="margin-bottom: 12px;"></i><div>${escapeHtml(err.message)}</div></div>`;
+    }
+  });
+</script>
+{% endblock %}

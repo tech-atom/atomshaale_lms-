@@ -1,0 +1,138 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}Assessment: {{ company.name }} - {{ test_type }} Prep{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/exam.css' %}?v=3.8" nonce="{{ request.csp_nonce }}">
+<link rel="stylesheet" href="{% static 'css/exam_compiler.css' %}?v=2.7" nonce="{{ request.csp_nonce }}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<style nonce="{{ request.csp_nonce }}">
+  :root {
+    --primary-color: #004d20;
+    --secondary-color: #008037;
+  }
+  .assessment-shell {
+    max-width: 1200px;
+    margin: 2rem auto;
+    padding: 0 1rem;
+  }
+  .portal-header-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    border: 1.5px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .portal-header-btn:hover {
+    background: var(--primary-color);
+    color: white;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- API URLs for exam.js -->
+<div id="exam-api-urls" 
+  data-current-user="student_{{ request.user.id }}" 
+  data-get-exam="{% url 'company_prep:api_get_test_meta' company.id test_type %}"
+  data-get-questions="{% url 'company_prep:api_get_test_questions' company.id test_type %}"
+  data-live-update="{% url 'company_prep:api_live_update' company.id test_type %}"
+  data-submit="{% url 'company_prep:api_submit' company.id test_type %}"
+  data-performance="{% url 'company_prep:test_result_page' company.id test_type %}">
+</div>
+
+<section class="assessment-shell">
+
+
+  <!-- Loader -->
+  <div id="exam-loader" class="assessment-loader" aria-live="polite">Loading your assessment environment...</div>
+
+  <!-- Exam Metadata details (Populated dynamically) -->
+  <div id="exam-details-table" class="exam-details-table" hidden>
+    <div class="desktop-exam-table-view">
+      <table>
+        <thead>
+          <tr>
+            <th>Title</th>
+            <th>Duration (min)</th>
+            <th>Total Marks</th>
+            <th>Negative Mark</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="exam-table-body"></tbody>
+      </table>
+    </div>
+    
+    <div class="mobile-exam-card-view" id="exam-mobile-card"></div>
+    <p class="hint" style="text-align: center; margin-top: 16px; color: #64748b; font-size: 0.85rem;">
+      Click "Take Exam" to continue to the consent guidelines.
+    </p>
+  </div>
+
+  <!-- Guidelines Consent screen -->
+  <div id="declaration" class="exam-declaration" hidden>
+    <div class="declaration-card">
+      <label>
+        <strong style="font-size: 1.1rem; color: var(--primary-color); display: block; margin-bottom: 12px;">
+          Important Instructions Before You Begin
+        </strong>
+        <div>
+          <ul style="padding-left: 20px; line-height: 1.7; margin-bottom: 20px;">
+            <li>Read all questions carefully before starting.</li>
+            <li>Use a laptop/desktop with a stable internet connection.</li>
+            <li>Do not refresh, close, or switch browser tabs during the exam.</li>
+            <li>Stay in full-screen mode throughout the exam.</li>
+            <li>Copying, pasting, tab switching, and using external devices are strictly prohibited.</li>
+            <li>The exam will be auto-submitted when the timer expires.</li>
+            <li>Click Submit only after completing all questions.</li>
+          </ul>
+          
+          <div class="declaration-consent" style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+            <input type="checkbox" id="agreeDeclaration" style="margin-top: 4px; width: 18px; height: 18px; cursor: pointer;" aria-label="I agree to follow the exam rules" />
+            <p style="margin: 0; font-size: 0.9rem; line-height: 1.4; color: #1e293b;">
+              <strong>I agree to follow the exam rules and understand that any violation may lead to penalties.</strong>
+            </p>
+          </div>
+        </div>
+      </label>
+    </div>
+  </div>
+
+  <!-- Start Exam trigger -->
+  <button id="startButton" hidden>Start Exam</button>
+
+  <!-- Dynamic Exam Taking Workspace (Populated by exam.js) -->
+  <div id="examArea" hidden>
+    <div class="exam-area-head">
+      <h3 id="exam-title" style="color: var(--primary-color); font-weight: 700;"></h3>
+      <div class="exam-head-meta">
+        <p id="question-progress" class="question-progress"></p>
+        <p id="tab-switch-counter" class="tab-switch-counter" hidden></p>
+        <p class="timer-line">
+          <i class="far fa-clock"></i> <strong>Time Left:</strong> 
+          <span id="timer" class="timer green" style="font-family: monospace; font-weight: 700; font-size: 1.15rem;">00:00</span>
+        </p>
+      </div>
+    </div>
+    <div class="exam-layout">
+      <div class="question-panel">
+        <form id="exam-form" method="post" autocomplete="off">{% csrf_token %}</form>
+      </div>
+      <aside id="question-side-panel" class="palette-panel"></aside>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block extra_script %}
+<script src="{% static 'js/exam_compiler.js' %}?v=2.10" nonce="{{ request.csp_nonce }}"></script>
+<script src="{% static 'js/exam.js' %}?v=3.8" nonce="{{ request.csp_nonce }}"></script>
+{% endblock %}

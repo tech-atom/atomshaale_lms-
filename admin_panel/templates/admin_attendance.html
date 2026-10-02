@@ -1,0 +1,324 @@
+{% extends "admin_base.html" %}
+{% load static %}
+
+{% block title %}Attendance Management{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_attendence.css' %}?v=4.0">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<div class="attendance-container animate-fade-in">
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div class="header-titles">
+            <h1 class="page-title">Attendance Dashboard</h1>
+            <p class="page-subtitle">Track, filter, and analyze student training session attendance in real-time.</p>
+        </div>
+        <button id="download-btn" class="download-button" aria-label="Export data to CSV">
+            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>
+            </svg>
+            <span>Export CSV</span>
+        </button>
+    </div>
+
+    <!-- Filters Panel -->
+    <div class="filter-card">
+        <h3 class="panel-title">
+            <svg class="panel-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+            </svg>
+            Filter Options
+        </h3>
+        <div class="filters-grid">
+            <div class="filter-group">
+                <label>College</label>
+                <div class="multiselect-container" id="collegeSelectContainer">
+                    <div class="multiselect-trigger" tabindex="0">
+                        <span class="multiselect-badge-text">All Colleges</span>
+                        <span class="multiselect-arrow">
+                            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        </span>
+                    </div>
+                    <div class="multiselect-dropdown">
+                        <div class="multiselect-search-wrapper">
+                            <input type="text" class="multiselect-search" placeholder="Search colleges...">
+                        </div>
+                        <div class="multiselect-actions">
+                            <button type="button" class="multiselect-action-btn select-all">Select All</button>
+                            <button type="button" class="multiselect-action-btn clear-all">Clear</button>
+                        </div>
+                        <div class="multiselect-options" id="collegeOptions"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>Course</label>
+                <div class="multiselect-container" id="courseSelectContainer">
+                    <div class="multiselect-trigger" tabindex="0">
+                        <span class="multiselect-badge-text">All Courses</span>
+                        <span class="multiselect-arrow">
+                            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        </span>
+                    </div>
+                    <div class="multiselect-dropdown">
+                        <div class="multiselect-search-wrapper">
+                            <input type="text" class="multiselect-search" placeholder="Search courses...">
+                        </div>
+                        <div class="multiselect-actions">
+                            <button type="button" class="multiselect-action-btn select-all">Select All</button>
+                            <button type="button" class="multiselect-action-btn clear-all">Clear</button>
+                        </div>
+                        <div class="multiselect-options" id="courseOptions"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>Year</label>
+                <div class="multiselect-container" id="yearSelectContainer">
+                    <div class="multiselect-trigger" tabindex="0">
+                        <span class="multiselect-badge-text">All Years</span>
+                        <span class="multiselect-arrow">
+                            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        </span>
+                    </div>
+                    <div class="multiselect-dropdown">
+                        <div class="multiselect-actions">
+                            <button type="button" class="multiselect-action-btn select-all">Select All</button>
+                            <button type="button" class="multiselect-action-btn clear-all">Clear</button>
+                        </div>
+                        <div class="multiselect-options" id="yearOptions"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>Semester</label>
+                <div class="multiselect-container" id="semesterSelectContainer">
+                    <div class="multiselect-trigger" tabindex="0">
+                        <span class="multiselect-badge-text">All Semesters</span>
+                        <span class="multiselect-arrow">
+                            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        </span>
+                    </div>
+                    <div class="multiselect-dropdown">
+                        <div class="multiselect-actions">
+                            <button type="button" class="multiselect-action-btn select-all">Select All</button>
+                            <button type="button" class="multiselect-action-btn clear-all">Clear</button>
+                        </div>
+                        <div class="multiselect-options" id="semesterOptions"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label>Section</label>
+                <div class="multiselect-container" id="sectionSelectContainer">
+                    <div class="multiselect-trigger" tabindex="0">
+                        <span class="multiselect-badge-text">All Sections</span>
+                        <span class="multiselect-arrow">
+                            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                        </span>
+                    </div>
+                    <div class="multiselect-dropdown">
+                        <div class="multiselect-actions">
+                            <button type="button" class="multiselect-action-btn select-all">Select All</button>
+                            <button type="button" class="multiselect-action-btn clear-all">Clear</button>
+                        </div>
+                        <div class="multiselect-options" id="sectionOptions"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="filter-group">
+                <label for="start-date">Start Date</label>
+                <input type="date" id="start-date">
+            </div>
+            <div class="filter-group">
+                <label for="end-date">End Date</label>
+                <input type="date" id="end-date">
+            </div>
+        </div>
+        <div class="filter-actions">
+            <button id="filter-btn" class="apply-button">
+                <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Apply Filters
+            </button>
+        </div>
+    </div>
+
+    <!-- Dashboard Tabs -->
+    <div class="tabs-container">
+        <div class="tabs-header">
+            <button class="tab-trigger active" data-tab="insights">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="20" x2="18" y2="10"/>
+                    <line x1="12" y1="20" x2="12" y2="4"/>
+                    <line x1="6" y1="20" x2="6" y2="14"/>
+                </svg>
+                Insights & Summary
+            </button>
+            <button class="tab-trigger" data-tab="detailed">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="8" y1="6" x2="21" y2="6"/>
+                    <line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                    <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                Detailed Records Log
+            </button>
+            <button class="tab-trigger" data-tab="analytics">
+                <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+                Per-Student Analytics
+            </button>
+        </div>
+
+        <div class="tabs-content">
+            <!-- TAB 1: Insights -->
+            <div id="tab-insights" class="tab-panel active">
+                <div class="kpi-grid">
+                    <div class="kpi-card total-records-card">
+                        <div class="kpi-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                <polyline points="14 2 14 8 20 8"/>
+                                <line x1="16" y1="13" x2="8" y2="13"/>
+                                <line x1="16" y1="17" x2="8" y2="17"/>
+                                <polyline points="10 9 9 9 8 9"/>
+                            </svg>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-title">Total Records</span>
+                            <span class="kpi-value" id="kpi-total">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card present-card">
+                        <div class="kpi-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+                                <polyline points="22 4 12 14.01 9 11.01"/>
+                            </svg>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-title">Present Days</span>
+                            <span class="kpi-value" id="kpi-present">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card absent-card">
+                        <div class="kpi-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <line x1="15" y1="9" x2="9" y2="15"/>
+                                <line x1="9" y1="9" x2="15" y2="15"/>
+                            </svg>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-title">Absent Days</span>
+                            <span class="kpi-value" id="kpi-absent">0</span>
+                        </div>
+                    </div>
+                    <div class="kpi-card performance-card">
+                        <div class="kpi-icon-wrap">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                        </div>
+                        <div class="kpi-details">
+                            <span class="kpi-title">Attendance Rate</span>
+                            <span class="kpi-value" id="kpi-percentage">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="charts-row">
+                    <div class="chart-container">
+                        <h3>Overall Attendance Ratio</h3>
+                        <div class="chart-canvas-wrap pie-wrap">
+                            <canvas id="pieChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Student Attendance Range Distribution</h3>
+                        <div class="chart-canvas-wrap">
+                            <canvas id="barChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: Detailed Log -->
+            <div id="tab-detailed" class="tab-panel">
+                <div class="table-toolbar">
+                    <div class="search-wrap">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" id="detailed-search" placeholder="Search by name, USN, college...">
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="attendance-table">
+                        <thead>
+                            <tr>
+                                <th>USN</th>
+                                <th>Name</th>
+                                <th>College</th>
+                                <th>Course</th>
+                                <th>Year</th>
+                                <th>Semester</th>
+                                <th>Section</th>
+                                <th>Date</th>
+                                <th>Slot</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: Per-Student Summary -->
+            <div id="tab-analytics" class="tab-panel">
+                <div class="table-toolbar">
+                    <div class="search-wrap">
+                        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" id="student-search" placeholder="Search by name or USN...">
+                    </div>
+                </div>
+                <div class="table-wrapper">
+                    <table id="student-summary-table">
+                        <thead>
+                            <tr>
+                                <th>USN</th>
+                                <th>Name</th>
+                                <th>Present count</th>
+                                <th>Absent count</th>
+                                <th>Overall Rate</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/admin_attendance.js' %}?v=4.0" defer></script>
+{% endblock %}

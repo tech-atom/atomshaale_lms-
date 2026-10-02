@@ -1,0 +1,156 @@
+/* Global responsive hardening shared across LMS dashboards */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+img,
+video,
+iframe {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Shared data-table overflow handling across dashboards */
+.main-content .table-container,
+.main-content .table-scroll,
+.main-content .report-table {
+  max-width: 100%;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.main-content .table-container table,
+.main-content .table-scroll table,
+.main-content .report-table table {
+  min-width: max-content;
+}
+
+.mobile-nav-toggle {
+  display: none;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1300;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  background: #ffffff;
+  color: #111827;
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.mobile-nav-toggle:focus-visible {
+  outline: 2px solid #1d4ed8;
+  outline-offset: 2px;
+}
+
+.sidebar-backdrop {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 1190;
+  background: rgba(0, 0, 0, 0.36);
+}
+
+@media (max-width: 991px) {
+  .mobile-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .logo-wrapper {
+    height: 56px !important;
+    padding-left: 56px !important;
+    justify-content: flex-start !important;
+  }
+
+  .logo-wrapper img {
+    height: 44px !important;
+    max-height: 44px;
+    width: auto;
+  }
+
+  .sidebar {
+    top: 56px !important;
+    height: calc(100vh - 56px) !important;
+    width: min(82vw, 280px) !important;
+    transform: translateX(-105%) !important;
+    transition: transform 0.24s ease;
+    z-index: 1200 !important;
+  }
+
+  /* Mobile fallback: keep menu entries readable when sidebar is open on touch devices. */
+  .sidebar ul li {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  body.sidebar-open .sidebar .link-text {
+    display: inline !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  body.sidebar-open .sidebar {
+    transform: translateX(0) !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  }
+
+  /* Ensure nav entries are visible on touch devices.
+     Some page CSS hides items until :hover, which is unreliable on phones. */
+  body.sidebar-open .sidebar ul li {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  body.sidebar-open .sidebar a,
+  body.sidebar-open .sidebar .icon,
+  body.sidebar-open .sidebar .link-text {
+    opacity: 1 !important;
+    visibility: visible !important;
+  }
+
+  body.sidebar-open .sidebar .link-text {
+    display: inline !important;
+    opacity: 1 !important;
+  }
+
+  body.sidebar-open .sidebar::after {
+    display: none !important;
+  }
+
+  body.sidebar-open .sidebar-backdrop {
+    display: block;
+  }
+
+  .main-content {
+    margin-left: 0 !important;
+    margin-top: 68px !important;
+    padding: 14px !important;
+  }
+
+  .user-info {
+    top: 9px !important;
+    right: 10px !important;
+    max-width: calc(100vw - 64px);
+    padding: 8px 10px !important;
+  }
+
+  .user-info .username {
+    font-size: 0.9rem !important;
+    margin-right: 4px !important;
+  }
+
+  .main-content table {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+}

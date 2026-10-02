@@ -1,0 +1,180 @@
+.schedule-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 30px;
+  font-family: 'Century Gothic';
+}
+
+.schedule-container h2 {
+  font-size: 26px;
+  text-align: center;
+  color: #008037;
+  margin-bottom: 25px;
+}
+
+.schedule-container table {
+  width: 100%;
+  min-width: 700px;
+  border-collapse: collapse;
+  font-size: 16px;
+}
+
+.table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.schedule-container th,
+.schedule-container td {
+  border: 1px solid #ddd;
+  padding: 10px;
+  text-align: left;
+}
+
+.schedule-container th {
+  background-color: #008037;
+  color: white;
+}
+
+.schedule-container tbody tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+/* schedule.css */
+.schedule-container {
+  padding: 20px;
+}
+
+.filter-toggle {
+  margin-bottom: 15px;
+}
+
+.centered-text {
+  text-align: center;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+thead tr {
+  background-color: #f5f5f5;
+}
+
+th,
+td {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+td {
+  vertical-align: middle;
+}
+
+/* ---------- Tablet Breakpoint ---------- */
+@media only screen and (max-width: 768px) {
+  .schedule-container {
+    padding: 15px;
+  }
+
+  .schedule-container h2 {
+    font-size: 20px;
+  }
+
+  .schedule-container table {
+    font-size: 14px;
+    min-width: 680px;
+  }
+
+  .schedule-container th,
+  .schedule-container td {
+    white-space: nowrap;
+    padding: 9px;
+  }
+}
+
+/* ---------- 📱 Enhanced Mobile Version (≤480px) ---------- */
+@media only screen and (max-width: 480px) {
+  body {
+    font-size: 14px;
+  }
+
+  .schedule-container {
+    padding: 15px 10px;
+    margin: 0 10px;
+  }
+
+  .schedule-container h2 {
+    font-size: 1.3rem;
+    line-height: 1.4;
+    margin-bottom: 20px;
+  }
+
+  .filter-toggle {
+    margin-bottom: 10px;
+  }
+
+  .schedule-container table {
+    font-size: 13px;
+    min-width: 640px;
+  }
+
+  .schedule-container th,
+  .schedule-container td {
+    white-space: nowrap;
+    padding: 8px;
+  }
+
+  /* Adjust button-like elements if present */
+  button,
+  .filter-toggle {
+    width: 100%;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 6px;
+  }
+
+  /* Center text helper */
+  .centered-text {
+    text-align: center;
+    font-size: 14px;
+  }
+}
+
+body.dark-mode {
+  background-color: #080f0b;
+  color: #f3f4f6;
+}
+
+body.dark-mode .main-content {
+  background: #080f0b !important;
+}
+
+body.dark-mode .schedule-container {
+  background: #111c15;
+  border: 1px solid #1b2e22;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+}
+
+body.dark-mode .schedule-container h2 {
+  color: #008037;
+}
+
+body.dark-mode .schedule-container th {
+  background-color: #1b2e22;
+  color: #f3f4f6;
+  border-color: #1b2e22;
+}
+
+body.dark-mode .schedule-container td {
+  border-color: #1b2e22;
+  background-color: #111c15;
+  color: #f3f4f6;
+}
+
+body.dark-mode .schedule-container tbody tr:nth-child(even) td {
+  background-color: #0d1610;
+}

@@ -1,0 +1,71 @@
+{% extends 'student_base.html' %}
+{% load static %}
+
+{% block title %}Practice Tests{% endblock %}
+
+{% block extra_head %}
+<div id="practice-api-urls"
+     data-current-user="{{ request.user.id }}"
+     data-get-domains="{% url 'student_get_domain' %}"
+     data-get-practice-tests="{% url 'student_practice_tests' %}"
+     data-get-past-attempts="{% url 'past_practice_attempts' %}"
+     data-get-practice-questions="{% url 'practice_questions' %}"
+     data-submit-practice-test="/practicetest/practice/submit/TEST_ID/"
+     data-get-performance="{% url 'student_get_performance' %}">
+</div>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/exam.css' %}?v=3.6">
+<link rel="stylesheet" href="{% static 'css/practice_test.css' %}?v=3.0">
+<link rel="stylesheet" href="{% static 'css/exam_compiler.css' %}?v=2.6">
+{% endblock %}
+
+{% block content %}
+<div class="practice-container p-4 md:p-6" id="testListContainer">
+  <h2 class="text-3xl font-bold mb-4">Practice Tests</h2>
+  <div class="mb-4 flex flex-col md:flex-row gap-3 items-start md:items-center hidden" style="display: none;">
+    <label for="domain" class="font-semibold">Select Domain:</label>
+    <select id="domain" class="flex-1 md:flex-initial px-3 py-2 border border-gray-300 rounded"></select>
+  </div>
+  <div id="practiceTestsTableContainer" class="overflow-x-auto"></div>
+  <div id="testAttemptsContainer"></div>
+</div>
+
+<!-- Test-taking form (hidden initially) -->
+<div class="practice-test-container hidden p-4 md:p-6" id="testAttemptContainer">
+  <div id="practiceExamArea" class="assessment-shell">
+    <div class="exam-area-head">
+      <h3 id="testTitle"></h3>
+      <div class="exam-head-meta">
+        <p id="practice-question-progress" class="question-progress"></p>
+        <p class="timer-line"><i class="far fa-clock"></i> <strong>Time Left:</strong> <span id="practice-timer" class="timer green">00:00</span></p>
+      </div>
+    </div>
+    <div class="exam-layout">
+      <div class="question-panel">
+        <form id="practiceForm" method="post" autocomplete="off" enctype="multipart/form-data" class="space-y-4">
+          {% csrf_token %}
+          <div id="questionContainer"></div>
+          <button id="practiceSubmitBtn" type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded font-semibold">Submit</button>
+        </form>
+      </div>
+      <aside id="practice-question-side-panel" class="palette-panel"></aside>
+    </div>
+  </div>
+</div>
+
+<!-- Modal for Detailed Report -->
+<div id="reportModal" class="report-modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="reportTitle">
+  <div class="report-modal-content bg-white rounded-lg shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <button class="report-modal-close absolute top-4 right-4 text-2xl font-bold text-gray-600 hover:text-gray-900" id="closeReportModal" aria-label="Close report modal">&times;</button>
+    <h2 id="reportTitle" class="text-2xl font-bold p-4 border-b">Practice Test Report</h2>
+    <div id="reportModalBody" class="loading-modal-body p-4"></div>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block extra_script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js" integrity="sha384-DhxhYObIMeMNGyAG7iK11OHzBIKyEIeRL0ad1iFPAOwZB8iirUlTT0O/WJJUk8+o" crossorigin="anonymous"></script>
+<script src="{% static 'js/exam_compiler.js' %}?v=2.8" nonce="{{ request.csp_nonce }}"></script>
+<script src="{% static 'js/practice_test.js' %}?v=4.0" nonce="{{ request.csp_nonce }}"></script>
+{% endblock %}

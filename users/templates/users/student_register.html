@@ -1,0 +1,280 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATOM - Student Registration</title>
+    <link rel="stylesheet" href="{% static 'css/register.css' %}?v=2.7">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+    <!-- Background Effects & Waves -->
+    <div class="background-elements">
+        <!-- Dotted Grid (Top-Left) -->
+        <div class="dotted-grid top-left"></div>
+        
+        <!-- Full-width continuous curvy layered vector waves at bottom -->
+        <svg class="background-wave bottom-waves" viewBox="0 0 1440 250" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <!-- Light green layer -->
+            <path d="M-100 250 L-100 80 C 250 -40 600 210 1000 130 C 1200 90 1350 150 1540 80 L 1540 250 Z" fill="rgba(0, 128, 55, 0.06)"/>
+            <!-- Medium green layer -->
+            <path d="M-100 250 L-100 120 C 200 40 500 230 900 160 C 1150 110 1300 190 1540 120 L 1540 250 Z" fill="rgba(0, 128, 55, 0.15)"/>
+            <!-- Active brand green layer -->
+            <path d="M-100 250 L-100 160 C 180 80 450 240 800 190 C 1050 160 1250 220 1540 160 L 1540 250 Z" fill="#008037"/>
+            <!-- Dark green layer -->
+            <path d="M-100 250 L-100 200 C 150 130 400 250 700 210 C 950 190 1200 240 1540 200 L 1540 250 Z" fill="#005c25"/>
+        </svg>
+
+        <!-- Top-right organic blob curve -->
+        <svg class="background-wave top-right-blob" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 500,0 C 350,150 250,50 100,0 Z" fill="rgba(0, 128, 55, 0.03)"/>
+            <path d="M 500,0 C 400,100 320,30 200,0 Z" fill="rgba(0, 128, 55, 0.015)"/>
+        </svg>
+
+        <!-- Right-center organic blob curve (behind card) -->
+        <svg class="background-wave right-blob" viewBox="0 0 400 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 400,100 C 200,250 200,550 400,700 Z" fill="rgba(0, 128, 55, 0.03)"/>
+            <path d="M 400,200 C 280,300 280,500 400,600 Z" fill="rgba(0, 128, 55, 0.015)"/>
+        </svg>
+    </div>
+
+    <!-- Main Registration Container -->
+    <div class="register-container">
+        <!-- Left: Branding Section -->
+        <div class="branding-section">
+            <div class="logo-container">
+                <img src="/static/images/atomshaalelogo.png" alt="Atom Shaale Logo" class="logo">
+                <div class="brand-info">
+                    
+                    
+                </div>
+            </div>
+
+            <div class="branding-hero">
+                <h1 class="hero-main-title">
+                    Start Your <br>
+                    <span class="hero-green-text">
+                        Learning Journey
+                        <span class="sparkles-container">
+                           
+                        </span>
+                    </span> <br>
+                    Today!
+                </h1>
+               
+            </div>
+        </div>
+
+        <!-- Right: Form Section -->
+        <div class="form-section">
+            <div class="form-card">
+                
+                <!-- Django Messages / Errors -->
+                {% if messages %}
+                <div class="messages-container">
+                    {% for message in messages %}
+                    <div class="message-alert alert-{{ message.tags }}">
+                        {% if message.tags == 'error' %}
+                        <i class="fas fa-exclamation-circle"></i>
+                        {% elif message.tags == 'success' %}
+                        <i class="fas fa-check-circle"></i>
+                        {% else %}
+                        <i class="fas fa-info-circle"></i>
+                        {% endif %}
+                        <span>{{ message }}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if form.non_field_errors %}
+                <div class="messages-container">
+                    <div class="message-alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>{{ form.non_field_errors.0 }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Form -->
+                <form method="post" action="{% url 'student_register' %}" class="register-form">
+                    {% csrf_token %}
+
+                    <div class="form-grid">
+                        
+
+                        <!-- Full Name -->
+                        <div class="form-group">
+                            <label for="id_first_name">Full Name <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user input-icon"></i>
+                                {{ form.first_name }}
+                            </div>
+                            {% if form.first_name.errors %}
+                            <span class="field-error">{{ form.first_name.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Email -->
+                        <div class="form-group">
+                            <label for="id_email">Email Address <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope input-icon"></i>
+                                {{ form.email }}
+                            </div>
+                            {% if form.email.errors %}
+                            <span class="field-error">{{ form.email.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Mobile Number -->
+                        <div class="form-group">
+                            <label for="id_mobile_number">Mobile Number <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-phone input-icon"></i>
+                                {{ form.mobile_number }}
+                            </div>
+                            {% if form.mobile_number.errors %}
+                            <span class="field-error">{{ form.mobile_number.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Gender -->
+                        <div class="form-group">
+                            <label for="id_gender">Gender <span class="required">*</span></label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-venus-mars input-icon"></i>
+                                {{ form.gender }}
+                            </div>
+                            {% if form.gender.errors %}
+                            <span class="field-error">{{ form.gender.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Academic Details Divider -->
+                    <div class="academic-divider">
+                        <div class="academic-divider-line"></div>
+                        <div class="academic-badge">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Academic Details</span>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <!-- USN -->
+                        <div class="form-group">
+                            <label for="id_usn">USN / Enrollment Number <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-id-card input-icon"></i>
+                                {{ form.usn }}
+                            </div>
+                            {% if form.usn.errors %}
+                            <span class="field-error">{{ form.usn.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- College -->
+                        <div class="form-group">
+                            <label for="id_college">College <span class="required">*</span></label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-building input-icon"></i>
+                                {{ form.college }}
+                            </div>
+                            {% if form.college.errors %}
+                            <span class="field-error">{{ form.college.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Course -->
+                        <div class="form-group">
+                            <label for="id_course">Course <span class="required">*</span></label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-book input-icon"></i>
+                                {{ form.course }}
+                            </div>
+                            {% if form.course.errors %}
+                            <span class="field-error">{{ form.course.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Section -->
+                        <div class="form-group">
+                            <label for="id_section">Section <span class="required">*</span></label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-users input-icon"></i>
+                                {{ form.section }}
+                            </div>
+                            {% if form.section.errors %}
+                            <span class="field-error">{{ form.section.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Semester -->
+                        <div class="form-group">
+                            <label for="id_semester">Semester <span class="required">*</span></label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-calendar input-icon"></i>
+                                {{ form.semester }}
+                            </div>
+                            {% if form.semester.errors %}
+                            <span class="field-error">{{ form.semester.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Year -->
+                        <div class="form-group">
+                            <label for="id_year">Year <span class="required">*</span></label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-calendar input-icon"></i>
+                                {{ form.year }}
+                            </div>
+                            {% if form.year.errors %}
+                            <span class="field-error">{{ form.year.errors.0 }}</span>
+                            {% endif %}
+                        </div>
+
+                        <!-- Batch Year -->
+                        <div class="form-group">
+                            <label for="id_batch_year">Batch Year <span class="required">*</span></label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-layer-group input-icon"></i>
+                                {{ form.batch_year }}
+                            </div>
+                            {% if form.batch_year.errors %}
+                            <span class="field-error">{{ form.batch_year.errors.0 }}</span>
+                            {% endif %}
+                            <small class="field-hint">Year you joined the college (e.g. 2025, 2026)</small>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="submit-button">
+                        CREATE ACCOUNT <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <!-- OR Divider -->
+                <div class="or-divider">
+                    <div class="or-line"></div>
+                    <span class="or-text">OR</span>
+                    <div class="or-line"></div>
+                </div>
+
+                <!-- Footer Sign In prompt -->
+                <p class="signin-prompt">
+                    Already have an account? <a href="{% url 'login' %}" class="signin-link">Sign In <i class="fas fa-arrow-right"></i></a>
+                </p>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="{% static 'js/college_cascade.js' %}"></script>
+    <script src="{% static 'js/register.js' %}"></script>
+</body>
+
+</html>

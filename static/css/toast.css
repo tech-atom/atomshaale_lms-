@@ -1,0 +1,32 @@
+/* static/css/toast.css */
+.toast-container {
+  font-family: 'Century Gothic';
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.toast {
+  min-width: 200px;
+  max-width: 300px;
+  padding: 0.75rem 1rem;
+  border-radius: 4px;
+  color: white;
+  font-weight: 500;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: slideIn 0.3s forwards, fadeOut 0.3s forwards 2.7s;
+}
+.toast.success { background: #28a745; }
+.toast.error   { background: #dc3545; }
+
+@keyframes slideIn {
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeOut {
+  to { opacity: 0; transform: translateY(-10px); }
+}

@@ -1,0 +1,550 @@
+/* ==========================================================
+   Admin Practice Test CSS
+   Fully Aligned with Admin Assessment Design System
+   Light ↔ Dark Mode Support & Responsive Grids
+========================================================== */
+
+:root {
+  --bg: #ffffff;
+  --text: #000000;
+  --card-bg: #ffffff;
+  --table-border: #e3e3e3;
+  --primary: #008037;
+  --btn-bg: #008037;
+  --btn-text: #ffffff;
+  --hover-bg: #eaf7ef;
+  --toast-success: #008037;
+  --toast-error: #a30000;
+  --border: #e3e3e3;
+}
+
+body.dark-mode {
+  --bg: #121212;
+  --text: #e0e0e0;
+  --card-bg: #1e1e1e;
+  --table-border: #333333;
+  --primary: #00b359;
+  --btn-bg: #00b359;
+  --btn-text: #ffffff;
+  --hover-bg: #1a2a1a;
+  --toast-success: #00b359;
+  --toast-error: #cc0000;
+  --border: #333333;
+}
+
+body {
+  font-family: 'Century Gothic';
+  background: var(--bg);
+  color: var(--text);
+  margin: 0;
+  padding: 0;
+  transition: background 0.4s ease, color 0.4s ease;
+}
+
+.practice-test-wrapper {
+  padding: 24px 20px;
+  background: var(--bg);
+  color: var(--text);
+  max-width: 1300px;
+  margin: 0 auto;
+}
+
+/* ---------------------------
+   Page Header & Title
+--------------------------- */
+.page-header {
+  margin-bottom: 20px;
+}
+
+.page-header h1 {
+  color: var(--primary);
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0;
+}
+
+/* ---------------------------
+   Navigation Bar & Tabs
+--------------------------- */
+.btn-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.toggle-btn {
+  padding: 8px 18px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  transition: all 0.25s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.toggle-btn:hover {
+  background: var(--hover-bg);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.toggle-btn.btn-active {
+  background: var(--primary);
+  color: #ffffff;
+  border-color: var(--primary);
+  box-shadow: 0 3px 8px rgba(0, 128, 55, 0.25);
+}
+
+.search-wrap {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+#searchInput {
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--card-bg);
+  color: var(--text);
+  min-width: 260px;
+  font-size: 14px;
+  transition: all 0.25s ease;
+  margin-bottom: 0;
+}
+
+#searchInput:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 6px rgba(0, 128, 55, 0.25);
+  outline: none;
+}
+
+/* ---------------------------
+   Tables (Matching Assessment)
+--------------------------- */
+.table-container {
+  overflow-x: auto;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  margin-bottom: 24px;
+}
+
+.exam-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card-bg);
+  border-radius: 10px;
+  overflow: hidden;
+  font-size: 14px;
+}
+
+.exam-table th,
+.exam-table td {
+  padding: 12px 14px;
+  border: 1px solid var(--table-border);
+  text-align: left;
+  vertical-align: middle;
+  transition: background 0.3s;
+}
+
+.exam-table th {
+  background: #008037;
+  color: #ffffff;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  border-color: #008037;
+}
+
+.exam-table tr:nth-child(even) {
+  background: rgba(0,0,0,0.015);
+}
+
+.exam-table tr:hover {
+  background: var(--hover-bg);
+}
+
+.action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+/* ---------------------------
+   Buttons (Matching Assessment)
+--------------------------- */
+.add-btn, .btn-primary {
+  background: var(--btn-bg);
+  color: var(--btn-text);
+  padding: 9px 20px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.add-btn:hover, .btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 128, 55, 0.25);
+  background: #00682b;
+}
+
+.action-btn {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 4px;
+  background: var(--btn-bg);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 500;
+  transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.18);
+}
+
+.action-btn.edit {
+  background: #008037;
+}
+
+.action-btn.edit:hover {
+  background: #000000;
+}
+
+.action-btn.delete {
+  background: #c62828;
+}
+
+.action-btn.delete:hover {
+  background: #9d1f1f;
+}
+
+.btn-small {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+
+/* ---------------------------
+   Cards & Form Containers
+--------------------------- */
+.card {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 22px;
+  background: var(--card-bg);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px;
+}
+
+.card h2, .card h3, .card-title {
+  color: var(--primary);
+  margin-top: 0;
+  margin-bottom: 16px;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* ---------------------------
+   Grid Forms (Matching Assessment Schedule Modal Grid)
+--------------------------- */
+.schedule-form {
+  margin-top: 8px;
+}
+
+.schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+  align-items: start;
+}
+
+.schedule-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.schedule-field.full {
+  grid-column: 1 / -1;
+}
+
+.schedule-label {
+  display: block;
+  margin-top: 0;
+  margin-bottom: 6px;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 14px;
+}
+
+input[type="text"],
+input[type="number"],
+input[type="datetime-local"],
+textarea,
+select {
+  padding: 9px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: var(--card-bg);
+  color: var(--text);
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border 0.3s, box-shadow 0.3s;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: #008037;
+  box-shadow: 0 0 6px rgba(0, 128, 55, 0.35);
+  outline: none;
+}
+
+textarea {
+  resize: vertical;
+}
+
+.grid-two {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ---------------------------
+   Panel Headers & Dividers
+--------------------------- */
+.panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.panel-header h2 {
+  color: var(--primary);
+  margin: 0;
+  font-size: 20px;
+}
+
+.muted {
+  color: #6b7280;
+  font-size: 13px;
+}
+
+/* ---------------------------
+   Modals (Matching Assessment)
+--------------------------- */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 9999;
+  left: 0; top: 0;
+  width: 100vw; height: 100vh;
+  overflow: auto;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(2px);
+  animation: fadeIn 0.3s ease;
+}
+
+.modal:not([hidden]) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-content {
+  background: var(--card-bg);
+  color: var(--text);
+  margin: auto;
+  padding: 24px 26px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  width: 95%;
+  max-width: 680px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+  animation: scaleIn 0.3s ease;
+  position: relative;
+}
+
+.close-modal, .close {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  background: transparent;
+  border: none;
+  font-size: 24px;
+  font-weight: bold;
+  color: #888;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.close-modal:hover, .close:hover {
+  color: #111;
+}
+
+/* ---------------------------
+   Utilities & Animations
+--------------------------- */
+.mt-1 { margin-top: 4px; }
+.mt-2 { margin-top: 8px; }
+.mt-3 { margin-top: 14px; }
+.mt-4 { margin-top: 24px; }
+.mb-2 { margin-bottom: 8px; }
+.mb-3 { margin-bottom: 14px; }
+.text-center { text-align: center; }
+.font-weight-bold { font-weight: 700; }
+.bg-light { background: rgba(0,0,0,0.03); }
+.p-2 { padding: 10px; }
+.rounded { border-radius: 6px; }
+
+.field-error {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 3px;
+}
+
+/* ---------------------------
+   MCQ Option Rows & Radio Buttons
+--------------------------- */
+.mcq-opt-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.mcq-opt-row .mcq-option-input {
+  flex: 1;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+.mcq-opt-row .radio-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  margin: 0;
+  user-select: none;
+}
+
+.mcq-opt-row .radio-label input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.test-case-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 10px;
+  margin-bottom: 8px;
+  align-items: center;
+}
+
+.format-help-list {
+  padding-left: 20px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+  font-size: 13px;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes scaleIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* ---------------------------
+   Responsive (Tablets & Mobile)
+--------------------------- */
+@media (max-width: 900px) {
+  .grid-two {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .practice-test-wrapper {
+    padding: 12px 10px;
+  }
+
+  .schedule-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-wrap {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  #searchInput {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .btn-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .toggle-btn {
+    text-align: center;
+  }
+
+  .exam-table {
+    font-size: 12px;
+  }
+
+  .action-group {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .action-btn {
+    width: 100%;
+    text-align: center;
+  }
+
+  .modal-content {
+    width: 96%;
+    padding: 16px;
+  }
+}

@@ -1,0 +1,71 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ round_name }} Result{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/company_prep.css' %}?v=1.2">
+{% endblock %}
+
+{% block content %}
+<div class="prep-header" style="text-align: center; display: block;">
+    <h1 class="prep-title" style="margin-bottom: 0.5rem;">{{ round_name }} Completed!</h1>
+    <p class="prep-subtitle">Score details and recommendation parameters for {{ company.name }} Target Prep</p>
+</div>
+
+<div class="dashboard-card" style="max-width: 600px; margin: 2rem auto; text-align: center;">
+    <div style="margin: 2rem 0;">
+        <div style="font-size: 4rem; font-weight: 800; color: {% if attempt.score >= 70 %}var(--success){% else %}var(--warning){% endif %}; line-height: 1;">
+            {{ attempt.score }}%
+        </div>
+        <div style="font-size: 1rem; color: var(--text-secondary); margin-top: 0.5rem; font-weight: 500;">
+            Obtained Score
+        </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 2rem;">
+        <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 1.25rem; font-weight: bold; color: var(--text-primary);">
+                {{ attempt.details.correct_count }} / {{ attempt.details.total_count }}
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">Correct Answers</div>
+        </div>
+        <div style="background: rgba(255,255,255,0.02); padding: 1rem; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 1.25rem; font-weight: bold; color: var(--text-primary);">
+                {% if attempt.score >= 70 %}Passed{% else %}Needs Prep{% endif %}
+            </div>
+            <div style="font-size: 0.8rem; color: var(--text-secondary);">Test Status</div>
+        </div>
+    </div>
+
+    <hr style="border: none; border-top: 1px solid var(--border); margin: 1.5rem 0;">
+
+    <div style="text-align: left; margin-bottom: 2rem;">
+        <h4 style="color: var(--text-primary); margin-top: 0; margin-bottom: 0.5rem;">Weak Areas Identified</h4>
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;">
+            {% for area in attempt.details.weak_areas %}
+            <span style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #fca5a5; padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.8rem; font-weight: 500;">
+                {{ area }}
+            </span>
+            {% endfor %}
+        </div>
+
+        <h4 style="color: var(--text-primary); margin-top: 0; margin-bottom: 0.5rem;">Recommended Practice</h4>
+        <p style="color: var(--text-secondary); font-size: 0.9rem; line-height: 1.5; margin: 0;">
+            Based on your answers, focus on reading training materials and practicing test questions specifically in the weak topics listed above. Retake this test or select higher difficulties as your proficiency grows.
+        </p>
+    </div>
+
+    <div style="display: flex; gap: 1rem; justify-content: center;">
+        {% if request.user.role == 'admin' or request.user.role == 'tpo' %}
+        <a href="{% url 'company_prep:tpo_company_detail' company.id %}" class="action-btn-primary" style="padding: 0.75rem 2rem; background: #008037 !important; border-color: #008037 !important; color: #ffffff !important;">
+            Back to Candidates
+        </a>
+        {% else %}
+        <a href="{% url 'company_prep:company_dashboard' company.id %}" class="action-btn-primary" style="padding: 0.75rem 2rem;">
+            Go to Dashboard
+        </a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

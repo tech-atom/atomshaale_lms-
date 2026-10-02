@@ -1,0 +1,279 @@
+{% extends 'compiler/base.html' %}
+
+{% block title %}Code Editor - Jango Compiler{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-code"></i> Code Editor</span>
+                <div>
+                    <select id="languageSelect" class="form-select form-select-sm" style="width: auto; display: inline-block;">
+                        <option value="python">Python</option>
+                        <option value="java">Java</option>
+                        <option value="c">C</option>
+                        <option value="cpp">C++</option>
+                        <option value="csharp">C#</option>
+                        <option value="dotnet">.NET</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="php">PHP</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="assembly">Assembly</option>
+                        <option value="cobol">COBOL</option>
+                    </select>
+                    <button id="runBtn" class="btn btn-success btn-sm ms-2">
+                        <i class="fas fa-play"></i> Run Code
+                    </button>
+                    <button id="clearBtn" class="btn btn-warning btn-sm ms-1">
+                        <i class="fas fa-eraser"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="row g-0">
+                    <div class="col-md-6">
+                        <div class="p-3">
+                            <label for="codeEditor" class="form-label text-light">
+                                <i class="fas fa-edit"></i> Code Input:
+                            </label>
+                            <textarea id="codeEditor" class="form-control" rows="20" 
+                                      placeholder="Write your code here..." 
+                                      style="background-color: #1e1e1e; color: #ffffff; border: 1px solid #007bff; font-family: 'Courier New', monospace; font-size: 14px;">print("Hello, World!")
+print("Welcome to Jango Compiler!")
+
+# Try running some Python code:
+for i in range(5):
+    print(f"Count: {i}")
+
+# You can write any Python code here
+import datetime
+print(f"Current time: {datetime.datetime.now()}")</textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3">
+                            <label class="form-label text-light">
+                                <i class="fas fa-terminal"></i> Output:
+                            </label>
+                            <div id="outputArea" class="p-3" 
+                                 style="background-color: #000000; color: #00ff00; border: 1px solid #007bff; min-height: 400px; font-family: 'Courier New', monospace; font-size: 14px; overflow-y: auto;">
+                                <div class="text-muted">Click "Run Code" to see output here...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i> Quick Help
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 class="text-primary">Keyboard Shortcuts:</h6>
+                        <ul class="small">
+                            <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> - Run code</li>
+                            <li><kbd>Ctrl</kbd> + <kbd>S</kbd> - Save (future feature)</li>
+                            <li><kbd>Ctrl</kbd> + <kbd>A</kbd> - Select all</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-success">Supported Languages:</h6>
+                        <ul class="small">
+                            <li>Python (fully supported)</li>
+                            <li>Java (portable available)</li>
+                            <li>C (portable available)</li>
+                            <li>C++ (portable available)</li>
+                            <li>C# (portable available)</li>
+                            <li>.NET (portable available)</li>
+                            <li>JavaScript (portable available)</li>
+                            <li>PHP (portable available)</li>
+                            <li>HTML (preview/validation)</li>
+                            <li>CSS (preview/validation)</li>
+                            <li>Assembly (portable available)</li>
+                            <li>COBOL (portable available)</li>
+                        </ul>
+                        <a href="{% url 'compiler:setup' %}" class="btn btn-success btn-sm">
+                            <i class="fas fa-download"></i> Install All Compilers
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-warning">Tips:</h6>
+                        <ul class="small">
+                            <li>Check syntax before running</li>
+                            <li>Use print() for output in Python</li>
+                            <li>Code execution times out after 10 seconds</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const runBtn = document.getElementById('runBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const codeEditor = document.getElementById('codeEditor');
+    const outputArea = document.getElementById('outputArea');
+    const languageSelect = document.getElementById('languageSelect');
+
+    // Run code function
+    runBtn.addEventListener('click', function() {
+        console.log('Run button clicked!'); // Debug log
+        const code = codeEditor.value.trim();
+        const language = languageSelect.value;
+        
+        console.log('Code:', code); // Debug log
+        console.log('Language:', language); // Debug log
+        
+        if (!code) {
+            outputArea.innerHTML = '<div class="text-warning">Please enter some code to run.</div>';
+            return;
+        }
+
+        // Show loading
+        outputArea.innerHTML = '<div class="text-info"><i class="fas fa-spinner fa-spin"></i> Compiling and running code...</div>';
+        runBtn.disabled = true;
+        runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
+
+        // Send request to backend
+        fetch('/api/compile/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                code: code,
+                language: language
+            })
+        })
+        .then(response => {
+            console.log('Response received:', response); // Debug log
+            return response.json();
+        })
+        .then(data => {
+            console.log('Response data:', data); // Debug log
+            if (data.success) {
+                let output = '';
+                if (data.output) {
+                    output += '<div class="text-success">Output:</div>';
+                    output += '<pre class="text-light">' + escapeHtml(data.output) + '</pre>';
+                }
+                if (data.error) {
+                    output += '<div class="text-danger mt-2">Errors:</div>';
+                    output += '<pre class="text-danger">' + escapeHtml(data.error) + '</pre>';
+                }
+                if (!data.output && !data.error) {
+                    output = '<div class="text-info">Code executed successfully with no output.</div>';
+                }
+                outputArea.innerHTML = output;
+            } else {
+                outputArea.innerHTML = '<div class="text-danger">Error: ' + escapeHtml(data.error) + '</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Fetch error:', error); // Debug log
+            outputArea.innerHTML = '<div class="text-danger">Network error: ' + escapeHtml(error.toString()) + '</div>';
+        })
+        .finally(() => {
+            runBtn.disabled = false;
+            runBtn.innerHTML = '<i class="fas fa-play"></i> Run Code';
+        });
+    });
+
+    // Clear editor
+    clearBtn.addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear the editor?')) {
+            codeEditor.value = '';
+            outputArea.innerHTML = '<div class="text-muted">Click "Run Code" to see output here...</div>';
+        }
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            runBtn.click();
+        }
+    });
+
+    // Language change
+    languageSelect.addEventListener('change', function() {
+        const language = this.value;
+        const samples = {
+            python: 'print("Hello, World!")\\nprint("Welcome to Jango Compiler!")\\n\\n# Try running some Python code:\\nfor i in range(5):\\n    print(f"Count: {i}")\\n\\n# You can write any Python code here\\nimport datetime\\nprint(f"Current time: {datetime.datetime.now()}")',
+            
+            java: 'public class HelloWorld {\\n    public static void main(String[] args) {\\n        System.out.println("Hello, World!");\\n        System.out.println("Welcome to Jango Compiler!");\\n        \\n        // Example loop\\n        for (int i = 0; i < 5; i++) {\\n            System.out.println("Count: " + i);\\n        }\\n    }\\n}',
+            
+            c: '#include <stdio.h>\\n\\nint main() {\\n    printf("Hello, World!\\\\n");\\n    printf("Welcome to Jango Compiler!\\\\n");\\n    \\n    // Example loop\\n    for (int i = 0; i < 5; i++) {\\n        printf("Count: %d\\\\n", i);\\n    }\\n    \\n    return 0;\\n}',
+            
+            cpp: '#include <iostream>\\n#include <string>\\nusing namespace std;\\n\\nint main() {\\n    cout << "Hello, World!" << endl;\\n    cout << "Welcome to Jango Compiler!" << endl;\\n    \\n    // Example loop\\n    for (int i = 0; i < 5; i++) {\\n        cout << "Count: " << i << endl;\\n    }\\n    \\n    return 0;\\n}',
+            
+            csharp: 'using System;\\n\\nclass Program {\\n    static void Main() {\\n        Console.WriteLine("Hello, World!");\\n        Console.WriteLine("Welcome to Jango Compiler!");\\n        \\n        // Example loop\\n        for (int i = 0; i < 5; i++) {\\n            Console.WriteLine($"Count: {i}");\\n        }\\n    }\\n}',
+            
+            dotnet: 'using System;\\nusing System.Collections.Generic;\\n\\nnamespace JangoCompiler {\\n    class Program {\\n        static void Main(string[] args) {\\n            Console.WriteLine("Hello, .NET World!");\\n            Console.WriteLine("Welcome to Jango Compiler!");\\n            \\n            var numbers = new List<int> {1, 2, 3, 4, 5};\\n            numbers.ForEach(n => Console.WriteLine($"Number: {n}"));\\n        }\\n    }\\n}',
+            
+            javascript: 'console.log("Hello, World!");\\nconsole.log("Welcome to Jango Compiler!");\\n\\n// Try some JavaScript\\nfor (let i = 0; i < 5; i++) {\\n    console.log(`Count: ${i}`);\\n}\\n\\n// Example with objects\\nconst compiler = {\\n    name: "Jango",\\n    version: "2.0",\\n    languages: ["Python", "Java", "C++"]\\n};\\n\\nconsole.log("Compiler info:", compiler);',
+            
+            php: '<?php\\necho "Hello, World!\\\\n";\\necho "Welcome to Jango Compiler!\\\\n";\\n\\n// Example loop\\nfor ($i = 0; $i < 5; $i++) {\\n    echo "Count: $i\\\\n";\\n}\\n\\n// Example array\\n$languages = ["Python", "Java", "C++", "PHP"];\\nforeach ($languages as $lang) {\\n    echo "Language: $lang\\\\n";\\n}\\n?>',
+            
+            html: '<!DOCTYPE html>\\n<html lang="en">\\n<head>\\n    <meta charset="UTF-8">\\n    <meta name="viewport" content="width=device-width, initial-scale=1.0">\\n    <title>Jango Compiler - HTML</title>\\n    <style>\\n        body { font-family: Arial, sans-serif; margin: 40px; }\\n        .highlight { color: #007bff; font-weight: bold; }\\n    </style>\\n</head>\\n<body>\\n    <h1>Hello, World!</h1>\\n    <p class="highlight">Welcome to Jango Compiler!</p>\\n    <ul>\\n        <li>Python</li>\\n        <li>Java</li>\\n        <li>C/C++</li>\\n        <li>JavaScript</li>\\n    </ul>\\n</body>\\n</html>',
+            
+            css: '/* Jango Compiler CSS Example */\\nbody {\\n    font-family: "Courier New", monospace;\\n    background-color: #1a1a1a;\\n    color: #00ff00;\\n    margin: 0;\\n    padding: 20px;\\n}\\n\\n.container {\\n    max-width: 800px;\\n    margin: 0 auto;\\n    padding: 20px;\\n    border: 2px solid #007bff;\\n    border-radius: 8px;\\n}\\n\\nh1 {\\n    color: #007bff;\\n    text-align: center;\\n    text-shadow: 0 0 10px #007bff;\\n}\\n\\n.highlight {\\n    background-color: #007bff;\\n    color: white;\\n    padding: 5px 10px;\\n    border-radius: 4px;\\n}',
+            
+            assembly: '; Hello World in Assembly (x86-64 NASM syntax)\\nsection .data\\n    hello db "Hello, World!", 0xA, 0\\n    welcome db "Welcome to Jango Compiler!", 0xA, 0\\n    hello_len equ $ - hello - 1\\n    welcome_len equ $ - welcome - 1\\n\\nsection .text\\n    global _start\\n\\n_start:\\n    ; Write hello message\\n    mov rax, 1          ; sys_write\\n    mov rdi, 1          ; stdout\\n    mov rsi, hello      ; message\\n    mov rdx, hello_len  ; length\\n    syscall\\n\\n    ; Write welcome message\\n    mov rax, 1\\n    mov rdi, 1\\n    mov rsi, welcome\\n    mov rdx, welcome_len\\n    syscall\\n\\n    ; Exit\\n    mov rax, 60         ; sys_exit\\n    mov rdi, 0          ; exit status\\n    syscall',
+            
+            cobol: '       IDENTIFICATION DIVISION.\\n       PROGRAM-ID. HELLO-WORLD.\\n       \\n       ENVIRONMENT DIVISION.\\n       \\n       DATA DIVISION.\\n       WORKING-STORAGE SECTION.\\n       01 WS-MESSAGE PIC X(30) VALUE "Hello, World!".\\n       01 WS-WELCOME PIC X(30) VALUE "Welcome to Jango Compiler!".\\n       01 WS-COUNTER PIC 9(2) VALUE 0.\\n       \\n       PROCEDURE DIVISION.\\n       MAIN-LOGIC.\\n           DISPLAY WS-MESSAGE.\\n           DISPLAY WS-WELCOME.\\n           \\n           PERFORM VARYING WS-COUNTER FROM 1 BY 1 UNTIL WS-COUNTER > 5\\n               DISPLAY "Count: " WS-COUNTER\\n           END-PERFORM.\\n           \\n           STOP RUN.'
+        };
+        
+        if (samples[language]) {
+            codeEditor.value = samples[language].replace(/\\\\n/g, '\\n');
+        }
+    });
+
+    // Utility functions
+    function getCSRFToken() {
+        const name = 'csrftoken';
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Test if JavaScript is working
+    console.log('JavaScript is loaded and working!');
+    console.log('runBtn:', runBtn);
+    console.log('codeEditor:', codeEditor);
+    console.log('languageSelect:', languageSelect);
+    console.log('outputArea:', outputArea);
+
+});
+
+</script>
+{% endblock %}

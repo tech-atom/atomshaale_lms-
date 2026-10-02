@@ -1,0 +1,696 @@
+/* ==========================================================
+   ADMIN TRAINERS DESIGN SYSTEM (PREMIUM DESIGN)
+   ========================================================== */
+
+:root {
+    --font: "Century Gothic";
+    
+    /* Strict White, Black, Green Brand */
+    --bg-slate: #ffffff;
+    --text-dark: #000000;
+    --text-muted: #1e1e1e;
+    --text-light: #555555;
+    
+    /* Branding Accents */
+    --emerald-primary: #008037;
+    --emerald-hover: #000000;
+    --indigo-secondary: #000000;
+    --indigo-hover: #008037;
+    
+    /* Component Tokens */
+    --card-bg: #ffffff;
+    --border-color: #000000;
+    --focus-ring: rgba(0, 128, 55, 0.2);
+    
+    /* Alert Status Toasts */
+    --toast-bg: #000000;
+    --toast-info: #008037;
+    --toast-warning: #000000;
+    --toast-error: #000000;
+}
+
+/* ==========================================================
+   BASE LAYOUT
+   ========================================================== */
+
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-slate);
+    color: var(--text-dark);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+}
+
+.trainer-dashboard-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+/* ==========================================================
+   ANIMATIONS & EFFECTS
+   ========================================================== */
+
+.animate-fade-in {
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+    opacity: 0;
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================
+   HEADER BANNER
+   ========================================================== */
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.dashboard-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, var(--text-dark) 30%, var(--indigo-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle-text {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 15px;
+}
+
+/* ==========================================================
+   CARDS CONTAINER
+   ========================================================== */
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02);
+    padding: 24px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    border-color: #cbd5e1;
+}
+
+.card-header {
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 750;
+    color: var(--text-dark);
+}
+
+/* ==========================================================
+   TOOLBAR SECTION
+   ========================================================== */
+
+.toolbar-card {
+    padding: 16px 24px;
+}
+
+.search-actions-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    max-width: 380px;
+    width: 100%;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text-muted);
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.search-input {
+    padding-left: 40px !important;
+}
+
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 550;
+    color: var(--text-dark);
+    background-color: var(--card-bg);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.form-input:focus {
+    border-color: var(--indigo-secondary);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* ==========================================================
+   BUTTONS
+   ========================================================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--indigo-secondary);
+    color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--indigo-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.btn-secondary {
+    background: var(--emerald-primary);
+    color: #ffffff;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--emerald-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.btn-neutral {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1.5px solid var(--border-color);
+}
+
+.btn-neutral:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.btn-primary-sm {
+    padding: 6px 12px;
+    font-size: 12.5px;
+    font-weight: 700;
+    border-radius: 6px;
+    background: var(--indigo-secondary);
+    color: #ffffff;
+}
+
+.btn-primary-sm:hover {
+    background: var(--indigo-hover);
+}
+
+.btn-neutral-sm {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 600;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+    border: 1.5px solid var(--border-color);
+}
+
+.btn-neutral-sm:hover:not(:disabled) {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.btn:disabled, .btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.active-toggle {
+    background: var(--indigo-secondary) !important;
+    color: #ffffff !important;
+    border-color: var(--indigo-hover) !important;
+}
+
+.flex-center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.flex-1 { flex: 1; }
+.mb-4 { margin-bottom: 16px; }
+
+/* ==========================================================
+   TRAINER CARDS GRID VIEW
+   ========================================================== */
+
+.trainer-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.trainer-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 24px;
+    transition: transform 0.25s, box-shadow 0.25s, border-color 0.25s;
+}
+
+.trainer-avatar-circle {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+.trainer-card h3 {
+    margin: 0 0 6px;
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text-dark);
+}
+
+.trainer-email {
+    margin: 0 0 16px;
+    font-size: 13.5px;
+    color: var(--text-muted);
+}
+
+.trainer-email a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 550;
+}
+
+.trainer-email a:hover {
+    color: var(--indigo-secondary);
+    text-decoration: underline;
+}
+
+.trainer-skills-block {
+    width: 100%;
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 16px;
+    text-align: left;
+    border: 1px solid var(--border-color);
+    box-sizing: border-box;
+}
+
+.block-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.trainer-skills-block p {
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #475569;
+    font-weight: 550;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.trainer-domains-block {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+    justify-content: center;
+}
+
+.text-tag {
+    background: #008037;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.trainer-card-footer {
+    width: 100%;
+    margin-top: auto;
+    border-top: 1px solid var(--border-color);
+    padding-top: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.badge {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 750;
+    padding: 4px 10px;
+    border-radius: 9999px;
+}
+
+/* ==========================================================
+   TRAINER LIST TABLE VIEW
+   ========================================================== */
+
+.table-card {
+    padding: 0;
+}
+
+.table-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+#trainerTable {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+#trainerTable th {
+    background: #f8fafc;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 16px;
+    border-bottom: 1.5px solid var(--border-color);
+}
+
+#trainerTable td {
+    padding: 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-dark);
+    vertical-align: middle;
+}
+
+.hover-row-effect {
+    transition: background-color 0.15s ease;
+}
+
+.hover-row-effect:hover {
+    background-color: #f8fafc;
+}
+
+.td-bold {
+    font-weight: 700;
+}
+
+#trainerTable .text-tag {
+    margin-right: 4px;
+    margin-bottom: 4px;
+    display: inline-block;
+}
+
+/* ==========================================================
+   PAGINATION CONTROLS
+   ========================================================== */
+
+.table-footer-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.pagination-info {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.pagination-controls {
+    display: flex;
+    gap: 6px;
+}
+
+.active-page {
+    background: var(--indigo-secondary) !important;
+    color: white !important;
+    border-color: var(--indigo-hover) !important;
+}
+
+/* ==========================================================
+   LOADER & SPIN ACTIONS
+   ========================================================== */
+
+.loading-td, .no-data-td {
+    padding: 48px !important;
+    text-align: center !important;
+}
+
+.loader-wrapper, .no-data-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--text-muted);
+}
+
+.no-data-icon {
+    font-size: 32px;
+}
+
+.no-data-wrapper p {
+    margin: 0;
+    font-weight: 600;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(79, 70, 229, 0.1);
+    border-top: 3px solid var(--indigo-secondary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ==========================================================
+   TOAST NOTIFICATION ALERTS
+   ========================================================== */
+
+.toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast {
+    background-color: var(--toast-bg);
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid var(--indigo-secondary);
+    min-width: 280px;
+    display: flex;
+    align-items: center;
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast.success { border-left-color: var(--emerald-primary); }
+.toast.error { border-left-color: var(--toast-error); }
+
+.toast-fade-out {
+    animation: slideOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(100px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(100px); }
+}
+
+/* ==========================================================
+   RESPONSIVE LAYOUT STYLES
+   ========================================================== */
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .toolbar-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-actions-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .view-toggles {
+        justify-content: center;
+    }
+    
+    .toggle-btn {
+        flex: 1;
+    }
+    
+    .table-footer-controls {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .trainer-cards-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================
+   BUTTON THEME OVERRIDES (WHITE, #008037, BLACK)
+   ========================================================== */
+
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-primary-sm,
+.view-feedback-btn,
+#filter-btn,
+#reset-btn,
+#download-btn,
+#clearSearch,
+#download-selected-btn,
+#download-all-matching-btn {
+    background-color: #008037 !important;
+    color: #ffffff !important;
+    border: 1.5px solid #008037 !important;
+    font-family: "Century Gothic";
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+.btn:hover:not(:disabled),
+.btn-primary:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.btn-neutral:hover:not(:disabled),
+.btn-primary-sm:hover:not(:disabled),
+.btn-neutral-sm:hover:not(:disabled),
+.view-feedback-btn:hover:not(:disabled),
+.toggle-btn:hover:not(:disabled),
+#refreshBtn:hover:not(:disabled),
+#filter-btn:hover:not(:disabled),
+#reset-btn:hover:not(:disabled),
+#download-btn:hover:not(:disabled),
+#clearSearch:hover:not(:disabled),
+#download-selected-btn:hover:not(:disabled),
+#download-all-matching-btn:hover:not(:disabled) {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-color: #000000 !important;
+}
+
+/* Also ensure disabled buttons look correct */
+.btn:disabled,
+.btn.disabled,
+.btn:disabled:hover,
+.btn.disabled:hover {
+    background-color: #cccccc !important;
+    color: #888888 !important;
+    border-color: #cccccc !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+}
+
+/* Neutral Utility Buttons Default styling (when inactive/unselected) */
+.btn-neutral,
+.btn-neutral-sm {
+    background-color: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 1.5px solid var(--border-color) !important;
+}

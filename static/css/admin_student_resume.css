@@ -1,0 +1,742 @@
+/* ==========================================================
+   STUDENT RESUMES DESIGN SYSTEM (PREMIUM DESIGN)
+   ========================================================== */
+
+:root {
+    --font: "Century Gothic";
+    
+    /* Strict White, Black, Green Brand */
+    --bg-slate: #ffffff;
+    --text-dark: #000000;
+    --text-muted: #1e1e1e;
+    --text-light: #555555;
+    
+    /* Branding & Interactive Colors */
+    --emerald-primary: #008037;
+    --emerald-hover: #000000;
+    --indigo-secondary: #000000;
+    --indigo-hover: #008037;
+    
+    /* Component Colors */
+    --card-bg: #ffffff;
+    --border-color: #000000;
+    --focus-ring: rgba(0, 128, 55, 0.2);
+    
+    /* Selection Indicator */
+    --selected-row-bg: #f9f9f9;
+    --selected-row-border: #008037;
+    
+    /* Toast Colors */
+    --toast-bg: #000000;
+    --toast-info: #008037;
+    --toast-warning: #000000;
+    --toast-error: #000000;
+}
+
+/* ==========================================================
+   BASE & LAYOUT
+   ========================================================== */
+
+body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg-slate);
+    color: var(--text-dark);
+    font-family: var(--font);
+    -webkit-font-smoothing: antialiased;
+}
+
+.resume-dashboard-container {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+/* ==========================================================
+   ANIMATIONS & TRANSITIONS
+   ========================================================== */
+
+.animate-fade-in {
+    animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-slide-up {
+    opacity: 0;
+    animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================
+   HEADER BANNER
+   ========================================================== */
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.dashboard-header h1 {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0 0 6px;
+    letter-spacing: -0.5px;
+}
+
+.gradient-text {
+    background: linear-gradient(135deg, var(--text-dark) 30%, var(--indigo-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.subtitle-text {
+    color: var(--text-muted);
+    margin: 0;
+    font-size: 15px;
+}
+
+/* ==========================================================
+   CARDS UTILITIES
+   ========================================================== */
+
+.card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02), 0 2px 4px -1px rgba(0,0,0,0.02);
+    padding: 24px;
+    margin-bottom: 24px;
+    overflow: hidden;
+}
+
+.filter-card {
+    overflow: visible !important;
+}
+
+.card-header {
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+}
+
+.card-header h3 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 750;
+    color: var(--text-dark);
+}
+
+/* ==========================================================
+   FILTERS CARD
+   ========================================================== */
+
+.filters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+}
+
+.filter-col {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-col label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.form-select,
+.form-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 550;
+    color: var(--text-dark);
+    background-color: var(--card-bg);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    box-sizing: border-box;
+}
+
+.form-select:focus,
+.form-input:focus {
+    border-color: var(--indigo-secondary);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* ==========================================================
+   SEARCH BAR
+   ========================================================== */
+
+.search-actions-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 14px;
+    color: var(--text-muted);
+    font-size: 14px;
+    pointer-events: none;
+}
+
+.search-input {
+    padding-left: 40px !important;
+}
+
+/* ==========================================================
+   BULK ACTIONS CARD
+   ========================================================== */
+
+.bulk-actions-card {
+    background: #f9f9f9;
+    border: 1px dashed var(--indigo-secondary);
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.selection-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.selection-icon {
+    font-size: 20px;
+}
+
+.selection-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dark);
+}
+
+.selection-text strong {
+    color: var(--indigo-secondary);
+    font-weight: 800;
+}
+
+.bulk-buttons {
+    display: flex;
+    gap: 12px;
+}
+
+/* ==========================================================
+   BUTTONS
+   ========================================================== */
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 700;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    text-decoration: none;
+}
+
+.btn-primary {
+    background: var(--indigo-secondary);
+    color: #ffffff;
+}
+
+.btn-primary:hover:not(:disabled) {
+    background: var(--indigo-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+}
+
+.btn-secondary {
+    background: var(--emerald-primary);
+    color: #ffffff;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--emerald-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+}
+
+.btn-neutral {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1.5px solid var(--border-color);
+}
+
+.btn-neutral:hover {
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.btn:disabled, .btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.btn-primary-sm {
+    padding: 6px 12px;
+    font-size: 12.5px;
+    font-weight: 700;
+    border-radius: 6px;
+    background: var(--indigo-secondary);
+    color: #ffffff;
+}
+
+.btn-primary-sm:hover {
+    background: var(--indigo-hover);
+}
+
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.flex-1 { flex: 1; }
+.mt-4 { margin-top: 16px; }
+
+/* ==========================================================
+   RESULTS TABLE CARD
+   ========================================================== */
+
+.table-flex-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 12px;
+    margin-bottom: 0;
+}
+
+.badge {
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 9999px;
+}
+
+.table-scroll-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+#resumeTable {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+}
+
+#resumeTable th {
+    background: #f8fafc;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 16px;
+    border-bottom: 1.5px solid var(--border-color);
+}
+
+#resumeTable td {
+    padding: 16px;
+    font-size: 14px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-dark);
+}
+
+.hover-row-effect {
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.hover-row-effect:hover {
+    background-color: #f8fafc;
+}
+
+.row-selected {
+    background-color: var(--selected-row-bg) !important;
+}
+
+.row-selected td {
+    border-bottom-color: var(--selected-row-border) !important;
+}
+
+.td-bold {
+    font-weight: 700;
+}
+
+/* Custom checkbox styling */
+.custom-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1.5px solid var(--text-light);
+    outline: none;
+    cursor: pointer;
+    accent-color: var(--indigo-secondary);
+}
+
+/* ==========================================================
+   LOADER & SPIN EFFECTS
+   ========================================================== */
+
+.loading-td, .no-data-td {
+    padding: 48px !important;
+    text-align: center !important;
+}
+
+.loader-wrapper, .no-data-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--text-muted);
+}
+
+.no-data-icon {
+    font-size: 32px;
+}
+
+.no-data-wrapper p {
+    margin: 0;
+    font-weight: 600;
+}
+
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(79, 70, 229, 0.1);
+    border-top: 3px solid var(--indigo-secondary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ==========================================================
+   TOAST ALERTS
+   ========================================================== */
+
+.toast-container {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast {
+    background-color: var(--toast-bg);
+    color: #ffffff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    border-left: 4px solid var(--indigo-secondary);
+    min-width: 280px;
+    display: flex;
+    align-items: center;
+    animation: slideIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.toast.info { border-left-color: var(--toast-info); }
+.toast.warning { border-left-color: var(--toast-warning); }
+.toast.error { border-left-color: var(--toast-error); }
+
+.toast-fade-out {
+    animation: slideOut 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes slideIn {
+    from { opacity: 0; transform: translateX(100px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideOut {
+    from { opacity: 1; transform: translateX(0); }
+    to { opacity: 0; transform: translateX(100px); }
+}
+
+/* ==========================================================
+   RESPONSIVE DESIGN overrides
+   ========================================================== */
+
+@media (max-width: 1024px) {
+    .filters-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .bulk-actions-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .bulk-buttons {
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+    }
+    
+    .search-actions-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .search-input {
+        width: 100%;
+        min-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .filters-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==========================================================
+   BUTTON THEME OVERRIDES (WHITE, #008037, BLACK)
+   ========================================================== */
+
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-neutral,
+.btn-primary-sm,
+.btn-neutral-sm,
+.view-feedback-btn,
+.toggle-btn,
+#refreshBtn,
+#filter-btn,
+#reset-btn,
+#download-btn,
+#clearSearch,
+#download-selected-btn,
+#download-all-matching-btn {
+    background-color: #008037 !important;
+    color: #ffffff !important;
+    border: 1.5px solid #008037 !important;
+    font-family: "Century Gothic";
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+}
+
+.btn:hover:not(:disabled),
+.btn-primary:hover:not(:disabled),
+.btn-secondary:hover:not(:disabled),
+.btn-neutral:hover:not(:disabled),
+.btn-primary-sm:hover:not(:disabled),
+.btn-neutral-sm:hover:not(:disabled),
+.view-feedback-btn:hover:not(:disabled),
+.toggle-btn:hover:not(:disabled),
+#refreshBtn:hover:not(:disabled),
+#filter-btn:hover:not(:disabled),
+#reset-btn:hover:not(:disabled),
+#download-btn:hover:not(:disabled),
+#clearSearch:hover:not(:disabled),
+#download-selected-btn:hover:not(:disabled),
+#download-all-matching-btn:hover:not(:disabled) {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border-color: #000000 !important;
+}
+
+/* Also ensure disabled buttons look correct */
+.btn:disabled,
+.btn.disabled,
+.btn:disabled:hover,
+.btn.disabled:hover {
+    background-color: #cccccc !important;
+    color: #888888 !important;
+    border-color: #cccccc !important;
+    cursor: not-allowed !important;
+    opacity: 0.6 !important;
+}
+
+/* ==========================================================
+   CUSTOM MULTISELECT COMPONENT STYLES
+   ========================================================== */
+.multiselect-container {
+    position: relative;
+    width: 100%;
+}
+
+.multiselect-trigger {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 550;
+    color: var(--text-dark);
+    background-color: var(--card-bg);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    user-select: none;
+    box-sizing: border-box;
+}
+
+.multiselect-trigger:focus {
+    border-color: var(--indigo-secondary);
+    box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.multiselect-dropdown {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: var(--card-bg);
+    border: 1.5px solid var(--border-color);
+    border-radius: 10px;
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+    display: none;
+    flex-direction: column;
+    max-height: 280px;
+    overflow: hidden;
+}
+
+.multiselect-dropdown.open {
+    display: flex;
+}
+
+.multiselect-search-wrapper {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.multiselect-search {
+    width: 100%;
+    padding: 6px 10px;
+    border: 1.5px solid var(--border-color);
+    border-radius: 6px;
+    font-size: 13px;
+    box-sizing: border-box;
+    outline: none;
+    font-family: var(--font);
+}
+
+.multiselect-search:focus {
+    border-color: var(--indigo-secondary);
+}
+
+.multiselect-actions {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: #fcfcfc;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.multiselect-action-btn {
+    background: none;
+    border: none;
+    font-size: 11px;
+    font-weight: bold;
+    color: var(--emerald-primary);
+    cursor: pointer;
+    padding: 2px 4px;
+    font-family: var(--font);
+}
+
+.multiselect-action-btn:hover {
+    text-decoration: underline;
+}
+
+.multiselect-options {
+    overflow-y: auto;
+    padding: 6px 0;
+    max-height: 180px;
+}
+
+.multiselect-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 550;
+    color: var(--text-dark);
+    user-select: none;
+}
+
+.multiselect-option:hover {
+    background: var(--selected-row-bg);
+}
+
+.multiselect-option input[type="checkbox"] {
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+    accent-color: var(--emerald-primary);
+    margin: 0;
+}
+
+.multiselect-badge-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 8px;
+}
+
+.multiselect-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+
+.multiselect-dropdown.open ~ .multiselect-trigger .multiselect-arrow {
+    transform: rotate(180deg);
+}

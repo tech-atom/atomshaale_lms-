@@ -1,0 +1,176 @@
+{% extends 'compiler/base.html' %}
+
+{% block title %}Language Support - Jango Compiler{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center mb-4">
+            <h1 class="text-success">
+                <i class="fas fa-download"></i> Language Support & Installation Guide
+            </h1>
+            <p class="lead text-light">Get the most out of Jango Compiler by installing the required compilers</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card border-success">
+            <div class="card-header bg-success text-white">
+                <i class="fas fa-check-circle"></i> Available Languages
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fab fa-python text-warning"></i> Python</span>
+                        <span class="badge bg-success">Ready</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fab fa-js text-warning"></i> JavaScript</span>
+                        <span class="badge bg-success">Ready</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-code"></i> HTML</span>
+                        <span class="badge bg-info">Preview Mode</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fab fa-css3"></i> CSS</span>
+                        <span class="badge bg-info">Preview Mode</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card border-warning">
+            <div class="card-header bg-warning text-dark">
+                <i class="fas fa-exclamation-triangle"></i> Requires Installation
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fab fa-java text-danger"></i> Java</span>
+                        <span class="badge bg-warning text-dark">Install JDK</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-code"></i> C/C++</span>
+                        <span class="badge bg-warning text-dark">Install GCC</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-hashtag"></i> C#/.NET</span>
+                        <span class="badge bg-warning text-dark">Install .NET SDK</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fab fa-php"></i> PHP</span>
+                        <span class="badge bg-warning text-dark">Install PHP</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-download"></i> Installation Instructions
+            </div>
+            <div class="card-body">
+                <div class="accordion" id="installAccordion">
+                    <div class="accordion-item bg-dark">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#javaInstall">
+                                <i class="fab fa-java text-danger me-2"></i> Java Development Kit (JDK)
+                            </button>
+                        </h2>
+                        <div id="javaInstall" class="accordion-collapse collapse show" data-bs-parent="#installAccordion">
+                            <div class="accordion-body">
+                                <h6>For Windows:</h6>
+                                <ol>
+                                    <li>Download JDK from <a href="https://www.oracle.com/java/technologies/downloads/" target="_blank">Oracle</a> or <a href="https://adoptium.net/" target="_blank">Adoptium</a></li>
+                                    <li>Install the JDK</li>
+                                    <li>Add <code>JAVA_HOME</code> to environment variables</li>
+                                    <li>Add <code>%JAVA_HOME%\bin</code> to PATH</li>
+                                    <li>Test with <code>javac -version</code> in Command Prompt</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item bg-dark">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#gccInstall">
+                                <i class="fas fa-code text-info me-2"></i> GCC/G++ Compiler
+                            </button>
+                        </h2>
+                        <div id="gccInstall" class="accordion-collapse collapse" data-bs-parent="#installAccordion">
+                            <div class="accordion-body">
+                                <h6>For Windows:</h6>
+                                <ol>
+                                    <li>Download MinGW-w64 from <a href="https://www.mingw-w64.org/downloads/" target="_blank">MinGW-w64</a></li>
+                                    <li>Or install via MSYS2: <code>pacman -S mingw-w64-x86_64-gcc</code></li>
+                                    <li>Add MinGW bin directory to PATH</li>
+                                    <li>Test with <code>gcc --version</code> and <code>g++ --version</code></li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item bg-dark">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#dotnetInstall">
+                                <i class="fas fa-hashtag text-purple me-2"></i> .NET SDK
+                            </button>
+                        </h2>
+                        <div id="dotnetInstall" class="accordion-collapse collapse" data-bs-parent="#installAccordion">
+                            <div class="accordion-body">
+                                <h6>For Windows:</h6>
+                                <ol>
+                                    <li>Download .NET SDK from <a href="https://dotnet.microsoft.com/download" target="_blank">Microsoft</a></li>
+                                    <li>Run the installer</li>
+                                    <li>Test with <code>dotnet --version</code> in Command Prompt</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="accordion-item bg-dark">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed bg-dark text-light" type="button" data-bs-toggle="collapse" data-bs-target="#phpInstall">
+                                <i class="fab fa-php text-primary me-2"></i> PHP
+                            </button>
+                        </h2>
+                        <div id="phpInstall" class="accordion-collapse collapse" data-bs-parent="#installAccordion">
+                            <div class="accordion-body">
+                                <h6>For Windows:</h6>
+                                <ol>
+                                    <li>Download PHP from <a href="https://www.php.net/downloads" target="_blank">php.net</a></li>
+                                    <li>Extract to a folder (e.g., C:\php)</li>
+                                    <li>Add PHP directory to PATH</li>
+                                    <li>Test with <code>php --version</code> in Command Prompt</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="alert alert-info">
+            <h5><i class="fas fa-info-circle"></i> Quick Start</h5>
+            <p>You can start coding immediately with <strong>Python</strong> and <strong>JavaScript</strong> - they're ready to use! 
+            For other languages, install the required compilers using the instructions above.</p>
+            <a href="{% url 'compiler:editor' %}" class="btn btn-primary">
+                <i class="fas fa-code"></i> Start Coding Now
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

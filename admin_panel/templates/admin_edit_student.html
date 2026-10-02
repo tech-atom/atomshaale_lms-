@@ -1,0 +1,52 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="edit-student-wrapper" style="max-width: 600px; margin: 40px auto; padding: 30px; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+  <h2 style="font-family: 'Century Gothic'; font-weight: 700; color: #333; margin-bottom: 25px; border-bottom: 2px solid #f0f0f0; padding-bottom: 15px;">
+    <i class="fa fa-edit" style="color: #008037; margin-right: 10px;"></i>Edit Student Details
+  </h2>
+  
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ next_url }}">
+    
+    {% for field in form %}
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label for="{{ field.id_for_label }}" style="display: block; font-weight: 600; margin-bottom: 8px; color: #444; font-family: 'Century Gothic';">
+          {{ field.label }} {% if field.field.required %}<span style="color: red;">*</span>{% endif %}
+        </label>
+        {{ field }}
+        {% if field.errors %}
+          <div style="color: #d9534f; font-size: 0.85em; margin-top: 5px;">
+            {{ field.errors.0 }}
+          </div>
+        {% endif %}
+        {% if field.help_text %}
+          <small class="form-text text-muted" style="display: block; font-size: 0.8em; margin-top: 5px; color: #777;">
+            {{ field.help_text }}
+          </small>
+        {% endif %}
+      </div>
+    {% endfor %}
+    
+    <div style="display: flex; gap: 15px; margin-top: 30px; justify-content: flex-end;">
+      <a href="{% if next_url %}{{ next_url }}{% else %}{% url 'admin_dashboard' %}{% endif %}" class="btn btn-secondary" style="padding: 10px 20px; border-radius: 6px; text-decoration: none; display: inline-block; background-color: #6c757d; color: #fff; border: none; cursor: pointer; transition: background 0.2s;">
+        Cancel
+      </a>
+      <button type="submit" class="btn btn-primary" style="padding: 10px 20px; border-radius: 6px; background-color: #008037; color: #fff; border: none; cursor: pointer; transition: background 0.2s;">
+        Save Changes
+      </button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/admin_registration.css' %}">
+
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{% static 'js/college_cascade.js' %}" defer></script>
+{% endblock %}

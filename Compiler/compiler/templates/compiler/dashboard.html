@@ -1,0 +1,139 @@
+{% extends 'compiler/base.html' %}
+
+{% block title %}Dashboard - Jango Compiler{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="text-center mb-4">
+            <h1 style="color: #008037;">
+                <i class="fas fa-terminal"></i> Welcome to Jango Compiler
+            </h1>
+            <p class="lead text-light">A powerful multi-language compiler and code execution platform</p>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-code"></i> Quick Start
+            </div>
+            <div class="card-body">
+                <p>Get started with coding right away:</p>
+                <a href="{% url 'compiler:editor' %}" class="btn btn-lg mb-2" style="background-color: #008037; color: white;">
+                    <i class="fas fa-edit"></i> Open Code Editor
+                </a>
+                <br>
+                <a href="{% url 'compiler:setup' %}" class="btn mb-2" style="background-color: #005024; color: white;">
+                    <i class="fas fa-download"></i> Setup Portable Compilers
+                </a>
+                <br>
+                <a href="{% url 'compiler:installation_guide' %}" class="btn btn-outline-info">
+                    <i class="fas fa-book"></i> Installation Guide
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-language"></i> Supported Languages
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-6">
+                        <ul class="list-unstyled">
+                            <li><i class="fab fa-python text-warning"></i> Python</li>
+                            <li><i class="fab fa-java text-danger"></i> Java</li>
+                            <li><i class="fas fa-code text-info"></i> C/C++</li>
+                        </ul>
+                    </div>
+                    <div class="col-6">
+                        <ul class="list-unstyled">
+                            <li><i class="fab fa-js text-warning"></i> JavaScript</li>
+                            <li><i class="fas fa-hashtag text-purple"></i> C#</li>
+                            <li><i class="fas fa-plus text-success"></i> More...</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-rocket"></i> Features
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-check text-success"></i> Real-time compilation</li>
+                    <li><i class="fas fa-check text-success"></i> Syntax highlighting</li>
+                    <li><i class="fas fa-check text-success"></i> Error detection</li>
+                    <li><i class="fas fa-check text-success"></i> Multiple languages</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-line"></i> Performance
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-bolt text-warning"></i> Fast compilation</li>
+                    <li><i class="fas fa-server text-info"></i> Optimized execution</li>
+                    <li><i class="fas fa-memory text-success"></i> Efficient memory usage</li>
+                    <li><i class="fas fa-cloud text-primary"></i> Cloud-based</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-tools"></i> Tools
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled">
+                    <li><i class="fas fa-bug text-danger"></i> Debugger</li>
+                    <li><i class="fas fa-file-code text-info"></i> Code formatter</li>
+                    <li><i class="fas fa-save text-success"></i> Project manager</li>
+                    <li><i class="fas fa-share text-warning"></i> Code sharing</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i> Getting Started
+            </div>
+            <div class="card-body">
+                <ol>
+                    <li>Click on the <strong>"Open Code Editor"</strong> button above</li>
+                    <li>Select your preferred programming language</li>
+                    <li>Write your code in the editor</li>
+                    <li>Click the <strong>"Run"</strong> button to compile and execute</li>
+                    <li>View the output in the result panel</li>
+                </ol>
+                <p class="mt-3">
+                    <strong>Pro Tip:</strong> Use keyboard shortcuts for faster coding:
+                    <code>Ctrl+S</code> to save, <code>Ctrl+Enter</code> to run code.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

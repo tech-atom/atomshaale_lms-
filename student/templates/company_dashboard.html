@@ -1,0 +1,247 @@
+{% extends base_template %}
+{% load static %}
+
+{% block title %}{{ company.name }} Preparation Dashboard{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/company_prep.css' %}?v=1.2">
+{% endblock %}
+
+{% block content %}
+<div class="prep-header" style="display: flex; justify-content: space-between; align-items: center; background: #ffffff; border: 1px solid #e2e8f0; padding: 1.25rem 1.75rem; border-radius: 12px; margin-bottom: 1.5rem; box-shadow: 0 4px 15px rgba(0,0,0,0.04); flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; align-items: center; gap: 1.25rem;">
+        {% if company.logo %}
+        <img src="{{ company.logo.url }}" alt="{{ company.name }}" style="width: 54px; height: 54px; object-fit: contain; border-radius: 10px; background: #ffffff; padding: 4px; border: 1px solid #e2e8f0;">
+        {% else %}
+        <div style="width: 54px; height: 54px; border-radius: 10px; background: #f1f5f9; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #008037; font-size: 1.5rem;">
+            {{ company.name|slice:":1"|upper }}
+        </div>
+        {% endif %}
+        <div>
+            <h1 class="prep-title" style="margin: 0; font-size: 1.7rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">{{ company.name }}</h1>
+            <span style="font-size: 0.82rem; color: #64748b; font-weight: 500;">Placement Preparation Program</span>
+        </div>
+    </div>
+
+    <!-- Back to Companies Button -->
+    <a href="{% url 'company_prep:company_list' %}" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1.3rem; background: #ffffff; border: 1.5px solid #008037; border-radius: 8px; color: #008037; font-weight: 700; font-size: 0.88rem; text-decoration: none; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(0, 128, 55, 0.08);">
+        <span>←</span> Back to Companies
+    </a>
+</div>
+
+<div style="display: flex; gap: 0.5rem; margin-top: -0.5rem; margin-bottom: 2rem; flex-wrap: wrap; background: var(--bg-card); padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid var(--border);">
+    <span style="font-size: 0.85rem; color: var(--text-secondary); align-self: center; margin-right: 0.5rem; font-weight: 500;">Select Exam Paper:</span>
+    {% for paper in other_papers %}
+    <a href="{% url 'company_prep:company_dashboard' paper.id %}" 
+       style="padding: 0.4rem 1rem; border-radius: 6px; font-size: 0.85rem; font-weight: bold; text-decoration: none; border: 1px solid {% if paper.id == company.id %}var(--secondary){% else %}var(--border){% endif %}; background: {% if paper.id == company.id %}var(--secondary){% else %}rgba(255,255,255,0.02){% endif %}; color: {% if paper.id == company.id %}#ffffff{% else %}var(--text-primary){% endif %}; transition: all 0.2s;">
+        {% if paper.year == 1 %}1st Year{% elif paper.year == 2 %}2nd Year{% elif paper.year == 3 %}3rd Year{% elif paper.year == 4 %}4th Year{% else %}{{ paper.year }} Paper{% endif %}{% if paper.semester %} - {{ paper.semester }} Sem{% endif %}
+    </a>
+    {% endfor %}
+</div>
+
+{% if company.college or company.start_datetime or company.end_datetime %}
+<div style="background: {% if not is_eligible or schedule_status == 'expired' %}#fef2f2{% else %}#f0fdf4{% endif %}; border: 1.5px solid {% if not is_eligible or schedule_status == 'expired' %}#fca5a5{% else %}#86efac{% endif %}; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;">
+    <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.5rem; display: flex; align-items: center;">{% if not is_eligible or schedule_status == 'expired' %}<svg viewBox="0 0 24 24" width="24" height="24" stroke="#991b1b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>{% else %}<svg viewBox="0 0 24 24" width="24" height="24" stroke="#166534" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>{% endif %}</span>
+        <div>
+            <strong style="color: {% if not is_eligible or schedule_status == 'expired' %}#991b1b{% else %}#166534{% endif %}; font-size: 0.95rem; display: block;">
+                {% if not is_eligible %}
+                    Access Restricted to {{ company.college.name }}
+                {% elif schedule_status == 'future' %}
+                    Test Scheduled (Not yet active)
+                {% elif schedule_status == 'expired' %}
+                    Test Expired
+                {% else %}
+                    Test Active
+                {% endif %}
+            </strong>
+            <span style="font-size: 0.8rem; color: #475569;">
+                {% if not is_eligible %}
+                    You are not eligible to take this practice session because it is restricted to students of {{ company.college.name }}.
+                {% elif schedule_status == 'future' %}
+                    This placement practice paper will open on <strong>{{ company.start_datetime|date:"d-M-Y H:i A" }}</strong>.
+                {% elif schedule_status == 'expired' %}
+                    This practice session closed on <strong>{{ company.end_datetime|date:"d-M-Y H:i A" }}</strong>.
+                {% else %}
+                    Accessible to students of {{ company.college.name|default:"all colleges" }} until <strong>{{ company.end_datetime|date:"d-M-Y H:i A"|default:"further notice" }}</strong>.
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="dashboard-grid">
+    <!-- Main Prep Columns -->
+    <div>
+        <!-- Company Metadata Info -->
+        <div class="dashboard-card" style="position: relative;">
+            <h2 class="dashboard-card-title">
+                <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Company Details & Selection Process
+            </h2>
+
+            <!-- Premium Metadata Section -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.25rem; background: rgba(255,255,255,0.02); border: 1px solid var(--border); border-radius: 8px; padding: 0.85rem 1.1rem;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="color: var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(0, 128, 55, 0.08); border-radius: 6px; width: 32px; height: 32px;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.72rem; color: var(--text-secondary); display: block; font-weight: 700; text-transform: uppercase;">Job Role</span>
+                        <strong style="font-size: 0.88rem; color: var(--text-primary);">{{ company.job_role|default:"General" }}</strong>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="color: var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(0, 128, 55, 0.08); border-radius: 6px; width: 32px; height: 32px;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.72rem; color: var(--text-secondary); display: block; font-weight: 700; text-transform: uppercase;">Package</span>
+                        <strong style="font-size: 0.88rem; color: var(--text-primary);">{{ company.package|default:"N/A" }}</strong>
+                    </div>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="color: var(--primary); display: flex; align-items: center; justify-content: center; background: rgba(0, 128, 55, 0.08); border-radius: 6px; width: 32px; height: 32px;">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.72rem; color: var(--text-secondary); display: block; font-weight: 700; text-transform: uppercase;">Location</span>
+                        <strong style="font-size: 0.88rem; color: var(--text-primary);">{{ company.place|default:"N/A" }}</strong>
+                    </div>
+                </div>
+            </div>
+
+
+            {% if company.previous_papers %}
+            <hr style="border: none; border-top: 1px solid var(--border); margin: 1rem 0;">
+            <div style="display: flex; align-items: center; justify-content: space-between; background: rgba(0, 128, 55, 0.08); border: 1px solid rgba(0, 128, 55, 0.2); padding: 0.75rem 1rem; border-radius: 6px;">
+                <div>
+                    <strong style="color: var(--text-primary); font-size: 0.9rem; display: block;">Previous Year Question Papers</strong>
+                    <span style="font-size: 0.75rem; color: var(--text-secondary);">Download real placement sheets uploaded by the Admin.</span>
+                </div>
+                <a href="{{ company.previous_papers.url }}" target="_blank" class="action-btn-primary" style="padding: 0.45rem 1rem; font-size: 0.8rem; background: #008037; display: inline-flex; align-items: center; gap: 0.35rem; text-decoration: none;">
+                    📥 Download PDF
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Rounds of Preparation -->
+        <div class="round-list">
+            <!-- Round 1: Aptitude -->
+            {% if has_aptitude %}
+            <div class="round-item">
+                <div class="round-item-header">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="round-badge badge-aptitude">Round 1</span>
+                        <h3 class="round-name-title">Quantitative & Logical Aptitude</h3>
+                    </div>
+                    {% if last_aptitude %}
+                    <span style="font-size: 0.85rem; color: var(--success); font-weight: bold;">Last Score: {{ last_aptitude.score }}%</span>
+                    {% else %}
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Not attempted</span>
+                    {% endif %}
+                </div>
+                
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+                    Prepare for the cognitive test including: Quantitative Aptitude, Logical Reasoning, Verbal Ability, and Data Interpretation.
+                </p>
+
+
+                <div style="margin-top: 0.5rem;">
+                    {% if is_eligible and schedule_status == 'active' and aptitude_attempts_count < max_attempts %}
+                    <a href="{% url 'company_prep:aptitude_test' company.id 'Medium' %}" class="action-btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Start Aptitude Test</a>
+                    {% else %}
+                    <button class="action-btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #cbd5e1; color: #64748b; border: none; cursor: not-allowed; box-shadow: none;" disabled>
+                        {% if aptitude_attempts_count >= max_attempts %}Attempts Exhausted{% elif not is_eligible %}Access Restricted{% else %}Test Locked{% endif %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Round 2: Technical -->
+            {% if has_technical %}
+            <div class="round-item">
+                <div class="round-item-header">
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <span class="round-badge badge-technical">Round 2</span>
+                        <h3 class="round-name-title">Technical Proficiency ({{ branch }} Branch)</h3>
+                    </div>
+                    {% if last_technical %}
+                    <span style="font-size: 0.85rem; color: var(--success); font-weight: bold;">Last Score: {{ last_technical.score }}%</span>
+                    {% else %}
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">Not attempted</span>
+                    {% endif %}
+                </div>
+                
+                <p style="font-size: 0.9rem; color: var(--text-secondary); margin: 0;">
+                    Tailored core assessment. Covers subjects: 
+                    {% if branch == 'CSE' %}Programming, DSA, SQL, OOPS, Operating Systems, Networks, System Design.
+                    {% elif branch == 'ECE' %}Digital Electronics, Microprocessors, Embedded Systems, Communication, Signals, PCB Design.
+                    {% elif branch == 'Mechanical' %}Thermodynamics, Strength of Materials, Manufacturing, CAD, CNC, GD&T.
+                    {% elif branch == 'Civil' %}Surveying, RCC Structures, Steel Structures, Estimations, AutoCAD, STAAD.
+                    {% elif branch == 'MBA' %}Marketing, Finance, HR metrics, Business Analytics, Case Studies.
+                    {% endif %}
+                </p>
+
+
+                <div style="margin-top: 0.5rem;">
+                    {% if has_aptitude and aptitude_attempts_count == 0 %}
+                    <button class="action-btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #cbd5e1; color: #64748b; border: none; cursor: not-allowed; box-shadow: none;" disabled>
+                        Unlock after Round 1
+                    </button>
+                    {% elif is_eligible and schedule_status == 'active' and technical_attempts_count < max_attempts %}
+                    <a href="{% url 'company_prep:technical_test' company.id %}" class="action-btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Start Technical Test</a>
+                    {% else %}
+                    <button class="action-btn-primary" style="padding: 0.5rem 1rem; font-size: 0.85rem; background: #cbd5e1; color: #64748b; border: none; cursor: not-allowed; box-shadow: none;" disabled>
+                        {% if technical_attempts_count >= max_attempts %}Attempts Exhausted{% elif not is_eligible %}Access Restricted{% else %}Test Locked{% endif %}
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <!-- Sidebar Metrics Columns -->
+    <div>
+        <!-- Readiness Panel -->
+        <div class="dashboard-card" style="text-align: center;">
+            <h3 style="margin-top: 0; color: var(--text-primary); font-size: 1.15rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem;">Placement Readiness</h3>
+            
+            <div style="margin: 1.5rem 0;">
+                <div style="font-size: 2.5rem; font-weight: 800; color: var(--secondary); line-height: 1;">
+                    {{ progress.placement_readiness }}%
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">Overall Job-Readiness Score</div>
+            </div>
+            
+            <div style="text-align: left; display: flex; flex-direction: column; gap: 0.75rem; font-size: 0.85rem;">
+                {% if has_aptitude %}
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; color: var(--text-secondary);">
+                        <span>Aptitude</span>
+                        <span>{{ progress.aptitude_score }}%</span>
+                    </div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: {{ progress.aptitude_score }}%; background: #6366f1;"></div></div>
+                </div>
+                {% endif %}
+                {% if has_technical %}
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem; color: var(--text-secondary);">
+                        <span>Technical</span>
+                        <span>{{ progress.technical_score }}%</span>
+                    </div>
+                    <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: {{ progress.technical_score }}%; background: #06b6d4;"></div></div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

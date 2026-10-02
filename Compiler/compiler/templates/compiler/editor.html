@@ -1,0 +1,229 @@
+﻿{% extends 'compiler/base.html' %}
+
+{% block title %}Code Editor - Jango Compiler{% endblock %}
+
+{% block content %}
+{% csrf_token %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-code"></i> Code Editor</span>
+                <div>
+                    <select id="languageSelect" class="form-select form-select-sm" style="width: auto; display: inline-block;">
+                        <option value="python">Python</option>
+                        <option value="java">Java</option>
+                        <option value="cpp">C++</option>
+                        <option value="c">C</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="csharp">C#</option>
+                    </select>
+                    <button id="runBtn" class="btn btn-sm ms-2" style="background-color: #008037; color: white;">
+                        <i class="fas fa-play"></i> Run Code
+                    </button>
+                    <button id="clearBtn" class="btn btn-warning btn-sm ms-1">
+                        <i class="fas fa-eraser"></i> Clear
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="row g-0">
+                    <div class="col-md-6">
+                        <div class="p-3">
+                            <label for="codeEditor" class="form-label text-light">
+                                <i class="fas fa-edit"></i> Code Input:
+                            </label>
+                            <textarea id="codeEditor" class="form-control" rows="20" 
+                                      placeholder="Write your code here..." 
+                                      style="background-color: #1e1e1e; color: #ffffff; border: 1px solid #008037; font-family: 'Courier New', monospace; font-size: 14px;">print("Hello, World!")
+print("Welcome to Jango Compiler!")
+
+# Try running some Python code:
+for i in range(5):
+    print(f"Count: {i}")
+
+# You can write any Python code here
+import datetime
+print(f"Current time: {datetime.datetime.now()}")</textarea>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3">
+                            <label class="form-label text-light">
+                                <i class="fas fa-terminal"></i> Output:
+                            </label>
+                            <div id="outputArea" class="p-3" 
+                                 style="background-color: #000000; color: #00ff00; border: 1px solid #008037; min-height: 400px; font-family: 'Courier New', monospace; font-size: 14px; overflow-y: auto;">
+                                <div class="text-muted">Click "Run Code" to see output here...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-info-circle"></i> Quick Help
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <h6 style="color: #008037;">Keyboard Shortcuts:</h6>
+                        <ul class="small">
+                            <li><kbd>Ctrl</kbd> + <kbd>Enter</kbd> - Run code</li>
+                            <li><kbd>Ctrl</kbd> + <kbd>S</kbd> - Save (future feature)</li>
+                            <li><kbd>Ctrl</kbd> + <kbd>A</kbd> - Select all</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 style="color: #008037;">Supported Languages:</h6>
+                        <ul class="small">
+                            <li>Python (fully supported)</li>
+                            <li>Java (coming soon)</li>
+                            <li>C/C++ (coming soon)</li>
+                            <li>JavaScript (coming soon)</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="text-warning">Tips:</h6>
+                        <ul class="small">
+                            <li>Check syntax before running</li>
+                            <li>Use print() for output in Python</li>
+                            <li>Code execution times out after 10 seconds</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const runBtn = document.getElementById('runBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const codeEditor = document.getElementById('codeEditor');
+    const outputArea = document.getElementById('outputArea');
+    const languageSelect = document.getElementById('languageSelect');
+
+    // Run code function
+    runBtn.addEventListener('click', function() {
+        const code = codeEditor.value.trim();
+        const language = languageSelect.value;
+        
+        if (!code) {
+            outputArea.innerHTML = '<div class="text-warning">Please enter some code to run.</div>';
+            return;
+        }
+
+        // Show loading
+        outputArea.innerHTML = '<div class="text-info"><i class="fas fa-spinner fa-spin"></i> Compiling and running code...</div>';
+        runBtn.disabled = true;
+        runBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Running...';
+
+        // Send request to backend
+        fetch('/api/compile/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({
+                code: code,
+                language: language
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                let output = '';
+                if (data.output) {
+                    output += '<div class="text-success">Output:</div>';
+                    output += '<pre class="text-light">' + escapeHtml(data.output) + '</pre>';
+                }
+                if (data.error) {
+                    output += '<div class="text-danger mt-2">Errors:</div>';
+                    output += '<pre class="text-danger">' + escapeHtml(data.error) + '</pre>';
+                }
+                if (!data.output && !data.error) {
+                    output = '<div class="text-info">Code executed successfully with no output.</div>';
+                }
+                outputArea.innerHTML = output;
+            } else {
+                outputArea.innerHTML = '<div class="text-danger">Error: ' + escapeHtml(data.error) + '</div>';
+            }
+        })
+        .catch(error => {
+            outputArea.innerHTML = '<div class="text-danger">Network error: ' + escapeHtml(error.toString()) + '</div>';
+        })
+        .finally(() => {
+            runBtn.disabled = false;
+            runBtn.innerHTML = '<i class="fas fa-play"></i> Run Code';
+        });
+    });
+
+    // Clear editor
+    clearBtn.addEventListener('click', function() {
+        if (confirm('Are you sure you want to clear the editor?')) {
+            codeEditor.value = '';
+            outputArea.innerHTML = '<div class="text-muted">Click "Run Code" to see output here...</div>';
+        }
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+            e.preventDefault();
+            runBtn.click();
+        }
+    });
+
+    // Language change
+    languageSelect.addEventListener('change', function() {
+        const language = this.value;
+        const samples = {
+            python: 'print("Hello, World!")\\nprint("Welcome to Jango Compiler!")\\n\\n# Try running some Python code:\\nfor i in range(5):\\n    print(f"Count: {i}")\\n\\n# You can write any Python code here\\nimport datetime\\nprint(f"Current time: {datetime.datetime.now()}")',
+            java: 'public class HelloWorld {\\n    public static void main(String[] args) {\\n        System.out.println("Hello, World!");\\n        System.out.println("Welcome to Jango Compiler!");\\n    }\\n}',
+            cpp: '#include <iostream>\\nusing namespace std;\\n\\nint main() {\\n    cout << "Hello, World!" << endl;\\n    cout << "Welcome to Jango Compiler!" << endl;\\n    return 0;\\n}',
+            c: '#include <stdio.h>\\n\\nint main() {\\n    printf("Hello, World!\\\\n");\\n    printf("Welcome to Jango Compiler!\\\\n");\\n    return 0;\\n}',
+            javascript: 'console.log("Hello, World!");\\nconsole.log("Welcome to Jango Compiler!");\\n\\n// Try some JavaScript\\nfor (let i = 0; i < 5; i++) {\\n    console.log(`Count: ${i}`);\\n}',
+            csharp: 'using System;\\n\\nclass Program {\\n    static void Main() {\\n        Console.WriteLine("Hello, World!");\\n        Console.WriteLine("Welcome to Jango Compiler!");\\n    }\\n}'
+        };
+        
+        if (samples[language]) {
+            codeEditor.value = samples[language].replace(/\\\\n/g, '\\n');
+        }
+    });
+
+    // Utility functions
+    function getCSRFToken() {
+        const name = 'csrftoken';
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+});
+</script>
+{% endblock %}

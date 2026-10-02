@@ -1,0 +1,431 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}Trainer Reports Dashboard{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_trainer_reports.css' %}" nonce="{{ request.csp_nonce }}">
+{% endblock %}
+
+{% block content %}
+<div class="trainer-report-dashboard">
+  
+  <!-- Config Div with DB API endpoints -->
+  <div id="report-api"
+       data-url="{% url 'admin_trainer_reports_api' %}"
+       data-export-url="{% url 'export_trainer_reports_excel' %}"
+       data-trainer-url="{% url 'get_trainers' %}"
+       data-colleges-url="{% url 'get_colleges' %}"
+       data-courses-url="{% url 'get_courses' %}"
+       data-sections-url="{% url 'get_sections' %}"
+       data-domains-url="{% url 'get_domains' %}"
+       data-years-url="{% url 'get_year_choices' %}"
+       data-semesters-url="{% url 'get_semester_choices' %}"
+       data-subdomains-base-url="/api/subdomains/">
+  </div>
+
+  <!-- Dashboard Header -->
+  <div class="dashboard-header animate-fade-in">
+    <div class="header-text">
+      <h1 class="main-title">Trainer Reports Analytics</h1>
+      <p class="subtitle">Live tracking of daily educational sessions, attendance metrics, and curriculum progress.</p>
+    </div>
+    <div class="header-actions">
+      <button id="exportExcelBtn" class="btn btn-primary btn-glowing">
+        <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        <span>Export to Excel</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Live Metrics Cards -->
+  <div class="metrics-grid animate-fade-in">
+    <div class="metric-card glass-panel" id="metric-total-reports">
+      <div class="metric-icon-wrapper bg-emerald-glow">
+        <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">Total Daily Reports</span>
+        <h3 class="metric-value" id="val-total-reports">0</h3>
+      </div>
+    </div>
+    <div class="metric-card glass-panel" id="metric-active-trainers">
+      <div class="metric-icon-wrapper bg-blue-glow">
+        <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        </svg>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">Trainers Represented</span>
+        <h3 class="metric-value" id="val-active-trainers">0</h3>
+      </div>
+    </div>
+    <div class="metric-card glass-panel" id="metric-avg-attendance">
+      <div class="metric-icon-wrapper bg-purple-glow">
+        <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">Avg Attendance Rate</span>
+        <h3 class="metric-value" id="val-avg-attendance">0%</h3>
+      </div>
+    </div>
+    <div class="metric-card glass-panel" id="metric-assignments">
+      <div class="metric-icon-wrapper bg-orange-glow">
+        <svg class="metric-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"></path>
+          <path d="M9 12l2 2 4-4"></path>
+        </svg>
+      </div>
+      <div class="metric-content">
+        <span class="metric-label">Active Engagement</span>
+        <h3 class="metric-value" id="val-activity-rate">0%</h3>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters Toolbar -->
+  <div class="toolbar glass-panel animate-fade-in">
+    <div class="toolbar-search-row">
+      <div class="search-input-wrapper">
+        <span class="search-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+        </span>
+        <input type="text" id="searchInput" placeholder="Search Trainer, College, Course, Module, Summary...">
+      </div>
+      <div class="date-range-wrapper">
+        <div class="date-field">
+          <label for="fromDate">From</label>
+          <input type="date" id="fromDate">
+        </div>
+        <div class="date-field">
+          <label for="toDate">To</label>
+          <input type="date" id="toDate">
+        </div>
+      </div>
+      <button id="resetFiltersBtn" class="btn btn-secondary">Reset Filters</button>
+    </div>
+
+    <!-- Multi-select Filter dropdowns grid -->
+    <div class="filters-grid">
+      <!-- Trainer -->
+      <div class="custom-dropdown" id="dropdown-trainer">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Trainers (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-search">
+            <input type="text" class="popover-search-input" placeholder="Search Trainers...">
+          </div>
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-trainer">
+            <div class="popover-loading">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- College -->
+      <div class="custom-dropdown" id="dropdown-college">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Colleges (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-search">
+            <input type="text" class="popover-search-input" placeholder="Search Colleges...">
+          </div>
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-college">
+            <div class="popover-loading">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Course -->
+      <div class="custom-dropdown" id="dropdown-course">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Courses (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-search">
+            <input type="text" class="popover-search-input" placeholder="Search Courses...">
+          </div>
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-course">
+            <div class="popover-loading">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section -->
+      <div class="custom-dropdown" id="dropdown-section">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Sections (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-search">
+            <input type="text" class="popover-search-input" placeholder="Search Sections...">
+          </div>
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-section">
+            <div class="popover-placeholder">All Sections</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Domain -->
+      <div class="custom-dropdown" id="dropdown-domain">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Domains (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-search">
+            <input type="text" class="popover-search-input" placeholder="Search Domains...">
+          </div>
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-domain">
+            <div class="popover-loading">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subdomain -->
+      <div class="custom-dropdown" id="dropdown-subdomain">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Subdomains (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-search">
+            <input type="text" class="popover-search-input" placeholder="Search Subdomains...">
+          </div>
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-subdomain">
+            <div class="popover-placeholder">Select domain first</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Year -->
+      <div class="custom-dropdown" id="dropdown-year">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Years (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-year">
+            <div class="popover-loading">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Semester -->
+      <div class="custom-dropdown" id="dropdown-semester">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Semesters (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-semester">
+            <div class="popover-loading">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Table Container -->
+  <div class="table-container glass-panel animate-fade-in" id="adminReportTableContainer">
+    <div class="table-header-info">
+      <div class="selections-count-wrapper">
+        <span id="selected-counter">0 reports selected</span>
+        <button id="clear-selections-btn" class="btn-text clear-selections">Clear selection</button>
+      </div>
+      <div class="reports-page-summary" id="reports-showing-summary">
+        Showing 0 to 0 of 0 reports
+      </div>
+    </div>
+    
+    <div class="table-scroll" aria-label="Trainer reports table container">
+      <table id="adminReportTable">
+        <thead>
+          <tr>
+            <th class="col-checkbox">
+              <label class="custom-checkbox-container">
+                <input type="checkbox" id="selectAllCheckbox">
+                <span class="checkbox-checkmark"></span>
+              </label>
+            </th>
+            <th class="col-date">Date</th>
+            <th class="col-trainer">Trainer</th>
+            <th class="col-college">College</th>
+            <th class="col-course">Course</th>
+            <th class="col-class-meta">Year</th>
+            <th class="col-class-meta">Sem</th>
+            <th class="col-class-meta">Sec</th>
+            <th class="col-domain">Domain</th>
+            <th class="col-subdomain">Subdomain</th>
+            <th class="col-module">Module</th>
+            <th class="col-attendance">Attendance</th>
+            <th class="col-badge">Exercises</th>
+            <th class="col-badge">Materials</th>
+            <th class="col-badge">Assignments</th>
+            <th class="col-actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="16" class="loading-state">
+              <div class="loading-spinner"></div>
+              <span>Fetching reports...</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-wrapper" id="paginationContainer"></div>
+  </div>
+</div>
+
+<!-- Details Modal -->
+<div class="modal-overlay" id="reportDetailModal" tabindex="-1" role="dialog" aria-modal="true" aria-hidden="true">
+  <div class="modal-dialog glass-panel" role="document">
+    <div class="modal-header">
+      <h2 class="modal-title">Trainer Daily Report Details</h2>
+      <button type="button" class="modal-close-btn" id="closeModalBtn" aria-label="Close modal">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-meta-grid">
+        <div class="meta-item">
+          <span class="meta-label">Trainer</span>
+          <span class="meta-value" id="modal-trainer">-</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Date</span>
+          <span class="meta-value" id="modal-date">-</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">College</span>
+          <span class="meta-value" id="modal-college">-</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Course</span>
+          <span class="meta-value" id="modal-course">-</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Class Details</span>
+          <span class="meta-value" id="modal-class-details">-</span>
+        </div>
+        <div class="meta-item">
+          <span class="meta-label">Curriculum / Module</span>
+          <span class="meta-value" id="modal-scope">-</span>
+        </div>
+      </div>
+
+      <!-- Attendance Visual Progress bar -->
+      <div class="attendance-visual-section">
+        <h4 class="section-title">Session Attendance Overview</h4>
+        <div class="attendance-progress-row">
+          <div class="progress-bar-wrapper">
+            <div class="progress-fill" id="modal-attendance-progress" style="width: 0%"></div>
+          </div>
+          <span class="progress-percentage" id="modal-attendance-text">0%</span>
+        </div>
+        <div class="attendance-detail-stats">
+          <span class="stat-badge stat-total">Total Class: <strong id="modal-total-students">0</strong></span>
+          <span class="stat-badge stat-present">Present: <strong id="modal-present-students">0</strong></span>
+          <span class="stat-badge stat-absent">Absent: <strong id="modal-absent-students">0</strong></span>
+        </div>
+      </div>
+
+      <!-- Checklist/Badges Grid -->
+      <div class="session-checklist-section">
+        <h4 class="section-title">Deliverables Tracked</h4>
+        <div class="checklist-grid">
+          <div class="checklist-item" id="modal-exercises">
+            <span class="chk-status"></span>
+            <span class="chk-label">Exercises Solved</span>
+          </div>
+          <div class="checklist-item" id="modal-materials">
+            <span class="chk-status"></span>
+            <span class="chk-label">Materials Shared</span>
+          </div>
+          <div class="checklist-item" id="modal-assignments">
+            <span class="chk-status"></span>
+            <span class="chk-label">Assignments Given</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary -->
+      <div class="summary-section">
+        <h4 class="section-title">Daily Session Summary</h4>
+        <div class="summary-text-box" id="modal-summary">
+          <!-- Text content -->
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span class="submitted-info">Submitted: <span id="modal-submitted-at">-</span></span>
+      <button type="button" class="btn btn-secondary" id="closeModalBtnFooter">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Popups Container -->
+<div id="toast-container" class="toast-container"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{% static 'js/admin_trainer_reports.js' %}" defer></script>
+{% endblock %}

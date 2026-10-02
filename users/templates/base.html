@@ -1,0 +1,72 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>{% block title %}My LMS{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{% static 'images/atomshaalelogo.png' %}">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" integrity="sha512-t4GWSVZO1eC8BM339Xd7Uphw5s17a86tIZIj8qRxhnKub6WoyhnrxeCIMeAqBPgdZGlCcG2PrZjMc+Wr78+5Xg==" crossorigin="anonymous">
+
+  <!-- Tailwind (mobile utilities) - build to static/css/tailwind_mobile.css -->
+  <!-- <link rel="stylesheet" href="{% static 'css/tailwind_mobile.css' %}"> -->
+
+  <!-- Combined Base CSS -->
+  <link rel="stylesheet" href="{% static 'css/user/base.css' %}">
+  <link rel="stylesheet" href="{% static 'css/responsive_global.css' %}">
+
+  {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-custom mb-4">
+    <div class="container-fluid">
+      <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+        <img src="{% static 'images/atomshaalelogo.png' %}" alt="Logo" />
+        <span class="fw-bold brand-text">
+          ATOM
+        </span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          {% if user.is_authenticated %}
+            <li class="nav-item">
+              <a class="btn btn-outline-success auth-btn px-3" href="{% url 'logout' %}">{% trans "Logout" %}</a>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="btn btn-success text-white auth-btn px-4" href="{% url 'login' %}">{% trans "Login" %}</a>
+            </li>
+          {% endif %}
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container glass">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
+          {{ message }}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer>
+    Copyright © 2026 ATOM. All rights reserved.
+  </footer>
+
+  <!-- Bootstrap JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js" integrity="sha512-VK2zcvntEufaimc+efOYi622VN5ZacdnufnmX7zIhCPmjhKnOi9ZDMtg1/ug5l183f19gG1/cBstPO4D8N/Img==" crossorigin="anonymous"></script>
+  {% block extra_js %}{% endblock %}
+</body>
+</html>

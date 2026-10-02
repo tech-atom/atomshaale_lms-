@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portable Compiler Setup - Jango Compiler</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            min-height: 100vh;
+        }
+        
+        .setup-container {
+            background: rgba(0, 0, 0, 0.8);
+            border: 2px solid #007bff;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(0, 123, 255, 0.3);
+            margin: 20px auto;
+            max-width: 1000px;
+            padding: 30px;
+        }
+        
+        .compiler-card {
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid #333;
+            border-radius: 10px;
+            margin: 10px 0;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .compiler-card:hover {
+            border-color: #007bff;
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.2);
+        }
+        
+        .status-badge {
+            font-size: 0.9em;
+            padding: 5px 10px;
+            border-radius: 20px;
+            margin-left: 10px;
+        }
+        
+        .status-installed {
+            background: #28a745;
+            color: white;
+        }
+        
+        .status-available {
+            background: #ffc107;
+            color: black;
+        }
+        
+        .status-missing {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .install-btn {
+            background: #007bff;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            padding: 8px 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .install-btn:hover {
+            background: #0056b3;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.5);
+        }
+        
+        .install-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+        
+        .progress-container {
+            display: none;
+            margin-top: 15px;
+        }
+        
+        .terminal-output {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 5px;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            height: 200px;
+            margin-top: 15px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        
+        .nav-link {
+            color: #00ff00 !important;
+            border: 1px solid transparent;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-link:hover {
+            color: #007bff !important;
+            border-color: #007bff;
+            box-shadow: 0 0 10px rgba(0, 123, 255, 0.3);
+        }
+        
+        .btn-setup-all {
+            background: linear-gradient(45deg, #007bff, #00ff00);
+            border: none;
+            border-radius: 25px;
+            color: #000;
+            font-weight: bold;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.5);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-setup-all:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 30px rgba(0, 123, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg" style="background-color: rgba(0, 0, 0, 0.9);">
+        <div class="container">
+            <a class="navbar-brand text-primary fw-bold" href="{% url 'dashboard' %}">
+                <i class="fas fa-terminal"></i> Jango Compiler
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{% url 'dashboard' %}">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a class="nav-link" href="{% url 'editor' %}">
+                    <i class="fas fa-code"></i> Code Editor
+                </a>
+                <a class="nav-link active" href="{% url 'setup' %}">
+                    <i class="fas fa-download"></i> Setup
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="setup-container">
+            <div class="text-center mb-4">
+                <h1><i class="fas fa-download"></i> Portable Compiler Setup</h1>
+                <p class="lead">Make your Jango Compiler fully portable with built-in compilers!</p>
+            </div>
+            
+            <!-- Setup All Button -->
+            <div class="text-center mb-4">
+                <button class="btn btn-setup-all" onclick="setupAllCompilers()">
+                    <i class="fas fa-magic"></i> Setup All Compilers (One-Click)
+                </button>
+                <div class="mt-2">
+                    <small class="text-muted">Downloads and installs all compilers automatically</small>
+                </div>
+            </div>
+            
+            <!-- Global Progress -->
+            <div id="globalProgress" class="progress-container">
+                <div class="progress">
+                    <div id="globalProgressBar" class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%"></div>
+                </div>
+                <div id="globalStatus" class="mt-2 text-center"></div>
+            </div>
+            
+            <!-- Compiler Status -->
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="compiler-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5><i class="fab fa-java"></i> Java (OpenJDK 17)</h5>
+                                <small class="text-muted">For Java compilation and execution</small>
+                            </div>
+                            <div>
+                                <span id="java-status" class="status-badge status-missing">Not Installed</span>
+                                <button class="install-btn" onclick="installCompiler('java')">Install</button>
+                            </div>
+                        </div>
+                        <div id="java-progress" class="progress-container">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="compiler-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5><i class="fas fa-cog"></i> GCC/G++ (MinGW)</h5>
+                                <small class="text-muted">For C and C++ compilation</small>
+                            </div>
+                            <div>
+                                <span id="gcc-status" class="status-badge status-missing">Not Installed</span>
+                                <button class="install-btn" onclick="installCompiler('gcc')">Install</button>
+                            </div>
+                        </div>
+                        <div id="gcc-progress" class="progress-container">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="compiler-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5><i class="fab fa-microsoft"></i> .NET SDK 6</h5>
+                                <small class="text-muted">For C# and .NET development</small>
+                            </div>
+                            <div>
+                                <span id="dotnet-status" class="status-badge status-missing">Not Installed</span>
+                                <button class="install-btn" onclick="installCompiler('dotnet')">Install</button>
+                            </div>
+                        </div>
+                        <div id="dotnet-progress" class="progress-container">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="compiler-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5><i class="fab fa-php"></i> PHP 8.2</h5>
+                                <small class="text-muted">For PHP script execution</small>
+                            </div>
+                            <div>
+                                <span id="php-status" class="status-badge status-missing">Not Installed</span>
+                                <button class="install-btn" onclick="installCompiler('php')">Install</button>
+                            </div>
+                        </div>
+                        <div id="php-progress" class="progress-container">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="compiler-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5><i class="fab fa-node-js"></i> Node.js 18</h5>
+                                <small class="text-muted">For JavaScript execution</small>
+                            </div>
+                            <div>
+                                <span id="nodejs-status" class="status-badge status-missing">Not Installed</span>
+                                <button class="install-btn" onclick="installCompiler('nodejs')">Install</button>
+                            </div>
+                        </div>
+                        <div id="nodejs-progress" class="progress-container">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="compiler-card">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5><i class="fas fa-microchip"></i> NASM 2.16</h5>
+                                <small class="text-muted">For Assembly language</small>
+                            </div>
+                            <div>
+                                <span id="nasm-status" class="status-badge status-missing">Not Installed</span>
+                                <button class="install-btn" onclick="installCompiler('nasm')">Install</button>
+                            </div>
+                        </div>
+                        <div id="nasm-progress" class="progress-container">
+                            <div class="progress">
+                                <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Terminal Output -->
+            <div class="mt-4">
+                <h5><i class="fas fa-terminal"></i> Installation Log</h5>
+                <div id="terminalOutput" class="terminal-output">
+                    Welcome to Jango Compiler Portable Setup!
+                    Ready to install compilers...
+                    
+                </div>
+            </div>
+            
+            <!-- Benefits -->
+            <div class="mt-4">
+                <h5><i class="fas fa-star"></i> Benefits of Portable Compilers</h5>
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-download fa-2x text-primary mb-2"></i>
+                            <h6>No External Downloads</h6>
+                            <small>Everything built-in, no internet required after setup</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-shipping-fast fa-2x text-success mb-2"></i>
+                            <h6>Instant Execution</h6>
+                            <small>Run any supported language immediately</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <i class="fas fa-shield-alt fa-2x text-warning mb-2"></i>
+                            <h6>Isolated Environment</h6>
+                            <small>No system PATH modifications needed</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Check compiler status on page load
+        window.onload = function() {
+            checkCompilerStatus();
+        };
+        
+        function logMessage(message) {
+            const terminal = document.getElementById('terminalOutput');
+            terminal.innerHTML += new Date().toLocaleTimeString() + ' - ' + message + '\n';
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+        
+        function updateStatus(compiler, status) {
+            const statusBadge = document.getElementById(compiler + '-status');
+            const button = statusBadge.nextElementSibling;
+            
+            statusBadge.className = 'status-badge';
+            
+            if (status === 'installed') {
+                statusBadge.classList.add('status-installed');
+                statusBadge.textContent = '✓ Installed';
+                button.textContent = 'Reinstall';
+                button.disabled = false;
+            } else if (status === 'installing') {
+                statusBadge.classList.add('status-available');
+                statusBadge.textContent = 'PENDING Installing...';
+                button.textContent = 'Installing...';
+                button.disabled = true;
+            } else {
+                statusBadge.classList.add('status-missing');
+                statusBadge.textContent = '✗ Not Installed';
+                button.textContent = 'Install';
+                button.disabled = false;
+            }
+        }
+        
+        function showProgress(compiler, show = true) {
+            const progressContainer = document.getElementById(compiler + '-progress');
+            progressContainer.style.display = show ? 'block' : 'none';
+            
+            if (show) {
+                const progressBar = progressContainer.querySelector('.progress-bar');
+                progressBar.style.width = '0%';
+                progressBar.classList.add('progress-bar-striped', 'progress-bar-animated');
+            }
+        }
+        
+        function updateProgress(compiler, percent) {
+            const progressBar = document.getElementById(compiler + '-progress').querySelector('.progress-bar');
+            progressBar.style.width = percent + '%';
+            
+            if (percent >= 100) {
+                setTimeout(() => {
+                    showProgress(compiler, false);
+                }, 1000);
+            }
+        }
+        
+        async function checkCompilerStatus() {
+            logMessage('Checking compiler status...');
+            
+            try {
+                const response = await fetch('/api/compiler-status/');
+                const data = await response.json();
+                
+                for (const [compiler, info] of Object.entries(data)) {
+                    if (info.available) {
+                        updateStatus(compiler, 'installed');
+                        logMessage(`✓ ${compiler} is available (${info.preferred})`);
+                    } else {
+                        updateStatus(compiler, 'missing');
+                        logMessage(`✗ ${compiler} not found`);
+                    }
+                }
+            } catch (error) {
+                logMessage('Error checking compiler status: ' + error.message);
+            }
+        }
+        
+        async function installCompiler(compiler) {
+            logMessage(`Starting installation of ${compiler}...`);
+            updateStatus(compiler, 'installing');
+            showProgress(compiler, true);
+            
+            try {
+                const response = await fetch('/api/install-compiler/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                    },
+                    body: JSON.stringify({ compiler: compiler })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    // Simulate progress
+                    let progress = 0;
+                    const interval = setInterval(() => {
+                        progress += Math.random() * 10;
+                        if (progress >= 100) {
+                            progress = 100;
+                            clearInterval(interval);
+                            updateStatus(compiler, 'installed');
+                            logMessage(`✓ ${compiler} installed successfully!`);
+                        }
+                        updateProgress(compiler, progress);
+                    }, 500);
+                } else {
+                    updateStatus(compiler, 'missing');
+                    showProgress(compiler, false);
+                    logMessage(`✗ Failed to install ${compiler}: ${data.error}`);
+                }
+            } catch (error) {
+                updateStatus(compiler, 'missing');
+                showProgress(compiler, false);
+                logMessage(`✗ Installation error: ${error.message}`);
+            }
+        }
+        
+        async function setupAllCompilers() {
+            logMessage('LAUNCH Starting automatic setup of all compilers...');
+            
+            const compilers = ['java', 'gcc', 'dotnet', 'php', 'nodejs', 'nasm'];
+            const globalProgress = document.getElementById('globalProgress');
+            const globalProgressBar = document.getElementById('globalProgressBar');
+            const globalStatus = document.getElementById('globalStatus');
+            
+            globalProgress.style.display = 'block';
+            globalStatus.textContent = 'Preparing installation...';
+            
+            let completed = 0;
+            const total = compilers.length;
+            
+            for (const compiler of compilers) {
+                globalStatus.textContent = `Installing ${compiler}... (${completed + 1}/${total})`;
+                await installCompiler(compiler);
+                completed++;
+                
+                const percent = (completed / total) * 100;
+                globalProgressBar.style.width = percent + '%';
+                
+                // Small delay between installations
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+            
+            globalStatus.textContent = 'SUCCESS All compilers installed successfully!';
+            logMessage('SUCCESS Portable compiler setup complete! Your Jango Compiler is now fully self-contained.');
+            
+            setTimeout(() => {
+                globalProgress.style.display = 'none';
+            }, 3000);
+        }
+    </script>
+    {% csrf_token %}
+</body>
+</html>

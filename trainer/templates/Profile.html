@@ -1,0 +1,116 @@
+{% extends 'trainer_base.html' %}
+{% load static %}
+
+{% block title %}Trainer Profile{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/profile.css' %}?v=2.0">
+{% endblock %}
+
+{% block content %}
+
+<div id="profile-urls" data-save-url="{% url 'save_trainer_pdf' %}"></div>
+
+<div class="container" id="form-section">
+    <h1 class="main-heading">Trainer Profile Generator</h1>
+
+    <form class="resume-form" method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <div class="form-grid">
+            <div class="input-group">
+                <label>Full Name *</label>
+                <input type="text" id="fullName" required>
+            </div>
+
+            <div class="input-group">
+                <label>Job Title *</label>
+                <input type="text" id="jobTitle" required>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <label>Professional Summary <small>(max 60 words)</small> *</label>
+            <textarea id="summary" rows="5" required></textarea>
+        </div>
+
+        <div class="input-group">
+            <label>Experience *</label>
+            <div id="experienceList" class="dynamic-list"></div>
+            <button type="button" class="btn-add" data-add-item="experienceList">+ Add</button>
+        </div>
+
+        <div class="input-group">
+            <label>Skills *</label>
+            <div id="skillsList" class="dynamic-list"></div>
+            <button type="button" class="btn-add" data-add-item="skillsList">+ Add</button>
+        </div>
+
+        <div class="input-group">
+            <label>Awards & Recognitions *</label>
+            <div id="achievementsList" class="dynamic-list"></div>
+            <button type="button" class="btn-add" data-add-item="achievementsList">+ Add</button>
+        </div>
+
+        <div class="input-group">
+            <label>Education *</label>
+            <textarea id="education" rows="4" required></textarea>
+        </div>
+
+        <button type="button" class="generate-btn" id="generateBtn">Generate Profile</button>
+    </form>
+</div>
+
+<div id="resume-output" class="hidden">
+    <div class="resume-page" id="trainerProfileSection">
+
+        <div class="top-header">
+            <div class="logo-section">
+                <img src="{% static 'images/atom logo.png' %}" class="logo-img">
+            </div>
+
+            <div class="profile-header">
+                <h1 id="nameDisplay"></h1>
+                <h2 id="titleDisplay"></h2>
+            </div>
+        </div>
+
+        <div class="resume-section">
+            <h3>Professional Summary <small>(max 60 words)</small></h3>
+            <p id="summaryDisplay"></p>
+        </div>
+
+        <div class="resume-section">
+            <h3>Experience</h3>
+            <div id="experienceDisplay"></div>
+        </div>
+
+        <div class="resume-section">
+            <h3>Skills</h3>
+            <div id="skillsDisplay"></div>
+        </div>
+
+        <div class="resume-section">
+            <h3>Awards & Recognitions</h3>
+            <div id="achievementsDisplay"></div>
+        </div>
+
+        <div class="resume-section">
+            <h3>Education</h3>
+            <div id="educationDisplay"></div>
+        </div>
+    </div>
+
+    <div class="resume-actions">
+        <button id="backBtn">Back</button>
+        <button id="downloadBtn">Download PDF</button>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="{% static 'js/profile_script.js' %}" defer></script>
+{% endblock %}

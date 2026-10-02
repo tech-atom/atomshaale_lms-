@@ -1,0 +1,232 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atom Shaale - Secure Access Portal</title>
+  <!-- Custom login CSS & FontAwesome -->
+  <link rel="stylesheet" href="{% static 'css/login.css' %}?v=3">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body data-login-redirect-url="{{ login_redirect_url|default:'' }}">
+
+  <!-- Canvas for dot grid & particle network background -->
+  <canvas id="particleCanvas"></canvas>
+
+  <!-- Unified Background Vector Graphic: Top-Right to Bottom-Left Diagonal Bands & 3D Chevrons -->
+  <div class="bg-vector-left">
+    <svg viewBox="0 0 500 800" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- 3D Volumetric Layer Drop Shadow -->
+        <filter id="chevronDropShadow" x="-30%" y="-30%" width="160%" height="160%">
+          <feDropShadow dx="8" dy="18" stdDeviation="14" flood-color="#000000" flood-opacity="0.85" />
+        </filter>
+
+        <!-- Edge Glow Filter -->
+        <filter id="glowFilter" x="-30%" y="-30%" width="160%" height="160%">
+          <feGaussianBlur stdDeviation="8" result="blur" />
+          <feMerge>
+            <feMergeNode in="blur" />
+            <feMergeNode in="SourceGraphic" />
+          </feMerge>
+        </filter>
+
+        <!-- Surface Gradients -->
+        <linearGradient id="neonGreenGrad" x1="100%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#008037" stop-opacity="0.85" />
+          <stop offset="50%" stop-color="#008037" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="#000000" stop-opacity="0" />
+        </linearGradient>
+
+        <linearGradient id="chevronGrad1" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#008037" stop-opacity="0.95" />
+          <stop offset="45%" stop-color="#004d21" stop-opacity="0.6" />
+          <stop offset="100%" stop-color="#001a0b" stop-opacity="0.05" />
+        </linearGradient>
+
+        <linearGradient id="chevronGrad2" x1="0%" y1="100%" x2="100%" y2="0%">
+          <stop offset="0%" stop-color="#00662c" stop-opacity="0.8" />
+          <stop offset="100%" stop-color="#001408" stop-opacity="0.05" />
+        </linearGradient>
+
+        <linearGradient id="dotFadeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#000000" />
+          <stop offset="40%" stop-color="#222222" />
+          <stop offset="100%" stop-color="#ffffff" />
+        </linearGradient>
+
+        <mask id="dotMask">
+          <rect x="-50" y="520" width="450" height="280" fill="url(#dotFadeGrad)" />
+        </mask>
+
+        <pattern id="dotPattern" x="0" y="0" width="14" height="14" patternUnits="userSpaceOnUse">
+          <circle cx="7" cy="7" r="1.6" fill="#008037" opacity="0.65" />
+        </pattern>
+      </defs>
+
+      <!-- 1. Top-Right to Bottom-Left Diagonal Bands & Glowing Neon Lines -->
+      <polygon points="-50,-50 310,-50 -50,520" fill="url(#neonGreenGrad)" opacity="0.4" />
+      <polygon points="-50,-50 180,-50 -50,330" fill="url(#neonGreenGrad)" opacity="0.6" />
+      
+      <!-- Primary Bright Neon Line from Top-Right (X=310, Y=-50) sloping down-left to (X=-50, Y=520) -->
+      <line x1="310" y1="-50" x2="-50" y2="520" stroke="#008037" stroke-width="5" filter="url(#glowFilter)" opacity="0.95" />
+      
+      <!-- Secondary Parallel Neon Line -->
+      <line x1="180" y1="-50" x2="-50" y2="330" stroke="#008037" stroke-width="3" filter="url(#glowFilter)" opacity="0.75" />
+
+      <!-- 2. Halftone Dot Grid fading out upwards beneath Chevrons -->
+      <rect x="-50" y="520" width="450" height="280" fill="url(#dotPattern)" mask="url(#dotMask)" />
+
+      <!-- 3. Chevron 3 (Lowest Layer) -->
+      <path d="M -50,790 L 70,625 Q 85,610 100,625 L 300,830 L 300,890 L 100,685 Q 85,670 70,685 L -50,850 Z"
+        fill="url(#chevronGrad2)" opacity="0.4" />
+      <path d="M -50,790 L 70,625 Q 85,610 100,625 L 300,830" fill="none" stroke="#008037" stroke-width="1.5"
+        opacity="0.6" />
+
+      <!-- 4. Chevron 2 (Middle Layer with 3D Drop Shadow) -->
+      <path d="M -50,700 L 70,535 Q 85,520 100,535 L 300,740 L 300,800 L 100,595 Q 85,580 70,595 L -50,760 Z"
+        fill="url(#chevronGrad2)" filter="url(#chevronDropShadow)" opacity="0.85" />
+      <path d="M -50,700 L 70,535 Q 85,520 100,535 L 300,740" fill="none" stroke="#008037" stroke-width="2.5"
+        filter="url(#glowFilter)" opacity="0.85" />
+
+      <!-- 5. Chevron 1 (Top/Main Layer with 3D Drop Shadow & Neon Glow) -->
+      <path d="M -50,610 L 70,445 Q 85,430 100,445 L 300,650 L 300,710 L 100,505 Q 85,490 70,505 L -50,670 Z"
+        fill="url(#chevronGrad1)" filter="url(#chevronDropShadow)" opacity="0.95" />
+      <path d="M -50,610 L 70,445 Q 85,430 100,445 L 300,650" fill="none" stroke="#008037" stroke-width="4"
+        filter="url(#glowFilter)" />
+    </svg>
+  </div>
+
+  <!-- Main Login Page Wrapper -->
+  <div class="page-container">
+
+    <!-- LEFT PANEL: Brand, Document Portal Header -->
+    <div class="left-panel">
+      <!-- Brand Logo Header -->
+      <div class="brand-header">
+        <div class="logo-and-title">
+          <!-- Atom Shaale Logo Image -->
+          <div class="atom-hexagon-logo">
+            <img src="{% static 'images/logo.png' %}" alt="Atom Shaale Logo" class="atom-shaale-img-logo">
+          </div>
+        </div>
+
+        <div class="brand-lms-title">LEARNING MANAGEMENT SYSTEM</div>
+
+        <div class="brand-portal-line">
+          <span class="line-left"></span>
+          <span class="portal-text">SECURE ACCESS PORTAL</span>
+          <span class="line-right"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL: Floating Login Card -->
+    <div class="right-panel">
+      <div class="login-card">
+
+        <!-- Top Circle Badge with Hexagon Logo -->
+        <div class="card-top-badge-wrapper">
+          <div class="card-logo-badge">
+            <img src="{% static 'images/login qud.png' %}" alt="Atom Logo" class="card-logo-img">
+          </div>
+        </div>
+
+        <!-- Non-field error banner -->
+        {% if form.non_field_errors %}
+        <div class="error-message">
+          <i class="fas fa-exclamation-circle"></i>
+          <span>{{ form.non_field_errors.0 }}</span>
+        </div>
+        {% endif %}
+
+        <!-- Form Element -->
+        <form method="post" class="login-form" autocomplete="off">
+          {% csrf_token %}
+
+          <!-- Field 1: Username / Employee ID -->
+          <div class="field-group">
+            <label for="{{ form.email.id_for_label }}" class="field-label">EMAIL ID</label>
+            <div class="input-control {% if form.email.errors %}has-error{% endif %}">
+              <div class="input-badge">
+                <i class="fas fa-user"></i>
+              </div>
+              {{ form.email }}
+            </div>
+            {% if form.email.errors %}
+            <div class="field-error-msg">
+              <i class="fas fa-circle-exclamation"></i>
+              <span>{{ form.email.errors.0 }}</span>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Field 2: Password -->
+          <div class="field-group">
+            <label for="{{ form.password.id_for_label }}" class="field-label">PASSWORD</label>
+            <div class="input-control {% if form.password.errors %}has-error{% endif %}">
+              <div class="input-badge">
+                <i class="fas fa-lock"></i>
+              </div>
+              {{ form.password }}
+              <button type="button" class="eye-toggle-btn" id="togglePassword" aria-label="Toggle password visibility">
+                <i class="far fa-eye"></i>
+              </button>
+            </div>
+            {% if form.password.errors %}
+            <div class="field-error-msg">
+              <i class="fas fa-circle-exclamation"></i>
+              <span>{{ form.password.errors.0 }}</span>
+            </div>
+            {% endif %}
+          </div>
+
+          <!-- Forgot Password Link -->
+          <div class="forgot-link-wrapper">
+            <a href="{% url 'password_reset' %}" class="forgot-pwd-link">Forgot Password?</a>
+          </div>
+
+          <!-- Primary Sign In Button -->
+          <button type="submit" class="btn-primary-sign-in">
+            <span>SIGN IN</span>
+            <i class="fas fa-arrow-right"></i>
+          </button>
+
+          <!-- OR Divider -->
+          <div class="or-divider">
+            <span>OR</span>
+          </div>
+
+          <!-- Secondary Create Account Button -->
+          <a href="{% url 'student_register' %}" class="btn-secondary-create">
+            <i class="fas fa-user-plus"></i>
+            <span>CREATE NEW ACCOUNT</span>
+          </a>
+
+          <!-- Footer Powered By -->
+          <div class="card-footer-version">
+            POWERED BY <span class="brand-atom">ATOM</span>
+          </div>
+        </form>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Server Message Toast Host -->
+  <div id="server-popups" class="hidden-popups" style="display: none;" aria-hidden="true">
+    {% if messages %}
+    {% for message in messages %}
+    <div class="popup-message" data-level="{{ message.tags|default:'info' }}">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+  </div>
+
+  <script src="{% static 'js/login.js' %}?v=6"></script>
+</body>
+
+</html>

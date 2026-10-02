@@ -1,0 +1,280 @@
+{% extends "tpo_base.html" %}
+{% load static %}
+
+{% block title %}TPO Command Center — {{ college.name }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/tpo_dashboard.css' %}?v=5.0">
+{% endblock %}
+
+{% block content %}
+<div class="tpo-dash-root">
+
+  <!-- ═══════════════════ 1. HERO COMMAND BANNER ═══════════════════ -->
+  <div class="hero-command-bar">
+    <div class="hero-left-col">
+      <div class="hero-pulse-ring">
+        <div class="hero-icon-core"><i class="fas fa-university"></i></div>
+      </div>
+      <div class="hero-text-block">
+        <div class="hero-tagline"><i class="fas fa-circle-dot pulse-green"></i> Live Analytics • {{ college.name }}</div>
+        <h1 class="hero-title">Welcome back, <span class="hero-name">{{ tpo_name }}</span></h1>
+        <p class="hero-sub">Training &amp; Placement Intelligence Dashboard — real-time insights</p>
+      </div>
+    </div>
+    <div class="hero-right-col">
+      <div class="hero-date-badge">
+        <i class="fas fa-calendar-alt"></i>
+        <span id="liveDateStr">Loading...</span>
+      </div>
+      <div class="hero-nav-links">
+        <a href="{% url 'tpo_student_attendance' %}" class="hero-quick-link"><i class="fas fa-calendar-check"></i><span>Attendance</span></a>
+        <a href="{% url 'tpo_student_performance' %}" class="hero-quick-link"><i class="fas fa-chart-line"></i><span>Performance</span></a>
+        <a href="{% url 'tpo_feedback' %}" class="hero-quick-link"><i class="fas fa-comments"></i><span>Feedback</span></a>
+        <a href="{% url 'tpo_resume' %}" class="hero-quick-link"><i class="fas fa-file-user"></i><span>Resumes</span></a>
+        <a href="{% url 'trainer_daily_report_tpo' %}" class="hero-quick-link"><i class="fas fa-clipboard-list"></i><span>Reports</span></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ 2. INSTANT STAT TILES (server-rendered) ═══════════════════ -->
+  <div class="instant-tiles-grid">
+    <div class="instant-tile tile-blue">
+      <div class="tile-icon"><i class="fas fa-users"></i></div>
+      <div class="tile-body">
+        <div class="tile-num">{{ total_students }}</div>
+        <div class="tile-label">Enrolled Students</div>
+      </div>
+      <div class="tile-glow"></div>
+    </div>
+
+    <div class="instant-tile tile-teal">
+      <div class="tile-icon"><i class="fas fa-chalkboard-teacher"></i></div>
+      <div class="tile-body">
+        <div class="tile-num">{{ total_trainers }}</div>
+        <div class="tile-label">Active Trainers</div>
+      </div>
+      <div class="tile-glow"></div>
+    </div>
+
+    <div class="instant-tile tile-purple">
+      <div class="tile-icon"><i class="fas fa-graduation-cap"></i></div>
+      <div class="tile-body">
+        <div class="tile-num">{{ total_courses }}</div>
+        <div class="tile-label">Degree Programs</div>
+      </div>
+      <div class="tile-glow"></div>
+    </div>
+
+    <div class="instant-tile tile-amber">
+      <div class="tile-icon"><i class="fas fa-calendar-day"></i></div>
+      <div class="tile-body">
+        <div class="tile-num">{{ sessions_today }}</div>
+        <div class="tile-label">Sessions Today</div>
+      </div>
+      <div class="tile-glow"></div>
+    </div>
+
+    <div class="instant-tile tile-rose">
+      <div class="tile-icon"><i class="fas fa-comments"></i></div>
+      <div class="tile-body">
+        <div class="tile-num">{{ recent_fb_count }}</div>
+        <div class="tile-label">Feedbacks (7 days)</div>
+      </div>
+      <div class="tile-glow"></div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ 3. AJAX-DRIVEN METRIC CARDS ═══════════════════ -->
+  <div class="ajax-section-header">
+    <div class="section-line"></div>
+    <h2 class="section-title"><i class="fas fa-bolt-lightning"></i> Live Performance Metrics</h2>
+    <div class="section-line"></div>
+  </div>
+
+  <div class="perf-metrics-grid">
+    <div class="perf-metric-card card-green">
+      <div class="pmc-top">
+        <span class="pmc-label"><i class="fas fa-user-check"></i> Avg Attendance</span>
+        <div class="pmc-icon icon-green"><i class="fas fa-calendar-check"></i></div>
+      </div>
+      <div class="pmc-value" id="avg-attendance">—</div>
+      <div class="pmc-bar-track"><div class="pmc-bar-fill fill-green" id="bar-attendance"></div></div>
+      <div class="pmc-footer">Class-wide Attendance Rate</div>
+    </div>
+
+    <div class="perf-metric-card card-indigo">
+      <div class="pmc-top">
+        <span class="pmc-label"><i class="fas fa-file-signature"></i> Exam Average</span>
+        <div class="pmc-icon icon-indigo"><i class="fas fa-award"></i></div>
+      </div>
+      <div class="pmc-value" id="avg-exam">—</div>
+      <div class="pmc-bar-track"><div class="pmc-bar-fill fill-indigo" id="bar-exam"></div></div>
+      <div class="pmc-footer">Main Examination Marks</div>
+    </div>
+
+    <div class="perf-metric-card card-amber">
+      <div class="pmc-top">
+        <span class="pmc-label"><i class="fas fa-laptop-code"></i> Practice Average</span>
+        <div class="pmc-icon icon-amber"><i class="fas fa-vial-circle-check"></i></div>
+      </div>
+      <div class="pmc-value" id="avg-practice">—</div>
+      <div class="pmc-bar-track"><div class="pmc-bar-fill fill-amber" id="bar-practice"></div></div>
+      <div class="pmc-footer">Practice Test Score</div>
+    </div>
+
+    <div class="perf-metric-card card-purple highlight-metric">
+      <div class="pmc-top">
+        <span class="pmc-label"><i class="fas fa-rocket"></i> Placement Readiness</span>
+        <div class="pmc-icon icon-purple"><i class="fas fa-star"></i></div>
+      </div>
+      <div class="pmc-value" id="placement-readiness">—</div>
+      <div class="pmc-bar-track"><div class="pmc-bar-fill fill-purple" id="bar-readiness"></div></div>
+      <div class="pmc-footer">Industry Readiness Index</div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ 4. CHARTS — ROW 1 ═══════════════════ -->
+  <div class="charts-row-2col">
+    <!-- Radar -->
+    <div class="chart-glass-card">
+      <div class="cgc-head">
+        <div class="cgc-title-block">
+          <div class="cgc-icon bg-teal"><i class="fas fa-compass"></i></div>
+          <div>
+            <h4>360° Competency Radar</h4>
+            <p>Exam · Practice · Attendance · Feedback · Placement</p>
+          </div>
+        </div>
+        <span class="cgc-badge badge-teal">Live</span>
+      </div>
+      <div class="cgc-chart-wrap">
+        <canvas id="competencyRadar"></canvas>
+      </div>
+    </div>
+
+    <!-- Polar Tier -->
+    <div class="chart-glass-card">
+      <div class="cgc-head">
+        <div class="cgc-title-block">
+          <div class="cgc-icon bg-purple"><i class="fas fa-pie-chart"></i></div>
+          <div>
+            <h4>Student Tier Distribution</h4>
+            <p>Excellent · Good · Average · Needs Focus</p>
+          </div>
+        </div>
+        <span class="cgc-badge badge-purple">Distribution</span>
+      </div>
+      <div class="cgc-chart-wrap">
+        <canvas id="tierPolarArea"></canvas>
+      </div>
+      <!-- Live Tier Chips -->
+      <div class="tier-chip-row" id="tierChipRow">
+        <div class="tier-chip tc-green"><span id="cnt-excellent">—</span> Excellent</div>
+        <div class="tier-chip tc-blue"><span id="cnt-good">—</span> Good</div>
+        <div class="tier-chip tc-amber"><span id="cnt-avg">—</span> Average</div>
+        <div class="tier-chip tc-red"><span id="cnt-poor">—</span> Needs Focus</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ 5. CHARTS — ROW 2 ═══════════════════ -->
+  <div class="charts-row-2col">
+    <!-- Monthly Attendance Trend -->
+    <div class="chart-glass-card">
+      <div class="cgc-head">
+        <div class="cgc-title-block">
+          <div class="cgc-icon bg-green"><i class="fas fa-chart-line"></i></div>
+          <div>
+            <h4>Monthly Attendance Trend</h4>
+            <p>Historical attendance velocity</p>
+          </div>
+        </div>
+        <span class="cgc-badge badge-green">Trend</span>
+      </div>
+      <div class="cgc-chart-wrap">
+        <canvas id="attendanceTrend"></canvas>
+      </div>
+    </div>
+
+    <!-- Feedback Summary -->
+    <div class="chart-glass-card">
+      <div class="cgc-head">
+        <div class="cgc-title-block">
+          <div class="cgc-icon bg-indigo"><i class="fas fa-comment-dots"></i></div>
+          <div>
+            <h4>Student Feedback Summary</h4>
+            <p>Content · Clarity · Logic · Satisfaction</p>
+          </div>
+        </div>
+        <span class="cgc-badge badge-indigo">Ratings</span>
+      </div>
+      <div class="cgc-chart-wrap">
+        <canvas id="feedbackChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ 6. COURSE PERFORMANCE CHART (full width) ═══════════════════ -->
+  <div class="chart-glass-card chart-full">
+    <div class="cgc-head">
+      <div class="cgc-title-block">
+        <div class="cgc-icon bg-amber"><i class="fas fa-layer-group"></i></div>
+        <div>
+          <h4>Course-wise Average Performance</h4>
+          <p>Exam vs Practice comparison across all registered programs</p>
+        </div>
+      </div>
+      <span class="cgc-badge badge-amber">Program Benchmark</span>
+    </div>
+    <div class="cgc-chart-wrap" style="height:260px;">
+      <canvas id="courseChart"></canvas>
+    </div>
+  </div>
+
+  <!-- ═══════════════════ 7. TOP STUDENTS TABLE ═══════════════════ -->
+  <div class="top-students-card">
+    <div class="tsc-head">
+      <div class="tsc-title-block">
+        <div class="cgc-icon bg-amber"><i class="fas fa-trophy"></i></div>
+        <div>
+          <h3>Students Stats</h3>
+          <p>{{ college.name }} — ranked by combined exam &amp; practice score</p>
+        </div>
+      </div>
+      <a href="{% url 'tpo_student_performance' %}" class="tsc-view-all">
+        Full Performance Board <i class="fas fa-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="tsc-table-wrap">
+      <table class="tsc-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student Name</th>
+            <th>USN</th>
+            <th>Course</th>
+            <th>Exam Avg</th>
+            <th>Practice Avg</th>
+            <th>Combined Avg</th>
+            <th>Tier</th>
+          </tr>
+        </thead>
+        <tbody id="topStudentsTableBody">
+          <tr><td colspan="8" class="loading-cell"><i class="fas fa-circle-notch fa-spin"></i> Fetching rankings...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"
+  integrity="sha384-DhxhYObIMeMNGyAG7iK11OHzBIKyEIeRL0ad1iFPAOwZB8iirUlTT0O/WJJUk8+o"
+  crossorigin="anonymous"></script>
+<script src="{% static 'js/tpo_dashboard.js' %}?v=5.0"></script>
+{% endblock %}

@@ -1,0 +1,325 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- URLS for JS (with placeholder uuid for pattern) -->
+<div id="domain-api-urls"
+     data-add-domain="{% url 'add_domain' %}"
+     data-update-domain="{% url 'update_domain' '00000000-0000-0000-0000-000000000000' %}"
+     data-delete-domain="{% url 'delete_domain' '00000000-0000-0000-0000-000000000000' %}"
+
+     data-add-subdomain="{% url 'add_subdomain' %}"
+     data-update-subdomain="{% url 'update_subdomain' '00000000-0000-0000-0000-000000000000' %}"
+     data-delete-subdomain="{% url 'delete_subdomain' %}"
+
+     data-add-module="{% url 'add_module' %}"
+     data-update-module="{% url 'update_module' '00000000-0000-0000-0000-000000000000' %}"
+     data-delete-module="{% url 'delete_module' '00000000-0000-0000-0000-000000000000' %}"
+
+     data-get-subdomains="{% url 'get_subdomains_by_domain' '00000000-0000-0000-0000-000000000000' %}"
+     data-csrf-token="{{ csrf_token }}"
+>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop"></div>
+
+<div class="dashboard-wrapper">
+  <!-- Live Statistics Cards -->
+  <div class="metrics-grid">
+    <div class="metric-card" id="metric-domains">
+      <div class="metric-icon">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+        </svg>
+      </div>
+      <div class="metric-details">
+        <span class="metric-label">Total Domains</span>
+        <span class="metric-value" id="count-domains">{{ domains|length }}</span>
+      </div>
+    </div>
+    <div class="metric-card" id="metric-subdomains">
+      <div class="metric-icon">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M2 22V10h8v12zm10 0V2h8v20z"/>
+        </svg>
+      </div>
+      <div class="metric-details">
+        <span class="metric-label">Total Subdomains</span>
+        <span class="metric-value" id="count-subdomains">{{ subdomains|length }}</span>
+      </div>
+    </div>
+    <div class="metric-card" id="metric-modules">
+      <div class="metric-icon">
+        <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V3a1 1 0 0 1 1-1h15v20H5a1 1 0 0 1-1-1z"/>
+        </svg>
+      </div>
+      <div class="metric-details">
+        <span class="metric-label">Total Modules</span>
+        <span class="metric-value" id="count-modules">{{ modules|length }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabbed Controller -->
+  <div class="tabs-header">
+    <button class="tab-btn active" data-tab="tab-domains">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+      Domains
+    </button>
+    <button class="tab-btn" data-tab="tab-subdomains">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 22V10h8v12zm10 0V2h8v20z"/></svg>
+      Subdomains
+    </button>
+    <button class="tab-btn" data-tab="tab-modules">
+      <svg class="tab-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V3a1 1 0 0 1 1-1h15v20H5a1 1 0 0 1-1-1z"/></svg>
+      Modules
+    </button>
+  </div>
+
+  <!-- Tabs Content Sections -->
+  <div class="tabs-content">
+    
+    <!-- Domains Tab -->
+    <div class="tab-panel active" id="tab-domains">
+      <div class="control-bar">
+        <div class="search-wrapper">
+          <input type="text" id="domainSearch" class="search-input" placeholder="Search domains...">
+        </div>
+        <button class="btn btn-add" id="openDomainModalBtn">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Domain
+        </button>
+      </div>
+      
+      <div class="table-container">
+        <table id="domainTable">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th class="actions-header">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="domainBody">
+            {% for domain in domains %}
+              <tr id="domain-row-{{ domain.id }}">
+                <td data-label="Name" class="td-name font-semibold">{{ domain.domain_name }}</td>
+                <td class="table-actions" data-label="Actions">
+                  <button class="btn-edit edit-domain-btn" data-id="{{ domain.id }}" data-name="{{ domain.domain_name }}" title="Edit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  </button>
+                  <button class="btn-delete delete-domain-btn" data-id="{{ domain.id }}" title="Delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Subdomains Tab -->
+    <div class="tab-panel" id="tab-subdomains">
+      <div class="control-bar">
+        <div class="filter-group">
+          <input type="text" id="subdomainSearch" class="search-input" placeholder="Search subdomains...">
+          <select id="subdomainDomainFilter" class="select-filter">
+            <option value="">All Domains</option>
+            {% for d in domains %}
+              <option value="{{ d.domain_name }}">{{ d.domain_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button class="btn btn-add" id="openSubModalBtn">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Subdomain
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table id="subTable">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Subdomain</th>
+              <th class="actions-header">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="subBody">
+            {% for sub in subdomains %}
+              <tr id="subdomain-row-{{ sub.id }}">
+                <td data-label="Domain"><span class="badge badge-domain">{{ sub.domain.domain_name }}</span></td>
+                <td data-label="Subdomain" class="td-name font-semibold">{{ sub.subdomain_name }}</td>
+                <td class="table-actions" data-label="Actions">
+                  <button class="btn-edit edit-sub-btn"
+                      data-id="{{ sub.id }}"
+                      data-domain-id="{{ sub.domain.id }}"
+                      data-name="{{ sub.subdomain_name }}" title="Edit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  </button>
+                  <button class="btn-delete delete-subdomain-btn" data-id="{{ sub.id }}" title="Delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Modules Tab -->
+    <div class="tab-panel" id="tab-modules">
+      <div class="control-bar">
+        <div class="filter-group">
+          <input type="text" id="moduleSearch" class="search-input" placeholder="Search modules...">
+          <select id="moduleDomainFilter" class="select-filter">
+            <option value="">All Domains</option>
+            {% for d in domains %}
+              <option value="{{ d.domain_name }}">{{ d.domain_name }}</option>
+            {% endfor %}
+          </select>
+          <select id="moduleSubdomainFilter" class="select-filter">
+            <option value="">All Subdomains</option>
+            {% for s in subdomains %}
+              <option value="{{ s.subdomain_name }}" data-domain="{{ s.domain.domain_name }}">{{ s.subdomain_name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button class="btn btn-add" id="openModuleModalBtn">
+          <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Module
+        </button>
+      </div>
+
+      <div class="table-container">
+        <table id="moduleTable">
+          <thead>
+            <tr>
+              <th>Domain</th>
+              <th>Subdomain</th>
+              <th>Module</th>
+              <th class="actions-header">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="moduleBody">
+            {% for mod in modules %}
+              <tr id="module-row-{{ mod.id }}">
+                <td data-label="Domain"><span class="badge badge-domain">{{ mod.domain.domain_name }}</span></td>
+                <td data-label="Subdomain"><span class="badge badge-subdomain">{% if mod.subdomain %}{{ mod.subdomain.subdomain_name }}{% else %}-{% endif %}</span></td>
+                <td data-label="Module" class="td-name font-semibold">{{ mod.module_name }}</td>
+                <td class="table-actions" data-label="Actions">
+                  <button class="btn-edit edit-module-btn"
+                      data-id="{{ mod.id }}"
+                      data-domain-id="{{ mod.domain.id }}"
+                      data-sub-id="{% if mod.subdomain %}{{ mod.subdomain.id }}{% endif %}"
+                      data-name="{{ mod.module_name }}" title="Edit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+                  </button>
+                  <button class="btn-delete delete-module-btn" data-id="{{ mod.id }}" title="Delete">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- Add/Edit Domain Modal -->
+<div class="modal" id="domainModal">
+  <button class="close" id="closeDomainModalBtn">&times;</button>
+  <h3 id="domainModalTitle" class="modal-title">Add Domain</h3>
+  <form id="domainForm" class="modal-form">
+    <input type="hidden" id="domainId">
+    <div class="form-group">
+      <label for="domainName">Name</label>
+      <input type="text" id="domainName" required placeholder="Enter domain name">
+    </div>
+    <div class="modal-actions">
+      <button type="submit" class="btn btn-save">Save Domain</button>
+    </div>
+  </form>
+</div>
+
+<!-- Add/Edit Subdomain Modal -->
+<div class="modal" id="subModal">
+  <button class="close" id="closeSubModalBtn">&times;</button>
+  <h3 id="subModalTitle" class="modal-title">Add Subdomain</h3>
+  <form id="subForm" class="modal-form">
+    <input type="hidden" id="subId">
+    <div class="form-group">
+      <label for="subDomainSelect">Domain</label>
+      <select id="subDomainSelect" required class="form-select">
+        <option value="">-- Select Domain --</option>
+        {% for d in domains %}<option value="{{ d.id }}">{{ d.domain_name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="subName">Subdomain Name</label>
+      <input type="text" id="subName" required placeholder="Enter subdomain name">
+    </div>
+    <div class="modal-actions">
+      <button type="submit" class="btn btn-save">Save Subdomain</button>
+    </div>
+  </form>
+</div>
+
+<!-- Add/Edit Module Modal -->
+<div class="modal" id="moduleModal">
+  <button class="close" id="closeModuleModalBtn">&times;</button>
+  <h3 id="moduleModalTitle" class="modal-title">Add Module</h3>
+  <form id="moduleForm" class="modal-form">
+    <input type="hidden" id="moduleId">
+    <div class="form-group">
+      <label for="modDomainSelect">Domain</label>
+      <select id="modDomainSelect" required class="form-select">
+        <option value="">-- Select Domain --</option>
+        {% for d in domains %}<option value="{{ d.id }}">{{ d.domain_name }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="modSubSelect">Subdomain</label>
+      <select id="modSubSelect" class="form-select">
+        <option value="">-- Optional --</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="moduleNameInput">Module Name</label>
+      <input type="text" id="moduleNameInput" required placeholder="Enter module name">
+    </div>
+    <div class="modal-actions">
+      <button type="submit" class="btn btn-save">Save Module</button>
+    </div>
+  </form>
+</div>
+
+<!-- Confirm Delete Modal -->
+<div class="confirm-modal" id="confirmDeleteModal">
+  <button class="close" id="closeConfirmModalBtn">&times;</button>
+  <h3 id="confirmTitle" class="modal-title danger">Confirm Delete</h3>
+  <div class="confirm-content">
+    <p id="confirmMsg">Are you sure you want to delete?</p>
+  </div>
+  <div class="modal-actions">
+    <button id="confirmDeleteBtn" class="btn btn-danger">Yes, Delete</button>
+    <button id="cancelConfirmDeleteBtn" class="btn btn-secondary">Cancel</button>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/domain_module.css' %}?v=1.1">
+<link rel="stylesheet" href="{% static 'css/toast.css' %}">
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/domain_module.js' %}" defer></script>
+{% endblock %}

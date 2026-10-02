@@ -1,0 +1,186 @@
+/* ============================================
+   AtomShaale | Clean Minimal Verification Page
+   Theme: #008037, White, Black
+   ============================================ */
+
+body {
+  font-family: "Century Gothic";
+  background: #ffffff;
+  color: #000;
+  margin: 0;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Background accent bar for subtle contrast */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(135deg, #008037 0%, #000 100%);
+  opacity: 0.05;
+  z-index: -1;
+}
+
+/* Main Wrapper */
+.verify-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 20px;
+}
+
+/* Card */
+.verify-card {
+  background: #fff;
+  border: 2px solid #008037;
+  border-radius: 16px;
+  width: 400px;
+  padding: 40px 36px;
+  text-align: center;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  animation: fadeIn 1s ease forwards;
+  transition: all 0.3s ease-in-out;
+}
+
+.verify-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0, 128, 55, 0.2);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header */
+.verify-header .logo {
+  width: 140px;
+  margin-bottom: 12px;
+  animation: floatLogo 6s ease-in-out infinite;
+}
+
+@keyframes floatLogo {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.verify-header h2 {
+  color: #008037;
+  font-size: 1.6rem;
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.verify-header p {
+  color: #000;
+  font-size: 0.95rem;
+  margin-bottom: 25px;
+  line-height: 1.5;
+}
+
+/* Input Fields */
+.input-group {
+  margin-bottom: 22px;
+  text-align: left;
+}
+
+.input-group label {
+  display: block;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 6px;
+}
+
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper input {
+  width: 100%;
+  padding: 10px 40px 10px 12px;
+  font-size: 1rem;
+  border: 2px solid #000;
+  border-radius: 8px;
+  background: #fff;
+  font-family: "Century Gothic";
+  transition: all 0.3s ease;
+}
+
+.password-wrapper input:focus {
+  border-color: #008037;
+  box-shadow: 0 0 8px rgba(0, 128, 55, 0.3);
+  outline: none;
+}
+
+/* 👁️ Password Toggle */
+.toggle-password {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #000;
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.3s ease;
+  user-select: none;
+}
+
+.toggle-password:hover {
+  transform: translateY(-50%) scale(1.2);
+  color: #008037;
+}
+
+/* Button */
+.verify-btn {
+  background: #008037;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  width: 100%;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+  box-shadow: 0 4px 14px rgba(0, 128, 55, 0.25);
+}
+
+.verify-btn:hover {
+  background: #000;
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Error Message */
+.alert {
+  background: #fff2f2;
+  border: 1.5px solid #b91c1c;
+  color: #b91c1c;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 18px;
+  text-align: left;
+  font-size: 0.9rem;
+  box-shadow: 0 3px 8px rgba(255, 0, 0, 0.1);
+}
+
+.alert ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .verify-card {
+    width: 90%;
+    padding: 30px 22px;
+  }
+  .verify-header h2 {
+    font-size: 1.3rem;
+  }
+}

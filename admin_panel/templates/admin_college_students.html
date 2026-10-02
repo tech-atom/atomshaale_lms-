@@ -1,0 +1,178 @@
+{% extends "admin_base.html" %}
+{% load static %}
+
+{% block extra_head %}
+<!-- FontAwesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/admin_collegestudents.css' %}?v=2.0">
+{% endblock %}
+
+{% block content %}
+
+<div class="college-students-wrapper">
+
+  <div class="page-header">
+    <div class="header-titles">
+      <h1>{{ college.name }}</h1>
+      <p class="subtitle-text"><i class="fa-solid fa-layer-group"></i> Manage Student Batches & System Access</p>
+    </div>
+    <a href="{% url 'admin_college' %}" class="back-btn">
+      <i class="fa-solid fa-arrow-left"></i> Back to Colleges
+    </a>
+  </div>
+
+  <!-- Toast notification -->
+  <div id="accessToast" class="access-toast" role="alert" aria-live="polite"></div>
+
+  <div class="table-container">
+    <table class="student-group-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Batch Year</th>
+          <th>Year</th>
+          <th>Semester</th>
+          <th>Section</th>
+          <th>Course</th>
+          <th>Status</th>
+          <th>View Students</th>
+          <th>Access</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for g in groups %}
+        <tr id="group-row-{{ forloop.counter }}">
+          <td>{{ forloop.counter }}</td>
+          <td><strong>{{ g.batch_year }}</strong></td>
+          <td>{{ g.year }}</td>
+          <td>{{ g.semester }}</td>
+          <td><span class="badge badge-section">{{ g.section__name }}</span></td>
+          <td><span class="badge badge-course">{{ g.course__name }}</span></td>
+
+          <!-- Status badge -->
+          <td>
+            <span class="status-badge {% if g.is_paused %}paused{% else %}active{% endif %}"
+                  id="status-badge-{{ forloop.counter }}">
+              {% if g.is_paused %}
+                <i class="fa-solid fa-circle-pause"></i> Paused
+              {% else %}
+                <i class="fa-solid fa-circle-check"></i> Active
+              {% endif %}
+            </span>
+          </td>
+
+          <!-- View Students link -->
+          <td>
+            <a href="{% url 'college_students_list' college.id g.year g.semester g.section__name g.course__name g.batch_year %}"
+               class="view-btn">
+              <i class="fa-solid fa-users"></i> View Students
+            </a>
+          </td>
+
+          <!-- Pause / Resume button -->
+          <td>
+            <button
+              class="toggle-access-btn {% if g.is_paused %}resume-btn{% else %}pause-btn{% endif %}"
+              id="toggle-btn-{{ forloop.counter }}"
+              data-counter="{{ forloop.counter }}"
+              data-college="{{ college.id }}"
+              data-year="{{ g.year }}"
+              data-semester="{{ g.semester }}"
+              data-section="{{ g.section__name }}"
+              data-course="{{ g.course__name }}"
+              data-batch-year="{{ g.batch_year }}"
+              data-paused="{{ g.is_paused|yesno:'true,false' }}"
+              onclick="toggleAccess(this)">
+              {% if g.is_paused %}
+                <i class="fa-solid fa-play"></i> Resume
+              {% else %}
+                <i class="fa-solid fa-pause"></i> Pause
+              {% endif %}
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" class="empty-row">
+            <i class="fa-solid fa-folder-open empty-icon"></i>
+            <div>No student batches found for this college.</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+
+<script nonce="{{ request.csp_nonce }}">
+function showToast(message, isError) {
+  const toast = document.getElementById('accessToast');
+  toast.innerHTML = (isError ? '<i class="fa-solid fa-circle-exclamation"></i> ' : '<i class="fa-solid fa-circle-check"></i> ') + message;
+  toast.className = 'access-toast ' + (isError ? 'toast-error' : 'toast-success') + ' toast-show';
+  setTimeout(() => { toast.className = 'access-toast'; }, 3500);
+}
+
+async function toggleAccess(btn) {
+  const counter   = btn.dataset.counter;
+  const college   = btn.dataset.college;
+  const year      = btn.dataset.year;
+  const semester  = btn.dataset.semester;
+  const section   = btn.dataset.section;
+  const course    = btn.dataset.course;
+  const batchYear = btn.dataset.batchYear;
+  const isPaused  = btn.dataset.paused === 'true';
+  const action    = isPaused ? 'resume' : 'pause';
+
+  // Loading state
+  btn.disabled = true;
+  btn.innerHTML = action === 'pause' ? '<i class="fa-solid fa-spinner fa-spin"></i> Pausing…' : '<i class="fa-solid fa-spinner fa-spin"></i> Resuming…';
+
+  try {
+    const resp = await fetch("{% url 'toggle_group_access' %}", {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: JSON.stringify({
+        college_id: college,
+        year,
+        semester,
+        section,
+        course,
+        batch_year: batchYear,
+        action
+      }),
+    });
+
+    const data = await resp.json();
+
+    if (data.status === 'success') {
+      const nowPaused = data.is_paused;
+
+      // Update button
+      btn.dataset.paused = nowPaused ? 'true' : 'false';
+      btn.innerHTML      = nowPaused ? '<i class="fa-solid fa-play"></i> Resume' : '<i class="fa-solid fa-pause"></i> Pause';
+      btn.className      = 'toggle-access-btn ' + (nowPaused ? 'resume-btn' : 'pause-btn');
+
+      // Update badge
+      const badge = document.getElementById('status-badge-' + counter);
+      badge.innerHTML = nowPaused ? '<i class="fa-solid fa-circle-pause"></i> Paused' : '<i class="fa-solid fa-circle-check"></i> Active';
+      badge.className   = 'status-badge ' + (nowPaused ? 'paused' : 'active');
+
+      showToast(data.message, false);
+    } else {
+      showToast(data.message || 'Something went wrong.', true);
+      btn.innerHTML = isPaused ? '<i class="fa-solid fa-play"></i> Resume' : '<i class="fa-solid fa-pause"></i> Pause';
+    }
+  } catch (err) {
+    showToast('Network error. Please try again.', true);
+    btn.innerHTML = isPaused ? '<i class="fa-solid fa-play"></i> Resume' : '<i class="fa-solid fa-pause"></i> Pause';
+  } finally {
+    btn.disabled = false;
+  }
+}
+</script>
+
+{% endblock %}

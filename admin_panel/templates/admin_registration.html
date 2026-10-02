@@ -1,0 +1,120 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="modal-backdrop" id="modalBackdrop"></div>
+
+<div class="registration-wrapper">
+  <h1>Admin Registration Panel</h1>
+  <button type="button" id="btnAddStudent"    class="btn btn-primary">+ Add Student</button>
+  <button type="button" id="btnBulkStudents"  class="btn btn-secondary">+ Bulk Students</button>
+  <button type="button" id="btnAddTrainer"    class="btn btn-success">+ Add Trainer</button>
+  <button type="button" id="btnAddTpo"        class="btn btn-info">+ Add TPO</button>
+</div>
+
+<!-- Student Modal -->
+<div id="studentModal" class="modal" aria-modal="true" aria-hidden="true">
+  <div class="modal-content">
+    <span class="close" tabindex="0" aria-label="Close">&times;</span>
+    <h2>Register Student</h2>
+    <form method="post" id="formStudent" autocomplete="off">{% csrf_token %}
+      {% for field in student_form %}
+        <div class="form-group{% if field.errors %} has-error{% endif %}">
+          {{ field.label_tag }}
+          {{ field }}
+          {{ field.errors }}
+          {% if field.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <div class="text-end">
+        <button type="submit" name="student_single" class="btn btn-primary">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Bulk Modal -->
+<div id="bulkModal" class="modal" aria-modal="true" aria-hidden="true">
+  <div class="modal-content">
+    <span class="close" tabindex="0" aria-label="Close">&times;</span>
+    <h2>Bulk Upload Students</h2>
+    <div id="bulkStatus"></div>
+    <form method="post" enctype="multipart/form-data" id="formBulk" autocomplete="off">{% csrf_token %}
+      {% for field in bulk_form %}
+        <div class="form-group{% if field.errors %} has-error{% endif %}">
+          {{ field.label_tag }}
+          {{ field }}
+          {{ field.errors }}
+          {% if field.help_text %}
+            <small class="form-text text-muted">{{ field.help_text }}</small>
+          {% endif %}
+        </div>
+      {% endfor %}
+      <div class="text-end">
+        <button type="submit" name="student_bulk" class="btn btn-secondary">Upload</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Trainer Modal -->
+<div id="trainerModal" class="modal" aria-modal="true" aria-hidden="true">
+  <div class="modal-content">
+    <span class="close" tabindex="0" aria-label="Close">&times;</span>
+    <h2>Register Trainer</h2>
+    <form method="post" enctype="multipart/form-data" id="formTrainer" autocomplete="off">{% csrf_token %}
+      {% for field in trainer_form %}
+        <div class="form-group{% if field.errors %} has-error{% endif %}">
+          {{ field.label_tag }}
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <div class="text-end">
+        <button type="submit" name="trainer" class="btn btn-success">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- TPO Modal -->
+<div id="tpoModal" class="modal" aria-modal="true" aria-hidden="true">
+  <div class="modal-content">
+    <span class="close" tabindex="0" aria-label="Close">&times;</span>
+    <h2>Register TPO</h2>
+    <form method="post" id="formTpo" autocomplete="off">{% csrf_token %}
+      {% for field in tpo_form %}
+        <div class="form-group{% if field.errors %} has-error{% endif %}">
+          {{ field.label_tag }}
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <div class="text-end">
+        <button type="submit" name="tpo" class="btn btn-info">Submit</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<div id="dj-data"
+     data-messages='[{% for message in messages %}{"text": "{{ message|escapejs }}", "tags": "{{ message.tags }}"}{% if not forloop.last %},{% endif %}{% endfor %}]'
+     data-form-errors='{"student": {{ student_form.errors|yesno:"true,false" }}, "bulk": {{ bulk_form.errors|yesno:"true,false" }}, "trainer": {{ trainer_form.errors|yesno:"true,false" }}, "tpo": {{ tpo_form.errors|yesno:"true,false" }}}'>
+</div>
+
+
+{% endblock %}
+
+{% block extra_head %}
+  <link rel="stylesheet" href="{% static 'css/admin_registration.css' %}">
+{% endblock %}
+
+{% block extra_scripts %}
+  <script src="{% static 'js/college_cascade.js' %}" defer></script>
+  <script src="{% static 'js/admin_registration.js' %}" defer></script>
+{% endblock %}

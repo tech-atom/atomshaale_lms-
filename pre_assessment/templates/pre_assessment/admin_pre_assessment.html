@@ -1,0 +1,1579 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block extra_head %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <link rel="stylesheet" href="{% static 'css/admin_pre_assessment.css' %}?v=1.1">
+  <!-- FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
+  <style nonce="{{ request.csp_nonce }}">
+    .nested-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .nested-table th, .nested-table td {
+      white-space: nowrap;
+      padding: 10px 12px;
+      text-align: left;
+    }
+    /* Badges */
+    .table-status-badge {
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: inline-block;
+    }
+    .table-status-badge.pass, .table-status-badge.submitted {
+      background: #d1fae5;
+      color: #065f46;
+    }
+    .table-status-badge.fail {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+    .table-status-badge.active, .table-status-badge.in_progress {
+      background: #fef3c7;
+      color: #d97706;
+    }
+    
+    .submission-badge {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 0.82rem;
+      font-weight: 700;
+      display: inline-block;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .submission-badge.mode-limit-exceeded {
+      background: #fee2e2;
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+    .submission-badge.mode-self-submitted {
+      background: #d1fae5;
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+    .submission-badge.mode-active {
+      background: #fef3c7;
+      color: #d97706;
+      border: 1px solid rgba(217, 119, 6, 0.3);
+    }
+    .submission-badge.mode-suspicious {
+      background: #ffedd5;
+      color: #ea580c;
+      border: 1px solid rgba(234, 88, 12, 0.3);
+    }
+    .submission-badge.mode-default {
+      background: #f1f5f9;
+      color: #64748b;
+      border: 1px solid rgba(100, 116, 139, 0.3);
+    }
+
+    /* Slide-out Drawer Styles */
+    .detail-modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(11, 37, 64, 0.4);
+      backdrop-filter: blur(4px);
+      z-index: 10000;
+      transition: all 0.3s ease;
+    }
+    .detail-modal-backdrop.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .student-detail-drawer {
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: min(650px, 95vw);
+      height: 100vh;
+      background: #f8fafc;
+      box-shadow: -15px 0 35px rgba(11, 37, 64, 0.15);
+      z-index: 10001;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      overflow: hidden;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .student-detail-drawer.hidden {
+      transform: translateX(100%);
+      display: flex !important;
+    }
+    .drawer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 2px solid #e2e8f0;
+      padding-bottom: 16px;
+    }
+    .drawer-header h2 {
+      margin: 0;
+      font-size: 1.45rem;
+      font-weight: 800;
+      color: #0b2540;
+    }
+    .drawer-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: #64748b;
+      cursor: pointer;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      transition: all 0.2s ease;
+    }
+    .drawer-close:hover {
+      background: #e2e8f0;
+      color: #0b2540;
+    }
+    .drawer-content {
+      flex: 1;
+      overflow-y: auto;
+      padding-right: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    .drawer-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.01);
+    }
+    .drawer-card-title {
+      margin: 0 0 14px 0;
+      font-size: 1.1rem;
+      color: #0b2540;
+      font-weight: 700;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .drawer-card-title i {
+      color: #008037;
+    }
+    .drawer-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .drawer-info-grid div {
+      font-size: 0.9rem;
+      color: #334155;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #f8fafc;
+      padding-bottom: 6px;
+    }
+    .drawer-info-grid div strong {
+      color: #64748b;
+    }
+    .status-badge {
+      padding: 2px 10px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+    .status-badge.pass, .status-badge.passed {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
+    .status-badge.fail, .status-badge.failed {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    .badge {
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      background: #0b2540;
+      color: #ffffff;
+    }
+    .drawer-loading {
+      text-align: center;
+      padding: 40px;
+      font-size: 1rem;
+      color: #64748b;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      align-items: center;
+    }
+    .drawer-loading i {
+      font-size: 2rem;
+      color: #008037;
+    }
+    .drawer-error {
+      text-align: center;
+      padding: 40px;
+      color: #ef4444;
+      font-weight: 600;
+    }
+    .drawer-question-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .drawer-question-item {
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 16px;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .drawer-question-item.q-correct {
+      border-left: 5px solid #10b981;
+    }
+    .drawer-question-item.q-incorrect {
+      border-left: 5px solid #ef4444;
+    }
+    .q-item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 8px;
+    }
+    .q-item-number {
+      font-weight: 700;
+      color: #0b2540;
+      font-size: 0.95rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .q-item-score {
+      font-size: 0.85rem;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+    .score-pass {
+      background: rgba(16, 185, 129, 0.1);
+      color: #10b981;
+    }
+    .score-fail {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+    }
+    .question-text-view {
+      font-size: 0.95rem;
+      color: #1e293b;
+      line-height: 1.5;
+      background: #f8fafc;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 0;
+      white-space: pre-line;
+      text-align: left;
+    }
+    .response-section, .answer-key-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      text-align: left;
+    }
+    .response-section h5, .answer-key-section h5 {
+      margin: 0;
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #64748b;
+      text-transform: uppercase;
+      text-align: left;
+    }
+    .response-text {
+      font-size: 0.9rem;
+      color: #334155;
+      background: #f1f5f9;
+      padding: 10px 12px;
+      border-radius: 6px;
+      margin: 0;
+      text-align: left;
+    }
+    .correct-text {
+      font-size: 0.9rem;
+      color: #065f46;
+      background: #ecfdf5;
+      padding: 10px 12px;
+      border-radius: 6px;
+      margin: 0;
+      font-weight: 500;
+      text-align: left;
+    }
+    .code-editor-header {
+      background: #1e293b;
+      color: #cbd5e1;
+      padding: 6px 14px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      border-top-left-radius: 6px;
+      border-top-right-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+    }
+    .code-preview {
+      margin: 0;
+      background: #0f172a;
+      padding: 14px;
+      border-bottom-left-radius: 6px;
+      border-bottom-right-radius: 6px;
+      overflow-x: auto;
+      text-align: left;
+    }
+    .code-preview code {
+      font-family: 'Courier New', Courier, monospace;
+      color: #38bdf8;
+      font-size: 0.85rem;
+      line-height: 1.4;
+      white-space: pre;
+      text-align: left;
+    }
+    .code-metrics {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      background: #f8fafc;
+      padding: 10px 14px;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      font-size: 0.85rem;
+    }
+    .badge-success { background: #10b981; color: #ffffff; }
+    .badge-danger { background: #ef4444; color: #ffffff; }
+    .badge-info { background: #3b82f6; color: #ffffff; }
+
+    /* Pulse dot styling for live monitor */
+    @keyframes blink-green {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.3; }
+    }
+    .pulse-dot {
+      animation: blink-green 1.5s infinite ease-in-out;
+    }
+    .flex-col {
+      flex-direction: column;
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-pre-container">
+  
+  <!-- ================= DASHBOARD HEADER ================= -->
+  <div class="dashboard-header-block">
+    <div class="header-titles">
+      <h1>PRE-Assessment Management</h1>
+      <p class="subtitle-text">Create exams, generate unique access codes, and monitor candidate completions without account registration.</p>
+    </div>
+    <div class="header-actions">
+      <button id="createPreBtn" class="btn btn-primary">
+        <i class="fa-solid fa-plus animate-pulse"></i> Create PRE-Assessment
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= LIVE METRICS CARDS ================= -->
+  <div class="dashboard-stats-grid">
+    <div class="stat-card total-card">
+      <div class="stat-icon-wrapper">
+        <i class="fa-solid fa-file-signature"></i>
+      </div>
+      <div class="stat-info">
+        <h3 id="stat-total-count">0</h3>
+        <p>Total PRE-Assessments</p>
+      </div>
+    </div>
+    <div class="stat-card active-card">
+      <div class="stat-icon-wrapper">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      <div class="stat-info">
+        <h3 id="stat-active-count">0</h3>
+        <p>Active Codes</p>
+      </div>
+    </div>
+    <div class="stat-card submissions-card">
+      <div class="stat-icon-wrapper">
+        <i class="fa-solid fa-user-graduate"></i>
+      </div>
+      <div class="stat-info">
+        <h3 id="stat-submissions-count">0</h3>
+        <p>Candidate Submissions</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= TOOLBAR (SEARCH + FILTERS) ================= -->
+  <div class="section-controls-row">
+    <div class="search-box-wrapper">
+      <i class="fa-solid fa-magnifying-glass search-icon"></i>
+      <input type="text" id="searchInput" placeholder="Search by Exam Title or Access Code..." autocomplete="off">
+    </div>
+    <div class="filter-dropdown-wrapper">
+      <select id="statusFilter" class="filter-select">
+        <option value="all">All Statuses</option>
+        <option value="active">Active Only</option>
+        <option value="inactive">Inactive Only</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ================= RESPONSIVE TABLE ================= -->
+  <div class="table-wrap">
+    <table id="preAssessmentTable">
+      <thead>
+        <tr>
+          <th>Exam Title</th>
+          <th>Access Code</th>
+          <th>Date Created</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="preAssessmentTableBody">
+        <tr>
+          <td colspan="5" class="text-center py-8 text-gray-500">
+            <i class="fa-solid fa-spinner fa-spin text-2xl mr-2"></i> Loading PRE-Assessments...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ================= GLASSMORPHISM MODALS ================= -->
+  
+  <!-- CREATE PRE-ASSESSMENT MODAL -->
+  <div id="createModal" class="modal-overlay">
+    <div class="glass-modal modal-content">
+      <div class="modal-header">
+        <h2>Create PRE-Assessment</h2>
+        <button class="close-modal-btn">&times;</button>
+      </div>
+      <form id="createPreForm">
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="examSelect">Select Base Exam <span class="required">*</span></label>
+            <select id="examSelect" class="form-control" required>
+              <option value="" disabled selected>-- Select an Exam --</option>
+              {% for exam in exams %}
+                <option value="{{ exam.id }}">{{ exam.title }} ({{ exam.duration_minutes }} mins, {{ exam.max_marks }} marks)</option>
+              {% empty %}
+                <option value="" disabled>No exams available. Please create an exam first.</option>
+              {% endfor %}
+            </select>
+          </div>
+          <p class="info-note"><i class="fa-solid fa-info-circle"></i> A unique 6-digit access code will be automatically generated upon creation.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary submit-btn">Generate Code</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- VIEW RESULTS MODAL -->
+  <div id="resultsModal" class="modal-overlay">
+    <div class="glass-modal modal-content modal-large">
+      <div class="modal-header">
+        <h2 id="resultsModalTitle">Candidate Submissions</h2>
+        <button class="close-modal-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="submissions-meta mb-4 flex justify-between items-center">
+          <span class="text-sm text-gray-600 font-medium" id="submissions-count-text">0 attempts recorded</span>
+          <button id="btnExportCSV" class="btn btn-secondary btn-sm" style="display: none;">
+            <i class="fa-solid fa-file-csv"></i> Export CSV
+          </button>
+        </div>
+        <div class="table-wrap max-h-96 overflow-y-auto">
+          <table class="nested-table">
+            <thead>
+              <tr>
+                <th>Candidate Name</th>
+                <th>Email ID</th>
+                <th>USN</th>
+                <th>College Name</th>
+                <th>Course</th>
+                <th>Year</th>
+                <th>Sem</th>
+                <th>Marks Obtained</th>
+                <th>%</th>
+                <th>Status</th>
+                <th>Attempted</th>
+                <th>Correct</th>
+                <th>Wrong</th>
+                <th>Unattempted</th>
+                <th>Tab Switch</th>
+                <th>Time Spent (Each Question)</th>
+                <th>Submission Mode</th>
+                <th>Section / Topic Analysis</th>
+                <th>Submitted At</th>
+                <th>Report</th>
+              </tr>
+            </thead>
+            <tbody id="submissionsTableBody">
+              <!-- Dynamically populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-header pt-0">
+         <!-- Empty footer spacer -->
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDENT DETAIL MODAL DRAWER -->
+  <div id="detailModalBackdrop" class="detail-modal-backdrop hidden" style="z-index: 10000;"></div>
+  <aside id="studentDetailDrawer" class="student-detail-drawer hidden" aria-hidden="true" style="z-index: 10001;">
+    <div class="drawer-header">
+      <div>
+        <h2 id="detailDrawerTitle" style="margin: 0; color: #0b2540;">Student Detailed Report</h2>
+        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+          <span class="badge" id="detailDrawerType">EXAM</span>
+          <label id="liveMonitorToggleWrapper" style="display: none; align-items: center; gap: 6px; font-size: 0.75rem; font-weight: 700; color: #008037; cursor: pointer; user-select: none;">
+            <span class="pulse-dot" style="width: 8px; height: 8px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+            <input type="checkbox" id="liveMonitorCheckbox" style="cursor: pointer; margin: 0;"> Live Monitor
+          </label>
+        </div>
+      </div>
+      <button id="detailDrawerCloseBtn" type="button" class="drawer-close" aria-label="Close"><i class="fas fa-times"></i></button>
+    </div>
+    
+    <div class="drawer-content">
+      <!-- General Info Card -->
+      <div class="drawer-card">
+        <h3 class="drawer-card-title"><i class="fas fa-user-circle"></i> Student Profile</h3>
+        <div class="drawer-info-grid">
+          <div><strong>Name:</strong> <span id="detailStudentName">—</span></div>
+          <div><strong>USN:</strong> <span id="detailStudentUsn">—</span></div>
+          <div><strong>Email:</strong> <span id="detailStudentEmail">—</span></div>
+          <div><strong>College:</strong> <span id="detailStudentCollege">—</span></div>
+          <div><strong>Course:</strong> <span id="detailStudentCourse">—</span></div>
+          <div><strong>Year:</strong> <span id="detailStudentYear">—</span></div>
+          <div><strong>Semester:</strong> <span id="detailStudentSemester">—</span></div>
+          <div><strong>Section:</strong> <span id="detailStudentSection">—</span></div>
+        </div>
+      </div>
+
+      <!-- Test Overview Card -->
+      <div class="drawer-card">
+        <h3 class="drawer-card-title"><i class="fas fa-chart-bar"></i> Attempt Summary</h3>
+        <div class="drawer-info-grid">
+          <div><strong>Marks Obtained:</strong> <span id="detailMarksObtained">—</span></div>
+          <div><strong>Percentage:</strong> <span id="detailPercentage">—</span></div>
+          <div><strong>Status:</strong> <span id="detailStatusBadge">—</span></div>
+          <div><strong>Attempted:</strong> <span id="detailAttemptedCount">—</span></div>
+          <div><strong>Correct:</strong> <span id="detailCorrectCount">—</span></div>
+          <div><strong>Wrong:</strong> <span id="detailWrongCount">—</span></div>
+          <div><strong>Time Spent:</strong> <span id="detailTimeSpent">—</span></div>
+          <div><strong>Submitted At:</strong> <span id="detailSubmittedAt">—</span></div>
+          <div id="detailTabSwitchesGroup"><strong>Tab Switches:</strong> <span id="detailTabSwitches">—</span></div>
+          <div id="detailSubmissionModeGroup"><strong>Submission Mode:</strong> <span id="detailSubmissionMode">—</span></div>
+        </div>
+      </div>
+
+      <!-- Question Breakdown Card -->
+      <div class="drawer-card">
+        <h3 class="drawer-card-title"><i class="fas fa-list-ol"></i> Question-by-Question Detailing</h3>
+        <div id="drawerQuestionContainer" class="drawer-question-list">
+          <!-- Populated dynamically via JS -->
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- PRE-ASSESSMENT LIVE MONITOR MODAL -->
+  <div id="preLiveMonitorModal" class="modal-overlay">
+    <div class="glass-modal modal-content modal-large">
+      <div class="modal-header">
+        <h2 id="preLiveMonitorTitle" style="display: flex; align-items: center; gap: 10px; margin: 0;">
+          <span class="pulse-dot" style="width: 10px; height: 10px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
+          Live PRE-Assessment Monitor: <span id="preLiveMonitorExamTitle" class="font-bold text-gray-800"></span>
+        </h2>
+        <button class="close-modal-btn" onclick="closePreLiveMonitor()">&times;</button>
+      </div>
+      <div class="modal-body">
+        
+        <!-- Live Metrics Summary Bar -->
+        <div class="monitor-summary" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; text-align: center; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+          <div style="padding: 10px; background: white; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Total Started</div>
+            <div id="preLiveTotal" style="font-size: 1.6rem; color: #0b2540; font-weight: 800; margin-top: 4px;">0</div>
+          </div>
+          <div style="padding: 10px; background: white; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Active Candidates</div>
+            <div id="preLiveActive" style="font-size: 1.6rem; color: #d97706; font-weight: 800; margin-top: 4px;">0</div>
+          </div>
+          <div style="padding: 10px; background: white; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Submitted</div>
+            <div id="preLiveSubmitted" style="font-size: 1.6rem; color: #10b981; font-weight: 800; margin-top: 4px;">0</div>
+          </div>
+        </div>
+
+        <!-- Filters Toolbar -->
+        <div class="monitor-filters" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 15px; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 12px; border-radius: 8px;">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; flex: 1;">
+            <select id="preLiveCollegeFilter" class="filter-select" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-size: 0.85rem; min-width: 150px; max-width: 250px;">
+              <option value="">All Colleges</option>
+            </select>
+            <select id="preLiveCourseFilter" class="filter-select" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-size: 0.85rem; min-width: 120px; max-width: 200px;">
+              <option value="">All Courses</option>
+            </select>
+            <input type="search" id="preLiveSearchInput" placeholder="Search by USN / Name..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-size: 0.85rem; min-width: 180px; flex: 1; max-width: 300px;">
+          </div>
+          
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <button class="btn btn-neutral btn-sm pre-filter-btn active-toggle" data-filter="all" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 700;">All</button>
+            <button class="btn btn-neutral btn-sm pre-filter-btn" data-filter="submitted" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 700;">Submitted</button>
+            <button class="btn btn-neutral btn-sm pre-filter-btn" data-filter="active" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 700;">Active</button>
+          </div>
+        </div>
+
+        <!-- Live Refresh Info & Actions -->
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 0 4px;">
+          <span style="font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-arrows-rotate fa-spin text-green-600"></i> Auto-refreshing every 5 seconds...
+          </span>
+          <button id="preLiveRefreshBtn" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 6px 12px;">
+            <i class="fa-solid fa-sync"></i> Refresh Now
+          </button>
+        </div>
+
+        <!-- Candidates Table -->
+        <div class="table-wrap max-h-96 overflow-y-auto" style="border: 1px solid #e2e8f0; border-radius: 8px;">
+          <table class="nested-table">
+            <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 2px solid #cbd5e1;">
+              <tr>
+                <th>USN</th>
+                <th>Candidate Name</th>
+                <th>Email</th>
+                <th>College</th>
+                <th>Course</th>
+                <th>Status</th>
+                <th>Progress</th>
+                <th>Tab Switch</th>
+                <th>Time Spent</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="preLiveMonitorTableBody">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Controls -->
+        <div id="preLivePagination" style="display: flex; align-items: center; justify-content: space-between; margin-top: 15px; padding: 10px 4px 0 4px; border-top: 1px solid #e2e8f0;">
+          <span id="preLivePageInfo" style="font-size: 0.85rem; color: #64748b; font-weight: 600;">Page 1 of 1</span>
+          <div style="display: flex; gap: 8px;">
+            <button id="preLivePrevBtn" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.75rem; font-weight: 700;" disabled>&larr; Previous</button>
+            <button id="preLiveNextBtn" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.75rem; font-weight: 700;" disabled>Next &rarr;</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- DELETE CONFIRMATION MODAL -->
+  <div id="deleteModal" class="modal-overlay">
+    <div class="glass-modal modal-content modal-sm">
+      <div class="modal-header">
+        <h2 class="text-red-600"><i class="fa-solid fa-triangle-exclamation"></i> Delete PRE-Assessment</h2>
+        <button class="close-modal-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this PRE-Assessment? This will delete the access code and all associated candidate results. This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+        <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Delete Permanently</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATIONS -->
+  <div id="toastNotification" class="toast-popup">
+    <span class="toast-message">Success!</span>
+  </div>
+
+</div>
+
+<!-- Vanilla AJAX script -->
+<script nonce="{{ request.csp_nonce }}">
+document.addEventListener('DOMContentLoaded', function() {
+  const urls = {
+    list: "{% url 'pre_assessment_list_api' %}",
+    create: "{% url 'pre_assessment_create_api' %}",
+    toggle: "/pre-assessment/admin/api/toggle/", // Appended with ID in JS
+    delete: "/pre-assessment/admin/api/delete/", // Appended with ID in JS
+    results: "/pre-assessment/admin/api/results/" // Appended with ID in JS
+  };
+
+  let preAssessments = [];
+  let activePreId = null;
+
+  // Modals
+  const createModal = document.getElementById('createModal');
+  const resultsModal = document.getElementById('resultsModal');
+  const deleteModal = document.getElementById('deleteModal');
+  const candidateReportModal = document.getElementById('candidateReportModal');
+
+  // Load Assessments
+  async function loadPreAssessments() {
+    try {
+      const response = await fetch(urls.list);
+      const data = await response.json();
+      preAssessments = data.data || [];
+      renderTable();
+      updateMetrics();
+    } catch (e) {
+      console.error(e);
+      showToast('Failed to load PRE-Assessments', false);
+    }
+  }
+
+  // Render Table
+  function renderTable() {
+    const tbody = document.getElementById('preAssessmentTableBody');
+    const searchVal = document.getElementById('searchInput').value.toLowerCase().trim();
+    const statusVal = document.getElementById('statusFilter').value;
+
+    const filtered = preAssessments.filter(item => {
+      const matchesSearch = item.exam_title.toLowerCase().includes(searchVal) || item.code.toLowerCase().includes(searchVal);
+      const matchesStatus = statusVal === 'all' || 
+                            (statusVal === 'active' && item.is_active) || 
+                            (statusVal === 'inactive' && !item.is_active);
+      return matchesSearch && matchesStatus;
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500">No PRE-Assessments found matching the criteria.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(item => {
+      const createdDate = new Date(item.created_at).toLocaleString('en-IN', { hour12: true });
+      return `
+        <tr data-id="${item.id}">
+          <td class="font-semibold text-gray-800">${escapeHtml(item.exam_title)}</td>
+          <td>
+            <div class="code-badge">
+              <span class="code-text font-mono font-bold">${escapeHtml(item.code)}</span>
+              <button class="copy-btn" onclick="copyToClipboard('${item.code}')" title="Copy code">
+                <i class="fa-regular fa-copy"></i>
+              </button>
+            </div>
+          </td>
+          <td>${createdDate}</td>
+          <td>
+            <span class="badge ${item.is_active ? 'badge-success' : 'badge-danger'}">
+              ${item.is_active ? 'Active' : 'Inactive'}
+            </span>
+          </td>
+          <td>
+            <div class="action-buttons">
+              <button class="btn btn-icon btn-secondary toggle-status-btn" onclick="toggleStatus('${item.id}')" title="${item.is_active ? 'Deactivate' : 'Activate'}">
+                <i class="fa-solid ${item.is_active ? 'fa-toggle-on text-green-600' : 'fa-toggle-off'}"></i>
+              </button>
+              <button class="btn btn-icon btn-primary view-results-btn" onclick="viewResults('${item.id}', '${escapeHtml(item.exam_title)}')" title="View Candidate Submissions">
+                <i class="fa-solid fa-chart-line"></i>
+              </button>
+              <button class="btn btn-icon btn-success live-monitor-btn" onclick="openPreLiveMonitor('${item.id}', '${escapeHtml(item.exam_title)}')" title="Live Monitor" style="background-color: #10b981; color: white;">
+                <i class="fa-solid fa-desktop"></i>
+              </button>
+              <button class="btn btn-icon btn-danger delete-btn" onclick="confirmDelete('${item.id}')" title="Delete PRE-Assessment">
+                <i class="fa-regular fa-trash-can"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // Update Metrics
+  function updateMetrics() {
+    document.getElementById('stat-total-count').textContent = preAssessments.length;
+    document.getElementById('stat-active-count').textContent = preAssessments.filter(item => item.is_active).length;
+    
+    const submissionsCount = preAssessments.reduce((acc, curr) => acc + (curr.submissions_count || 0), 0);
+    document.getElementById('stat-submissions-count').textContent = submissionsCount;
+  }
+
+  // Copy code utility
+  window.copyToClipboard = function(code) {
+    navigator.clipboard.writeText(code).then(() => {
+      showToast(`Code "${code}" copied to clipboard!`);
+    }).catch(err => {
+      console.error('Could not copy text: ', err);
+    });
+  };
+
+  // Toggle Status API
+  window.toggleStatus = async function(id) {
+    try {
+      const response = await fetch(`${urls.toggle}${id}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken()
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showToast(data.message || 'Status updated successfully');
+        loadPreAssessments();
+      } else {
+        showToast(data.error || 'Failed to update status', false);
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('An error occurred', false);
+    }
+  };
+
+  // View Results API
+  window.viewResults = async function(id, title) {
+    const tbody = document.getElementById('submissionsTableBody');
+    tbody.innerHTML = `<tr><td colspan="20" class="text-center py-6 text-gray-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading candidate submissions...</td></tr>`;
+    document.getElementById('resultsModalTitle').textContent = `Submissions: ${title}`;
+    
+    // Clear and set export download reference
+    const exportBtn = document.getElementById('btnExportCSV');
+    exportBtn.style.display = 'none';
+ 
+    openModal(resultsModal);
+ 
+    try {
+      const response = await fetch(`${urls.results}${id}/`);
+      const data = await response.json();
+      const results = data.data || [];
+      
+      document.getElementById('submissions-count-text').textContent = `${results.length} attempts recorded`;
+ 
+      if (results.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="20" class="text-center py-6 text-gray-400">No submissions received yet for this PRE-Assessment.</td></tr>`;
+        return;
+      }
+ 
+      // Configure export CSV action
+      exportBtn.style.display = 'inline-flex';
+      exportBtn.onclick = function() {
+        exportResultsCSV(title, results);
+      };
+ 
+      tbody.innerHTML = results.map(r => {
+        const subDate = new Date(r.submitted_at).toLocaleString('en-IN', { hour12: true });
+        
+        // Status badge
+        const statusVal = r.status || "";
+        const statusClass = statusVal.toLowerCase();
+        
+        // Submission Mode badge
+        let modeBadgeClass = "mode-default";
+        const mode = r.submission_mode || "";
+        if (mode === "Limit Exceeded Submit" || mode.toLowerCase().includes("auto")) {
+          modeBadgeClass = "mode-limit-exceeded";
+        } else if (mode === "Self Submitted" || mode === "Submitted") {
+          modeBadgeClass = "mode-self-submitted";
+        } else if (mode === "Active" || mode === "In Progress") {
+          modeBadgeClass = "mode-active";
+        } else if (mode === "Suspicious") {
+          modeBadgeClass = "mode-suspicious";
+        }
+
+        return `
+          <tr>
+            <td class="font-medium text-gray-800">${escapeHtml(r.candidate_name)}</td>
+            <td>${escapeHtml(r.candidate_email)}</td>
+            <td>${escapeHtml(r.candidate_usn || '-')}</td>
+            <td>${escapeHtml(r.candidate_college || '-')}</td>
+            <td>${escapeHtml(r.candidate_course || '-')}</td>
+            <td>${r.candidate_year || '-'}</td>
+            <td>${r.candidate_sem || '-'}</td>
+            <td class="font-bold text-green-700">${r.marks_obtained} / ${r.total_marks}</td>
+            <td class="font-bold">${r.percentage}%</td>
+            <td>
+              <span class="table-status-badge ${statusClass}">
+                ${escapeHtml(statusVal)}
+              </span>
+            </td>
+            <td>${r.attempted}</td>
+            <td class="text-green-600 font-bold">${r.correct}</td>
+            <td class="text-red-600 font-bold">${r.wrong}</td>
+            <td>${r.unattempted}</td>
+            <td class="${r.tab_switch_count > 0 ? 'text-red-600 font-bold' : ''}">${r.tab_switch_count}</td>
+            <td class="font-mono text-xs" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(r.time_spent_each_question)}">${escapeHtml(r.time_spent_each_question)}</td>
+            <td>
+              <span class="submission-badge ${modeBadgeClass}">
+                ${escapeHtml(mode)}
+              </span>
+            </td>
+            <td class="font-medium text-xs" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(r.topic_analysis)}">${escapeHtml(r.topic_analysis)}</td>
+            <td>${subDate}</td>
+            <td>
+              <button class="btn btn-icon btn-primary view-report-btn" onclick="viewDetailedReport('${r.id}')" title="View Detailed Report">
+                <i class="fa-solid fa-eye"></i>
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = `<tr><td colspan="20" class="text-center py-6 text-red-500">Failed to load results.</td></tr>`;
+    }
+  };
+
+  // CSV Exporter
+  function exportResultsCSV(examTitle, results) {
+    let csvContent = "data:text/csv;charset=utf-8,";
+    csvContent += "Candidate Name,Email,USN,College Name,Course,Year,Semester,Marks Obtained,Total Marks,Time Taken,Submitted At,Status\n";
+    
+    results.forEach(r => {
+      const row = [
+        `"${r.candidate_name.replace(/"/g, '""')}"`,
+        `"${r.candidate_email.replace(/"/g, '""')}"`,
+        `"${(r.candidate_usn || '').replace(/"/g, '""')}"`,
+        `"${(r.candidate_college || '').replace(/"/g, '""')}"`,
+        `"${(r.candidate_course || '').replace(/"/g, '""')}"`,
+        r.candidate_year || '',
+        r.candidate_sem || '',
+        r.marks_obtained,
+        r.total_marks,
+        `"${(r.time_taken || '').replace(/"/g, '""')}"`,
+        `"${new Date(r.submitted_at).toLocaleString('en-IN')}"`,
+        r.status
+      ].join(",");
+      csvContent += row + "\n";
+    });
+
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `PRE_Assessment_${examTitle.replace(/\s+/g, '_')}_Results.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  // Slide-out Drawer Actions
+  const detailDrawer = document.getElementById("studentDetailDrawer");
+  const detailBackdrop = document.getElementById("detailModalBackdrop");
+  const detailCloseBtn = document.getElementById("detailDrawerCloseBtn");
+  let liveMonitorInterval = null;
+
+  const closeDetailDrawer = () => {
+    if (detailDrawer && detailBackdrop) {
+      detailDrawer.classList.add("hidden");
+      detailBackdrop.classList.add("hidden");
+      detailDrawer.setAttribute("aria-hidden", "true");
+    }
+    // Clear live monitor interval when closed
+    if (liveMonitorInterval) {
+      clearInterval(liveMonitorInterval);
+      liveMonitorInterval = null;
+    }
+    const checkbox = document.getElementById("liveMonitorCheckbox");
+    if (checkbox) checkbox.checked = false;
+  };
+
+  if (detailCloseBtn) detailCloseBtn.addEventListener("click", closeDetailDrawer);
+  if (detailBackdrop) detailBackdrop.addEventListener("click", closeDetailDrawer);
+  
+  // Add listener to close button inside footer
+  document.querySelector("#studentDetailDrawer .cancel-btn")?.addEventListener("click", closeDetailDrawer);
+
+  document.getElementById("liveMonitorCheckbox")?.addEventListener("change", function() {
+    if (this.checked) {
+      if (window.currentActiveReportId) {
+        // Setup 5 seconds interval refresh
+        liveMonitorInterval = setInterval(() => {
+          window.viewDetailedReport(window.currentActiveReportId, true);
+        }, 5000);
+      }
+    } else {
+      if (liveMonitorInterval) {
+        clearInterval(liveMonitorInterval);
+        liveMonitorInterval = null;
+      }
+    }
+  });
+
+  window.viewDetailedReport = async function(id, isSilent = false) {
+    window.currentActiveReportId = id;
+    const container = document.getElementById("drawerQuestionContainer");
+    
+    if (!isSilent) {
+      container.innerHTML = `<div class="drawer-loading"><i class="fas fa-spinner fa-spin"></i> Fetching detailed report from database...</div>`;
+      
+      if (detailDrawer && detailBackdrop) {
+        detailDrawer.classList.remove("hidden");
+        detailBackdrop.classList.remove("hidden");
+        detailDrawer.setAttribute("aria-hidden", "false");
+      }
+    }
+
+    try {
+      const detailUrl = "/admin-panel/admin/api/performance/result-detail/";
+      const response = await fetch(`${detailUrl}?type=exam&id=${id}`);
+      const data = await response.json();
+      
+      if (data.error) {
+        if (!isSilent) {
+          container.innerHTML = `<div class="drawer-error">${escapeHtml(data.error)}</div>`;
+        }
+        return;
+      }
+
+      document.getElementById("detailDrawerType").textContent = data.test_type || "EXAM";
+      document.getElementById("detailStudentName").textContent = data.student.name || "—";
+      document.getElementById("detailStudentUsn").textContent = data.student.usn || "—";
+      document.getElementById("detailStudentEmail").textContent = data.student.email || "—";
+      document.getElementById("detailStudentCollege").textContent = data.student.college || "—";
+      document.getElementById("detailStudentCourse").textContent = data.student.course || "—";
+      document.getElementById("detailStudentYear").textContent = data.student.year || "—";
+      document.getElementById("detailStudentSemester").textContent = data.student.semester || "—";
+      document.getElementById("detailStudentSection").textContent = data.student.section || "—";
+
+      document.getElementById("detailMarksObtained").textContent = `${data.marks_obtained} / ${data.total_marks}`;
+      document.getElementById("detailPercentage").textContent = `${data.percentage}%`;
+      
+      const statusBadge = document.getElementById("detailStatusBadge");
+      statusBadge.textContent = data.status;
+      statusBadge.className = `status-badge ${data.status.toLowerCase()}`;
+
+      document.getElementById("detailAttemptedCount").textContent = data.attempted_questions;
+      document.getElementById("detailCorrectCount").textContent = data.correct_answers;
+      document.getElementById("detailWrongCount").textContent = data.wrong_answers;
+      document.getElementById("detailTimeSpent").textContent = data.time_taken;
+      document.getElementById("detailSubmittedAt").textContent = data.submitted_at;
+      document.getElementById("detailTabSwitches").textContent = data.tab_switch_count ?? "0";
+      document.getElementById("detailSubmissionMode").textContent = data.submission_mode ?? "—";
+
+      // Setup Live Monitor checkbox visibility (only visible if the candidate is actively taking the exam)
+      const toggleWrapper = document.getElementById("liveMonitorToggleWrapper");
+      const checkbox = document.getElementById("liveMonitorCheckbox");
+      const isFinalStatus = ['submitted', 'accidental_submit'].includes(data.status.toLowerCase());
+      
+      if (isFinalStatus) {
+        if (toggleWrapper) toggleWrapper.style.display = "none";
+        if (liveMonitorInterval) {
+          clearInterval(liveMonitorInterval);
+          liveMonitorInterval = null;
+        }
+        if (checkbox) checkbox.checked = false;
+      } else {
+        if (toggleWrapper) toggleWrapper.style.display = "inline-flex";
+      }
+
+      container.innerHTML = "";
+      const breakdown = data.question_wise_breakdown || [];
+      if (!breakdown.length) {
+        container.innerHTML = `<div class="text-center py-6 text-gray-400">No question breakdown details available.</div>`;
+        return;
+      }
+
+      breakdown.forEach((q, idx) => {
+        const itemDiv = document.createElement("div");
+        itemDiv.className = `drawer-question-item ${q.correct ? "q-correct" : "q-incorrect"}`;
+        
+        let typeIcon = "fa-question-circle";
+        if (q.type === "MCQ") typeIcon = "fa-list-ul";
+        else if (q.type === "TF") typeIcon = "fa-check-double";
+        else if (q.type === "DESC") typeIcon = "fa-align-left";
+        else if (q.type === "CODE" || q.type === "Code") typeIcon = "fa-code";
+
+        let answerHtml = "";
+        if (q.parsed_code) {
+          answerHtml = `
+            <div class="code-editor-header">
+              <span><i class="fas fa-code"></i> ${q.parsed_code.language}</span>
+            </div>
+            <pre class="code-preview"><code>${escapeHtml(q.parsed_code.code)}</code></pre>
+          `;
+        } else {
+          answerHtml = `<p class="response-text">${escapeHtml(q.student_answer || "— (No Answer)")}</p>`;
+        }
+
+        let verdictHtml = "";
+        if (q.type === "CODE" || q.type === "Code") {
+          const passed = q.passed || 0;
+          const total = q.total || 0;
+          const badgeColor = q.correct ? "badge-success" : "badge-danger";
+          verdictHtml = `
+            <div class="code-metrics">
+              <strong>Verdict:</strong> <span class="badge ${badgeColor}">${escapeHtml(q.verdict)}</span>
+              <strong>Test Cases:</strong> <span class="badge badge-info">${passed} / ${total} Passed</span>
+            </div>
+          `;
+        }
+
+        itemDiv.innerHTML = `
+          <div class="q-item-header">
+            <span class="q-item-number"><i class="fas ${typeIcon}"></i> Question ${idx + 1} (${q.type})</span>
+            <span class="q-item-score ${q.correct ? "score-pass" : "score-fail"}">
+              ${q.marks_awarded} Marks
+            </span>
+          </div>
+          <div class="q-item-body">
+            <p class="question-text-view">${escapeHtml(q.question_text)}</p>
+            
+            <div class="response-section" style="margin-top: 10px;">
+              <h5>Student Response:</h5>
+              ${answerHtml}
+            </div>
+
+            <div class="answer-key-section" style="margin-top: 10px;">
+              <h5>Correct Answer / Criteria:</h5>
+              <p class="correct-text">${escapeHtml(q.correct_answer || "—")}</p>
+            </div>
+
+            ${verdictHtml}
+          </div>
+        `;
+        container.appendChild(itemDiv);
+      });
+    } catch (e) {
+      console.error(e);
+      if (!isSilent) {
+        container.innerHTML = `<div class="drawer-error">Failed to load detailed report.</div>`;
+      }
+    }
+  };
+
+  // ─── Live Pre-Assessment Monitor Logic ───
+  let preLiveMonitorInterval = null;
+  let preLiveMonitorFilter = 'all';
+  let preLiveCollegeFilter = '';
+  let preLiveCourseFilter = '';
+  let preLiveSearchText = '';
+  let preLiveActiveId = null;
+  let preLiveCurrentPage = 1;
+
+  window.openPreLiveMonitor = function(id, title) {
+    preLiveActiveId = id;
+    preLiveMonitorFilter = 'all';
+    preLiveCollegeFilter = '';
+    preLiveCourseFilter = '';
+    preLiveSearchText = '';
+    preLiveCurrentPage = 1;
+    
+    document.getElementById('preLiveMonitorExamTitle').textContent = title;
+    
+    // Reset filters elements
+    const collegeSelect = document.getElementById('preLiveCollegeFilter');
+    const courseSelect = document.getElementById('preLiveCourseFilter');
+    const searchInput = document.getElementById('preLiveSearchInput');
+    
+    collegeSelect.innerHTML = '<option value="">All Colleges</option>';
+    courseSelect.innerHTML = '<option value="">All Courses</option>';
+    searchInput.value = '';
+    
+    // Set up filter buttons active state
+    document.querySelectorAll('.pre-filter-btn').forEach(btn => {
+      btn.classList.remove('active-toggle');
+      if (btn.dataset.filter === 'all') btn.classList.add('active-toggle');
+    });
+    
+    // Load initial data
+    loadPreLiveMonitorData(id, true);
+    
+    // Open Modal
+    openModal(document.getElementById('preLiveMonitorModal'));
+    
+    // Start auto-refresh polling every 5 seconds
+    if (preLiveMonitorInterval) clearInterval(preLiveMonitorInterval);
+    preLiveMonitorInterval = setInterval(() => {
+      loadPreLiveMonitorData(id, false);
+    }, 5000);
+  };
+
+  window.closePreLiveMonitor = function() {
+    closeModal(document.getElementById('preLiveMonitorModal'));
+    if (preLiveMonitorInterval) {
+      clearInterval(preLiveMonitorInterval);
+      preLiveMonitorInterval = null;
+    }
+  };
+
+  // Wire up filter event listeners
+  document.getElementById('preLiveCollegeFilter').addEventListener('change', function() {
+    preLiveCollegeFilter = this.value;
+    preLiveCurrentPage = 1;
+    loadPreLiveMonitorData(preLiveActiveId, false);
+  });
+  
+  document.getElementById('preLiveCourseFilter').addEventListener('change', function() {
+    preLiveCourseFilter = this.value;
+    preLiveCurrentPage = 1;
+    loadPreLiveMonitorData(preLiveActiveId, false);
+  });
+  
+  document.getElementById('preLiveSearchInput').addEventListener('input', function() {
+    preLiveSearchText = this.value.toLowerCase().trim();
+    preLiveCurrentPage = 1;
+    loadPreLiveMonitorData(preLiveActiveId, false);
+  });
+  
+  document.querySelectorAll('.pre-filter-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.pre-filter-btn').forEach(b => b.classList.remove('active-toggle'));
+      this.classList.add('active-toggle');
+      preLiveMonitorFilter = this.dataset.filter;
+      preLiveCurrentPage = 1;
+      loadPreLiveMonitorData(preLiveActiveId, false);
+    });
+  });
+  
+  document.getElementById('preLiveRefreshBtn').addEventListener('click', function() {
+    loadPreLiveMonitorData(preLiveActiveId, false);
+    showToast('Live monitor refreshed.');
+  });
+
+  // Pagination navigation listeners
+  document.getElementById('preLivePrevBtn').addEventListener('click', function() {
+    if (preLiveCurrentPage > 1) {
+      preLiveCurrentPage--;
+      loadPreLiveMonitorData(preLiveActiveId, false);
+    }
+  });
+
+  document.getElementById('preLiveNextBtn').addEventListener('click', function() {
+    preLiveCurrentPage++;
+    loadPreLiveMonitorData(preLiveActiveId, false);
+  });
+
+  async function loadPreLiveMonitorData(id, isInitial = false) {
+    if (!id) return;
+    const tbody = document.getElementById('preLiveMonitorTableBody');
+    if (isInitial) {
+      tbody.innerHTML = `<tr><td colspan="10" class="text-center py-6 text-gray-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Initializing monitor...</td></tr>`;
+    }
+    
+    try {
+      const url = `${urls.results}${id}/?page=${preLiveCurrentPage}&q=${encodeURIComponent(preLiveSearchText)}&college=${encodeURIComponent(preLiveCollegeFilter)}&course=${encodeURIComponent(preLiveCourseFilter)}&status=${preLiveMonitorFilter}`;
+      const response = await fetch(url);
+      const payload = await response.json();
+      
+      const results = payload.data || [];
+      const totalQuestions = payload.total_questions || 0;
+      
+      // Update Summary Counts
+      document.getElementById('preLiveTotal').textContent = payload.total_count || 0;
+      document.getElementById('preLiveActive').textContent = payload.active_count || 0;
+      document.getElementById('preLiveSubmitted').textContent = payload.submitted_count || 0;
+      
+      // Dynamically populate filter dropdown options if it's the initial load
+      if (isInitial) {
+        const colleges = payload.colleges || [];
+        const courses = payload.courses || [];
+        
+        const collegeSelect = document.getElementById('preLiveCollegeFilter');
+        colleges.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          opt.textContent = c;
+          collegeSelect.appendChild(opt);
+        });
+        
+        const courseSelect = document.getElementById('preLiveCourseFilter');
+        courses.forEach(c => {
+          const opt = document.createElement('option');
+          opt.value = c;
+          opt.textContent = c;
+          courseSelect.appendChild(opt);
+        });
+      }
+      
+      // Update Pagination Controls
+      const page = payload.page || 1;
+      const numPages = payload.num_pages || 1;
+      document.getElementById('preLivePageInfo').textContent = `Page ${page} of ${numPages}`;
+      document.getElementById('preLivePrevBtn').disabled = !payload.has_prev;
+      document.getElementById('preLiveNextBtn').disabled = !payload.has_next;
+      
+      if (results.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="10" class="text-center py-6 text-gray-400">No candidates match the filter criteria.</td></tr>`;
+        return;
+      }
+      
+      tbody.innerHTML = results.map(r => {
+        const rawStatus = String(r.status || '').toLowerCase();
+        const isFinal = ['submitted', 'accidental_submit', 'retaken'].includes(rawStatus);
+        
+        // Badges mapping
+        let statusBadgeClass = "active";
+        if (rawStatus === "submitted" || rawStatus === "retaken") statusBadgeClass = "pass";
+        else if (rawStatus === "accidental_submit") statusBadgeClass = "fail";
+        else if (rawStatus === "suspicious") statusBadgeClass = "fail";
+        
+        const currentQ = r.current_question || 1;
+        const progressDisplay = isFinal ? 'Finished' : `Q ${currentQ} / ${totalQuestions}`;
+        
+        // Parse time spent breakdown nicely
+        let timeSpentHtml = "-";
+        if (r.time_spent_each_question && r.time_spent_each_question !== "-") {
+          timeSpentHtml = `<div style="max-height: 50px; overflow-y: auto; font-family: monospace; font-size: 0.8rem;">${r.time_spent_each_question.replace(/\s*\|\s*/g, '<br>')}</div>`;
+        }
+        
+        // Action buttons
+        let actionsHtml = "";
+        if (isFinal) {
+          actionsHtml += `
+            <button class="btn btn-neutral btn-sm" onclick="preLiveAllowRetake(${r.id})" style="padding: 2px 8px; font-size: 0.75rem; margin-bottom: 2px; display: block; width: 100%;">
+              Allow Retake
+            </button>
+          `;
+        }
+        actionsHtml += `
+          <button class="btn btn-neutral btn-sm" onclick="preLiveRemoveAttempt(${r.id})" style="padding: 2px 8px; font-size: 0.75rem; background-color: #fee2e2; color: #b91c1c; border-color: #fca5a5; margin-bottom: 2px; display: block; width: 100%;">
+            Remove
+          </button>
+          <button class="btn btn-neutral btn-sm" onclick="closePreLiveMonitor(); viewDetailedReport('${r.id}');" style="padding: 2px 8px; font-size: 0.75rem; display: block; width: 100%;">
+            Report
+          </button>
+        `;
+        
+        return `
+          <tr>
+            <td class="font-mono text-sm">${escapeHtml(r.candidate_usn || '-')}</td>
+            <td class="font-semibold text-gray-800">${escapeHtml(r.candidate_name)}</td>
+            <td class="text-xs">${escapeHtml(r.candidate_email)}</td>
+            <td class="text-xs">${escapeHtml(r.candidate_college || '-')}</td>
+            <td class="text-xs">${escapeHtml(r.candidate_course || '-')}</td>
+            <td>
+              <span class="table-status-badge ${statusBadgeClass}">
+                ${escapeHtml(r.status || 'Active')}
+              </span>
+            </td>
+            <td>${progressDisplay}</td>
+            <td class="${r.tab_switch_count > 0 ? 'text-red-600 font-bold' : ''}">${r.tab_switch_count ?? 0}</td>
+            <td>${timeSpentHtml}</td>
+            <td>
+              <div style="display: flex; flex-direction: column; gap: 2px; align-items: stretch; min-width: 90px;">
+                ${actionsHtml}
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+      
+    } catch (e) {
+      console.error(e);
+      tbody.innerHTML = `<tr><td colspan="10" class="text-center py-6 text-red-500">Failed to load monitoring data.</td></tr>`;
+    }
+  }
+
+  window.preLiveAllowRetake = async function(resultId) {
+    if (!confirm('Are you sure you want to allow this candidate to retake the exam? their progress will be reset.')) return;
+    try {
+      const response = await fetch(`/pre-assessment/admin/api/allow-retake/${resultId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken()
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showToast(data.message || 'Retake allowed successfully');
+        loadPreLiveMonitorData(preLiveActiveId, false);
+      } else {
+        showToast(data.error || 'Failed to allow retake', false);
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('An error occurred', false);
+    }
+  };
+
+  window.preLiveRemoveAttempt = async function(resultId) {
+    if (!confirm('Are you sure you want to delete this candidate attempt? This will permanently erase their answers and score, and allow them to register again. This action is irreversible.')) return;
+    try {
+      const response = await fetch(`/pre-assessment/admin/api/remove-attempt/${resultId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCsrfToken()
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showToast(data.message || 'Attempt removed successfully');
+        loadPreLiveMonitorData(preLiveActiveId, false);
+      } else {
+        showToast(data.error || 'Failed to remove attempt', false);
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('An error occurred', false);
+    }
+  };
+
+  // Confirm Delete
+  window.confirmDelete = function(id) {
+    activePreId = id;
+    openModal(deleteModal);
+  };
+
+  // Delete Action API
+  document.getElementById('confirmDeleteBtn').addEventListener('click', async function() {
+    if (!activePreId) return;
+    try {
+      const response = await fetch(`${urls.delete}${activePreId}/`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRFToken': getCsrfToken()
+        }
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showToast(data.message || 'PRE-Assessment deleted successfully');
+        closeModal(deleteModal);
+        loadPreAssessments();
+      } else {
+        showToast(data.error || 'Failed to delete pre-assessment', false);
+      }
+    } catch (e) {
+      console.error(e);
+      showToast('An error occurred', false);
+    }
+  });
+
+  // Create pre-assessment form submission
+  document.getElementById('createPreForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const examId = document.getElementById('examSelect').value;
+    if (!examId) return;
+
+    const submitBtn = this.querySelector('.submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Generating...`;
+
+    try {
+      const response = await fetch(urls.create, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({ exam_id: examId })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showToast(`PRE-Assessment created successfully! Code: ${data.code}`);
+        closeModal(createModal);
+        document.getElementById('examSelect').selectedIndex = 0;
+        loadPreAssessments();
+      } else {
+        showToast(data.error || 'Failed to create PRE-Assessment', false);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('An error occurred', false);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Generate Code';
+    }
+  });
+
+  // Open modal button
+  document.getElementById('createPreBtn').addEventListener('click', () => openModal(createModal));
+
+  // Search input change
+  document.getElementById('searchInput').addEventListener('input', renderTable);
+  document.getElementById('statusFilter').addEventListener('change', renderTable);
+
+  // Close modals clicking cross, cancel, overlay
+  document.querySelectorAll('.close-modal-btn, .cancel-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const modal = this.closest('.modal-overlay');
+      closeModal(modal);
+    });
+  });
+
+  window.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal-overlay')) {
+      closeModal(e.target);
+    }
+  });
+
+  // Keyboard accessibility: ESC key closes modals
+  window.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const openModalOverlay = document.querySelector('.modal-overlay.modal-show');
+      if (openModalOverlay) {
+        closeModal(openModalOverlay);
+      }
+    }
+  });
+
+  // Helper Functions
+  function openModal(el) {
+    el.classList.add('modal-show');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(el) {
+    el.classList.remove('modal-show');
+    document.body.style.overflow = '';
+    if (el.id === 'preLiveMonitorModal' && preLiveMonitorInterval) {
+      clearInterval(preLiveMonitorInterval);
+      preLiveMonitorInterval = null;
+    }
+  }
+
+  function showToast(message, success = true) {
+    const toast = document.getElementById('toastNotification');
+    toast.textContent = message;
+    toast.className = `toast-popup show ${success ? 'toast-success' : 'toast-error'}`;
+    setTimeout(() => {
+      toast.classList.remove('show');
+    }, 3000);
+  }
+
+  function getCsrfToken() {
+    const m = document.querySelector('meta[name="csrf-token"]');
+    return m ? m.getAttribute('content') : '';
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    const map = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+  }
+
+  // Load initial data
+  loadPreAssessments();
+});
+</script>
+{% endblock %}

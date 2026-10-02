@@ -1,0 +1,474 @@
+{% extends "tpo_base.html" %}
+{% load static %}
+
+{% block title %}Student Feedback Analytics — {{ college.name }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/tpo_feedback.css' %}?v=3.0" nonce="{{ request.csp_nonce }}">
+{% endblock %}
+
+{% block content %}
+<div class="fb-dashboard-wrapper">
+
+  <!-- 1. HERO HEADER -->
+  <div class="fb-hero-card">
+    <div class="fb-hero-left">
+      <div class="fb-hero-icon"><i class="fas fa-comments"></i></div>
+      <div>
+        <h2>Student Feedback Analytics</h2>
+        <p class="fb-hero-subtitle">Comprehensive session satisfaction & learning quality insights </p>
+      </div>
+    </div>
+    <div class="fb-hero-actions">
+      <a href="{% url 'download_feedback_excel' %}?course={{ selected_course }}&year={{ selected_year }}&semester={{ selected_semester }}" class="fb-hero-btn btn-excel">
+        <i class="fas fa-file-excel"></i> Export Excel
+      </a>
+    </div>
+  </div>
+
+  <!-- QUICK DATE SHORTCUTS -->
+  <div class="quick-date-row">
+    <span class="quick-date-label"><i class="fas fa-bolt"></i> Quick Filter:</span>
+    <button type="button" class="qd-btn" id="qdToday"><i class="fas fa-calendar-day"></i> Today</button>
+    <button type="button" class="qd-btn" id="qdYesterday"><i class="fas fa-calendar-minus"></i> Yesterday</button>
+    <button type="button" class="qd-btn" id="qdThisWeek"><i class="fas fa-calendar-week"></i> This Week</button>
+    <button type="button" class="qd-btn" id="qdThisMonth"><i class="fas fa-calendar-alt"></i> This Month</button>
+    <button type="button" class="qd-btn qd-clear" id="qdClear"><i class="fas fa-times"></i> Clear Dates</button>
+  </div>
+
+  <!-- 2. FILTER BAR -->
+  <form method="get" class="fb-filter-card" id="fbFilterForm">
+    <div class="filter-field-group">
+      <label><i class="fas fa-graduation-cap"></i> Course:</label>
+      <select name="course" class="filter-select">
+        <option value="">All Courses</option>
+        {% for course in courses %}
+          <option value="{{ course.id }}" {% if selected_course == course.id|stringformat:"s" %}selected{% endif %}>{{ course.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-field-group">
+      <label><i class="fas fa-layer-group"></i> Year:</label>
+      <select name="year" class="filter-select">
+        <option value="">All Years</option>
+        {% for y in years %}
+          <option value="{{ y }}" {% if selected_year == y|stringformat:"s" %}selected{% endif %}>Year {{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-field-group">
+      <label><i class="fas fa-clock"></i> Semester:</label>
+      <select name="semester" class="filter-select">
+        <option value="">All Semesters</option>
+        {% for s in semesters %}
+          <option value="{{ s }}" {% if selected_semester == s|stringformat:"s" %}selected{% endif %}>Semester {{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-field-group">
+      <label><i class="fas fa-calendar-day"></i> From Date:</label>
+      <input type="date" id="dateFromInput" name="date_from" value="{{ date_from }}" class="filter-select">
+    </div>
+
+    <div class="filter-field-group">
+      <label><i class="fas fa-calendar-check"></i> To Date:</label>
+      <input type="date" id="dateToInput" name="date_to" value="{{ date_to }}" class="filter-select">
+    </div>
+
+    <div class="filter-actions-group">
+      <button type="submit" class="btn-primary-filter"><i class="fas fa-filter"></i> Filter</button>
+      <a href="{% url 'tpo_feedback' %}" class="btn-reset-filter"><i class="fas fa-undo"></i> Reset</a>
+    </div>
+  </form>
+
+  <!-- 3. METRIC SUMMARY CARDS -->
+  <div class="fb-metrics-grid">
+    <div class="fb-metric-card">
+      <div class="fb-metric-icon icon-bg-blue"><i class="fas fa-clipboard-list"></i></div>
+      <div class="fb-metric-info">
+        <span class="fb-metric-label">Total Feedbacks</span>
+        <h3 class="fb-metric-val">{{ total_feedback }}</h3>
+        <span class="fb-metric-sub">Responses Collected</span>
+      </div>
+    </div>
+
+    <div class="fb-metric-card">
+      <div class="fb-metric-icon icon-bg-green"><i class="fas fa-users"></i></div>
+      <div class="fb-metric-info">
+        <span class="fb-metric-label">Students (Filtered)</span>
+        <h3 class="fb-metric-val">{{ total_students }}</h3>
+        <span class="fb-metric-sub">{{ college.name }}</span>
+      </div>
+    </div>
+
+    <div class="fb-metric-card highlight-card">
+      <div class="fb-metric-icon icon-bg-amber"><i class="fas fa-star"></i></div>
+      <div class="fb-metric-info">
+        <span class="fb-metric-label">Overall Avg Rating</span>
+        <h3 class="fb-metric-val">{{ overall_avg }} <span class="rating-suffix">/ 5</span></h3>
+        <div class="star-row">
+          {% for i in "12345" %}
+            <i class="fas fa-star{% if forloop.counter > overall_avg %}-o{% endif %} star-icon"></i>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="fb-metric-card">
+      <div class="fb-metric-icon icon-bg-indigo"><i class="fas fa-book-open"></i></div>
+      <div class="fb-metric-info">
+        <span class="fb-metric-label">Content Rating</span>
+        <h3 class="fb-metric-val">{{ avg_content }} / 5</h3>
+        <span class="fb-metric-sub">Training Quality</span>
+      </div>
+    </div>
+
+    <div class="fb-metric-card">
+      <div class="fb-metric-icon icon-bg-teal"><i class="fas fa-bullseye"></i></div>
+      <div class="fb-metric-info">
+        <span class="fb-metric-label">Objectives Clarity</span>
+        <h3 class="fb-metric-val">{{ avg_clarity }} / 5</h3>
+        <span class="fb-metric-sub">Goal Clarity Score</span>
+      </div>
+    </div>
+
+    <div class="fb-metric-card">
+      <div class="fb-metric-icon icon-bg-purple"><i class="fas fa-sitemap"></i></div>
+      <div class="fb-metric-info">
+        <span class="fb-metric-label">Structure & Logic</span>
+        <h3 class="fb-metric-val">{{ avg_logic }} / 5</h3>
+        <span class="fb-metric-sub">Course Organization</span>
+      </div>
+    </div>
+
+    <div class="fb-metric-card">
+      <div class="fb-metric-icon icon-bg-rose"><i class="fas fa-heart"></i></div>
+      <div class="fb-metric-info">
+        <span class="fb-metric-label">Satisfaction Score</span>
+        <h3 class="fb-metric-val">{{ avg_satisfaction }} / 5</h3>
+        <span class="fb-metric-sub">Overall Happiness</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ANALYTICS CHARTS GRID -->
+  <div class="fb-charts-grid">
+    <!-- Radar: Overall 4-metric coverage -->
+    <div class="fb-chart-panel">
+      <div class="fb-panel-head">
+        <h4><i class="fas fa-compass text-teal"></i> Feedback Quality Radar</h4>
+        <span class="fb-chart-tag tag-teal">360° View</span>
+      </div>
+      <div class="fb-chart-box">
+        <canvas id="fbRadarChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Bar: Rating Distribution per Category -->
+    <div class="fb-chart-panel">
+      <div class="fb-panel-head">
+        <h4><i class="fas fa-chart-bar text-blue"></i> Average Rating by Category</h4>
+        <span class="fb-chart-tag tag-blue">Avg Score</span>
+      </div>
+      <div class="fb-chart-box">
+        <canvas id="fbAvgBarChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Doughnut: Session Engagement Distribution -->
+    <div class="fb-chart-panel">
+      <div class="fb-panel-head">
+        <h4><i class="fas fa-fire text-amber"></i> Session Engagement Distribution</h4>
+        <span class="fb-chart-tag tag-amber">Engagement</span>
+      </div>
+      <div class="fb-chart-box">
+        <canvas id="fbEngagementChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Polar: Future Interest Distribution -->
+    <div class="fb-chart-panel">
+      <div class="fb-panel-head">
+        <h4><i class="fas fa-rocket text-purple"></i> Future Interest Distribution</h4>
+        <span class="fb-chart-tag tag-purple">Career Outlook</span>
+      </div>
+      <div class="fb-chart-box">
+        <canvas id="fbInterestChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. TRAINER FEEDBACK ANALYTICS SECTION -->
+  {% if trainer_summary %}
+  <div class="fb-section-divider">
+    <div class="fb-section-label"><i class="fas fa-chalkboard-teacher"></i> Trainer-wise Feedback Analytics</div>
+  </div>
+
+  <!-- Trainer Metric Cards Row -->
+  <div class="trainer-metrics-row">
+    <div class="trainer-stat-card">
+      <div class="fb-metric-icon icon-bg-teal"><i class="fas fa-chalkboard-teacher"></i></div>
+      <div class="fb-metric-info">
+        <span class="fb-metric-label">Trainers Rated</span>
+        <h3 class="fb-metric-val">{{ total_trainers }}</h3>
+        <span class="fb-metric-sub">Distinct Trainers</span>
+      </div>
+    </div>
+    {% for t in trainer_summary|slice:":4" %}
+    <div class="trainer-stat-card">
+      <div class="trainer-avatar-icon">{{ t.name|slice:":1"|upper }}</div>
+      <div class="fb-metric-info">
+        <span class="fb-metric-label">{{ t.name }}</span>
+        <h3 class="fb-metric-val">{{ t.avg_overall }} <span class="rating-suffix">/ 5</span></h3>
+        <span class="fb-metric-sub">{{ t.feedback_count }} feedback{% if t.feedback_count != 1 %}s{% endif %}</span>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Trainer Chart + Trainer Feedback Detail Table side-by-side -->
+  <div class="trainer-analytics-grid">
+    <!-- Trainer Performance Chart -->
+    <div class="fb-chart-panel">
+      <div class="fb-panel-head">
+        <h4><i class="fas fa-chart-bar text-teal"></i> Trainer Performance Ratings Comparison</h4>
+        <span class="fb-chart-tag tag-teal">Avg out of 5</span>
+      </div>
+      <div class="fb-chart-box">
+        <canvas id="fbTrainerBarChart"></canvas>
+      </div>
+    </div>
+
+    <!-- Trainer Aggregate Summary Table -->
+    <div class="fb-table-card" style="border:none; box-shadow:none; background:transparent;">
+      <div class="table-scroll-container">
+        <table class="fb-data-table">
+          <thead>
+            <tr>
+              <th>Trainer Name</th>
+              <th>Feedbacks</th>
+              <th>Pace <span class="th-sub">(1-5)</span></th>
+              <th>Knowledge <span class="th-sub">(1-5)</span></th>
+              <th>Query Handling <span class="th-sub">(1-5)</span></th>
+              <th>Overall Avg</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for t in trainer_summary %}
+            <tr>
+              <td>
+                <div class="name-avatar-wrap">
+                  <div class="trainer-avatar-sm">{{ t.name|slice:":1"|upper }}</div>
+                  <span class="font-bold-name">{{ t.name }}</span>
+                </div>
+              </td>
+              <td><span class="usn-badge">{{ t.feedback_count }}</span></td>
+              <td><span class="rating-pill rating-{% if t.avg_pace >= 4 %}high{% elif t.avg_pace >= 3 %}mid{% else %}low{% endif %}">{{ t.avg_pace }} <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-left:2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span></td>
+              <td><span class="rating-pill rating-{% if t.avg_knowledge >= 4 %}high{% elif t.avg_knowledge >= 3 %}mid{% else %}low{% endif %}">{{ t.avg_knowledge }} <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-left:2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span></td>
+              <td><span class="rating-pill rating-{% if t.avg_queries >= 4 %}high{% elif t.avg_queries >= 3 %}mid{% else %}low{% endif %}">{{ t.avg_queries }} <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-left:2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span></td>
+              <td>
+                <div class="progress-bar-wrap-sm">
+                  <div class="progress-fill-sm {% if t.avg_overall >= 4 %}fill-green{% elif t.avg_overall >= 3 %}fill-amber{% else %}fill-red{% endif %}" style="width:{{ t.avg_overall|floatformat:0|add:0 }}0%;"></div>
+                  <span class="progress-text-sm">{{ t.avg_overall }}/5</span>
+                </div>
+              </td>
+              <td>
+                <span class="status-badge {% if t.avg_overall >= 4 %}excellent{% elif t.avg_overall >= 3 %}good{% else %}poor{% endif %}">
+                  {% if t.avg_overall >= 4 %}<i class="fas fa-star"></i> Excellent
+                  {% elif t.avg_overall >= 3 %}<i class="fas fa-thumbs-up"></i> Good
+                  {% else %}<i class="fas fa-triangle-exclamation"></i> Needs Attention
+                  {% endif %}
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Individual Trainer Feedback Records -->
+  <div class="fb-table-card">
+    <div class="fb-table-card-head">
+      <h3><i class="fas fa-person-chalkboard text-teal"></i> Individual Trainer Feedback Records</h3>
+      <div class="fb-search-box-wrap">
+        <i class="fas fa-search fb-search-icon"></i>
+        <input type="text" id="trainerFbSearchInput" placeholder="Search trainer, student...">
+      </div>
+    </div>
+    <div class="table-scroll-container">
+      <table class="fb-data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Trainer Name</th>
+            <th>Student Name</th>
+            <th>USN</th>
+            <th>Session Date</th>
+            <th>Pace <span class="th-sub">(1-5)</span></th>
+            <th>Knowledge <span class="th-sub">(1-5)</span></th>
+            <th>Query Handling <span class="th-sub">(1-5)</span></th>
+            <th>Participation</th>
+            <th>Examples Used</th>
+          </tr>
+        </thead>
+        <tbody id="trainerFbTableBody">
+          {% if trainer_feedback_qs %}
+            {% for tfb in trainer_feedback_qs %}
+            <tr>
+              <td>{{ forloop.counter }}</td>
+              <td>
+                <div class="name-avatar-wrap">
+                  <div class="trainer-avatar-sm">{{ tfb.trainer.user.first_name|slice:":1"|upper }}</div>
+                  <span class="font-bold-name">{{ tfb.trainer.user.get_full_name }}</span>
+                </div>
+              </td>
+              <td class="fb-student-name-cell">
+                <div class="name-avatar-wrap">
+                  <div class="fb-small-avatar"><i class="fas fa-user-graduate"></i></div>
+                  <span>{{ tfb.feedback.student.user.get_full_name|default:tfb.feedback.student.user.username }}</span>
+                </div>
+              </td>
+              <td><span class="usn-badge">{{ tfb.feedback.student.usn|default:"—" }}</span></td>
+              <td class="date-cell">{{ tfb.session.date|date:"d M Y" }}</td>
+              <td><span class="rating-pill rating-{% if tfb.pace_rating >= 4 %}high{% elif tfb.pace_rating >= 3 %}mid{% else %}low{% endif %}">{{ tfb.pace_rating }} <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-left:2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span></td>
+              <td><span class="rating-pill rating-{% if tfb.knowledge_rating >= 4 %}high{% elif tfb.knowledge_rating >= 3 %}mid{% else %}low{% endif %}">{{ tfb.knowledge_rating }} <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-left:2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span></td>
+              <td><span class="rating-pill rating-{% if tfb.queries_rating >= 4 %}high{% elif tfb.queries_rating >= 3 %}mid{% else %}low{% endif %}">{{ tfb.queries_rating }} <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-left:2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></span></td>
+              <td>
+                <span class="engagement-pill engagement-{% if tfb.participation == 'active' %}highly_engaged{% else %}moderately_engaged{% endif %}">
+                  {{ tfb.participation|capfirst }}
+                </span>
+              </td>
+              <td class="date-cell">{{ tfb.examples|capfirst }}</td>
+            </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="10" class="no-records-cell">No individual trainer feedback records found.</td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+    <div class="fb-table-footer">
+      <div class="entries-info">{{ trainer_feedback_qs|length }} trainer feedback record{% if trainer_feedback_qs|length != 1 %}s{% endif %}</div>
+      <div class="footer-badge"><i class="fas fa-shield-halved"></i> College-scoped data only</div>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- 6. DETAILED STUDENT FEEDBACK TABLE CARD -->
+  <div class="fb-table-card">
+    <div class="fb-table-card-head">
+      <h3><i class="fas fa-list-check"></i> Detailed Student Feedback Directory</h3>
+      <div class="fb-search-box-wrap">
+        <i class="fas fa-search fb-search-icon"></i>
+        <input type="text" id="fbSearchInput" placeholder="Search student, USN, course...">
+      </div>
+    </div>
+
+    <div class="table-scroll-container">
+      <table class="fb-data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student Name</th>
+            <th>USN</th>
+            <th>Course / Yr / Sem</th>
+            <th>Date</th>
+            <th>Content <span class="th-sub">(1-5)</span></th>
+            <th>Clarity <span class="th-sub">(1-5)</span></th>
+            <th>Logic <span class="th-sub">(1-5)</span></th>
+            <th>Satisfaction <span class="th-sub">(1-5)</span></th>
+            <th>Takeaways</th>
+          </tr>
+        </thead>
+        <tbody id="fbTableBody">
+          {% if feedbacks %}
+            {% for fb in feedbacks %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td class="fb-student-name-cell">
+                  <div class="name-avatar-wrap">
+                    <div class="fb-small-avatar"><i class="fas fa-user-graduate"></i></div>
+                    <span class="font-bold-name">{{ fb.student.user.get_full_name|default:fb.student.user.username }}</span>
+                  </div>
+                </td>
+                <td><span class="usn-badge">{{ fb.student.usn|default:"—" }}</span></td>
+                <td>
+                  <span class="course-name-text">{{ fb.student.course.name|default:"—" }}</span>
+                  <div class="level-pills-row">
+                    <span class="level-pill">Yr {{ fb.student.year }}</span>
+                    <span class="level-pill">Sem {{ fb.student.semester }}</span>
+                  </div>
+                </td>
+                <td class="date-cell">{{ fb.date|date:"d M Y" }}</td>
+                <td>
+                  <span class="rating-pill rating-{% if fb.content_rating >= 4 %}high{% elif fb.content_rating >= 3 %}mid{% else %}low{% endif %}">
+                    {{ fb.content_rating }} <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-left:2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  </span>
+                </td>
+                <td>
+                  <span class="rating-pill rating-{% if fb.objectives_clarity >= 4 %}high{% elif fb.objectives_clarity >= 3 %}mid{% else %}low{% endif %}">
+                    {{ fb.objectives_clarity }} <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-left:2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  </span>
+                </td>
+                <td>
+                  <span class="rating-pill rating-{% if fb.structure_logic >= 4 %}high{% elif fb.structure_logic >= 3 %}mid{% else %}low{% endif %}">
+                    {{ fb.structure_logic }} <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-left:2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  </span>
+                </td>
+                <td>
+                  <span class="rating-pill rating-{% if fb.satisfaction >= 4 %}high{% elif fb.satisfaction >= 3 %}mid{% else %}low{% endif %}">
+                    {{ fb.satisfaction }} <svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" style="display:inline-block; vertical-align:middle; margin-left:2px;"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                  </span>
+                </td>
+                <td class="takeaway-cell" title="{{ fb.takeaways }}">
+                  {{ fb.takeaways|truncatewords:10 }}
+                </td>
+              </tr>
+            {% endfor %}
+          {% else %}
+            <tr>
+              <td colspan="10" class="no-records-cell">
+                <i class="fas fa-inbox"></i><br>No feedback found for the current filters in {{ college.name }}.
+              </td>
+            </tr>
+          {% endif %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="fb-table-footer">
+      <div class="entries-info">Showing <strong>{{ feedbacks|length }}</strong> feedback entries for {{ college.name }}</div>
+      <div class="footer-badge"><i class="fas fa-shield-halved"></i> College-scoped data only</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Chart.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"
+  integrity="sha384-DhxhYObIMeMNGyAG7iK11OHzBIKyEIeRL0ad1iFPAOwZB8iirUlTT0O/WJJUk8+o"
+  crossorigin="anonymous"></script>
+
+<script nonce="{{ request.csp_nonce }}">
+  window.fbData = {
+    avgContent:   {{ avg_content }},
+    avgClarity:   {{ avg_clarity }},
+    avgLogic:     {{ avg_logic }},
+    avgSatisfaction: {{ avg_satisfaction }},
+    engagementDist: JSON.parse('{{ engagement_dist_json|escapejs }}'),
+    interestDist:   JSON.parse('{{ interest_dist_json|escapejs }}'),
+    trainerChart:   JSON.parse('{{ trainer_chart_data_json|escapejs }}'),
+  };
+</script>
+
+<script src="{% static 'js/tpo_feedback.js' %}?v=3.0" nonce="{{ request.csp_nonce }}"></script>
+{% endblock %}

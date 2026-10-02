@@ -1,0 +1,151 @@
+/* ===============================================
+   AtomShaale | Modular Welcome Email Template
+   =============================================== */
+
+body {
+  font-family: 'Century Gothic';
+  background: #f3f9f6;
+  margin: 0;
+  padding: 40px 0;
+  color: #333;
+}
+
+/* Wrapper */
+.email-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Email Container */
+.email-container {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(0, 128, 55, 0.15);
+  overflow: hidden;
+  border-collapse: collapse;
+}
+
+/* Header */
+.email-header {
+  background: linear-gradient(90deg, #008037, #00b35a);
+  text-align: center;
+  padding: 26px;
+}
+
+.logo {
+  width: 140px;
+  height: auto;
+}
+
+/* Body */
+.email-body {
+  padding: 30px 28px;
+}
+
+.email-body h2 {
+  color: #008037;
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+}
+
+.email-body p {
+  font-size: 1rem;
+  margin-bottom: 18px;
+  line-height: 1.6;
+}
+
+.features {
+  font-size: 1rem;
+  color: #008037;
+  padding-left: 20px;
+  margin: 22px 0;
+  line-height: 1.5;
+}
+
+.features li {
+  margin-bottom: 8px;
+}
+
+/* Buttons */
+.button-wrapper {
+  text-align: center;
+  margin: 28px 0;
+}
+
+.cta-button {
+  display: inline-block;
+  padding: 13px 30px;
+  background: #008037;
+  color: #fff;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  box-shadow: 0 4px 12px rgba(0, 128, 55, 0.3);
+  transition: all 0.3s ease;
+}
+
+.cta-button:hover {
+  background: #00a84f;
+  box-shadow: 0 6px 18px rgba(0, 128, 55, 0.4);
+}
+
+/* Text Link */
+.text-link {
+  color: #008037;
+  text-decoration: none;
+  word-break: break-all;
+  transition: color 0.3s ease;
+}
+
+.text-link:hover {
+  color: #00b35a;
+  text-decoration: underline;
+}
+
+/* Info */
+.info {
+  font-size: 0.95rem;
+  color: #555;
+}
+
+.note {
+  font-size: 0.92rem;
+  color: #888;
+}
+
+.signature {
+  font-size: 1rem;
+  color: #008037;
+  font-weight: 600;
+}
+
+/* Footer */
+.email-footer {
+  background: #f7faf8;
+  text-align: center;
+  font-size: 0.85rem;
+  color: #777;
+  padding: 16px;
+  border-top: 1px solid #e8efe9;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  body {
+    padding: 20px 10px;
+  }
+
+  .email-body {
+    padding: 20px;
+  }
+
+  .cta-button {
+    width: 100%;
+    padding: 12px 0;
+    font-size: 1rem;
+  }
+}

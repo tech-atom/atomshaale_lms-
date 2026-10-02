@@ -1,0 +1,58 @@
+{% extends "student_base.html" %}
+{% load static %}
+
+{% block title %}Edit Profile{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/student_profile_edit.css' %}?v=1.1">
+{% endblock %}
+
+{% block content %}
+
+<div class="edit-profile-container">
+
+<h2>Edit Profile</h2>
+
+<form method="post" enctype="multipart/form-data" class="edit-profile-form">
+
+{% csrf_token %}
+
+<div class="form-group">
+<label>USN</label>
+{{ form.usn }}
+</div>
+
+<div class="form-group">
+<label>College</label>
+{{ form.college }}
+</div>
+
+<div class="form-group">
+<label>Course</label>
+{{ form.course }}
+</div>
+
+<div class="form-group">
+<label>Section</label>
+{{ form.section }}
+</div>
+
+<div class="form-group">
+<label>Year</label>
+{{ form.year }}
+</div>
+
+<div class="form-group">
+<label>Semester</label>
+{{ form.semester }}
+</div>
+
+<button type="submit" class="btn-save">
+Update Profile
+</button>
+
+</form>
+
+</div>
+
+{% endblock %}

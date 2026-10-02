@@ -1,0 +1,261 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_placement.css' %}">
+{% endblock %}
+
+{% block content %}
+<div style="max-width: 750px; margin: 0 auto; padding-top: 1rem;">
+    <a href="{% url 'company_prep:admin_placement' %}" style="color: #008037; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.25rem; font-weight: 600;">
+        ← Back to Company Dashboard
+    </a>
+</div>
+
+<div class="form-card" style="max-width: 750px; margin: 1rem auto; background: #ffffff; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.06); border: 1px solid #e2e8f0;">
+    <h2 style="margin-top: 0; margin-bottom: 1.5rem; color: #0f172a; border-bottom: 2px solid #008037; padding-bottom: 0.75rem; font-size: 1.5rem;">
+        {{ title }}
+    </h2>
+    
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <!-- 1. Company Name & Company Logo -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="form-group">
+                <label class="form-label" for="name" style="font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.5rem;">Company Name *</label>
+                <input type="text" class="form-control" id="name" name="name" value="{% if company %}{{ company.name }}{% else %}{{ prefilled_name|default:'' }}{% endif %}" required placeholder="e.g. Google, Bosch, TCS" style="width: 100%; padding: 0.75rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="logo" style="font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.5rem;">Company Logo</label>
+                <input type="file" class="form-control" id="logo" name="logo" accept="image/*" style="width: 100%; padding: 0.6rem; border: 1.5px solid #cbd5e1; border-radius: 8px; background: #ffffff;">
+                {% if company and company.logo %}
+                <div style="margin-top: 0.35rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <img src="{{ company.logo.url }}" alt="Company Logo" style="width: 32px; height: 32px; object-fit: contain; border-radius: 4px; border: 1px solid #cbd5e1; padding: 2px;">
+                    <span style="font-size: 0.8rem; color: #16a34a; font-weight: 600;">Current Logo Loaded</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- 2. Question Paper Primary Year & Exam Duration -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="form-group">
+                <label class="form-label" for="year" style="font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.5rem;">Question Paper Primary Year *</label>
+                <input type="number" class="form-control" id="year" name="year" value="{{ company.year|default:'2024' }}" required placeholder="e.g. 2024, 2025" style="width: 100%; padding: 0.75rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="test_duration_minutes" style="font-weight: 700; color: #1e293b; display: flex; align-items: center; gap: 4px; margin-bottom: 0.5rem;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg> Exam Duration (Minutes) *</label>
+                <input type="number" class="form-control" id="test_duration_minutes" name="test_duration_minutes" value="{{ company.test_duration_minutes|default:'15' }}" required min="1" max="180" placeholder="e.g. 15, 30, 60" style="width: 100%; padding: 0.75rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;">
+            </div>
+        </div>
+
+        <!-- 2b. Role, Package & Place -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem;">
+            <div class="form-group">
+                <label class="form-label" for="job_role" style="font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.5rem;">Job Role</label>
+                <input type="text" class="form-control" id="job_role" name="job_role" value="{{ company.job_role|default:'General' }}" placeholder="e.g. Software Engineer" style="width: 100%; padding: 0.75rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="package" style="font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.5rem;">Salary Package</label>
+                <input type="text" class="form-control" id="package" name="package" value="{{ company.package|default:'N/A' }}" placeholder="e.g. 6 LPA" style="width: 100%; padding: 0.75rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="place" style="font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.5rem;">Placement Location</label>
+                <input type="text" class="form-control" id="place" name="place" value="{{ company.place|default:'N/A' }}" placeholder="e.g. Bengaluru" style="width: 100%; padding: 0.75rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem;">
+            </div>
+        </div>
+
+        <!-- 3. Selection Process Stages (Check all rounds that apply) -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label" style="font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.5rem;">Selection Process Stages (Check all rounds that apply)</label>
+            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 1.1rem; display: flex; flex-direction: column; gap: 0.85rem;">
+                
+                <label style="display: flex; align-items: center; gap: 0.6rem; font-weight: 600; cursor: pointer; color: #1e293b; font-size: 0.95rem;">
+                    <input type="checkbox" id="stage_aptitude" name="stage_aptitude" {% if has_aptitude %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #008037;">
+                    Round 1: Quantitative, Logical & Verbal Aptitude Round
+                </label>
+                
+                <label style="display: flex; align-items: center; gap: 0.6rem; font-weight: 600; cursor: pointer; color: #1e293b; font-size: 0.95rem; margin: 0;">
+                    <input type="checkbox" id="stage_technical" name="stage_technical" {% if has_technical %}checked{% endif %} style="width: 18px; height: 18px; accent-color: #008037;">
+                    Round 2: Technical Domain Assessment (Coding Compiler)
+                </label>
+            </div>
+        </div>
+
+        <!-- 4. Multiple Year Question Papers & Rounds Section -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                <label class="form-label" style="font-weight: 700; color: #1e293b; margin: 0;">Multiple Year Question Papers & Rounds</label>
+                <button type="button" id="add_more_paper_row_btn" style="background: #0000; border: 1.5px solid #008037; color: #008037; padding: 0.4rem 0.85rem; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;">
+                    ＋ Add Another Year Paper
+                </button>
+            </div>
+
+            <!-- Existing Uploaded Papers list -->
+            {% if existing_papers %}
+            <div style="margin-bottom: 1rem; background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.85rem;">
+                <label style="font-size: 0.82rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.5rem;">Uploaded Papers:</label>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                    {% for paper in existing_papers %}
+                    <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; padding: 0.5rem 0.85rem; border-radius: 6px; font-size: 0.88rem;">
+                        <div>
+                            <strong style="color: #008037; margin-right: 0.5rem;">{{ paper.year }} Question Paper</strong>
+                            <span style="font-size: 0.78rem; color: #64748b;">({{ paper.technical_round_format }})</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            {% if paper.paper_file %}
+                            <a href="{{ paper.paper_file.url }}" target="_blank" style="color: #008037; font-weight: 700; text-decoration: none;">📥 View File</a>
+                            {% endif %}
+                            <button type="submit" name="delete_paper_id" value="{{ paper.id }}" onclick="return confirm('Delete this year paper?');" style="background: #fef2f2; border: 1px solid #fca5a5; color: #ef4444; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">Delete</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Container for Year Paper Cards -->
+            <div id="multi_paper_container">
+                
+                <!-- Card 1 -->
+                <div class="year-paper-card" style="background: #ffffff; border: 1.5px solid #008037; border-radius: 8px; padding: 1.1rem; margin-bottom: 0.85rem; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+                        <span style="font-weight: 700; color: #008037; font-size: 0.95rem; display: flex; align-items: center; gap: 6px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Question Paper & Rounds Entry</span>
+                        <button type="button" class="remove-paper-card-btn" style="background: #fef2f2; border: 1px solid #fca5a5; color: #ef4444; padding: 0.25rem 0.65rem; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 4px;"><svg viewBox="0 0 24 24" width="12" height="12" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg> Remove</button>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 180px 1fr; gap: 1rem; margin-bottom: 1rem;">
+                        <div>
+                            <label style="font-weight: 700; font-size: 0.82rem; color: #334155; display: block; margin-bottom: 0.35rem;">Paper Year *</label>
+                            <input type="number" name="multi_paper_year" class="form-control" placeholder="e.g. 2024" style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem;">
+                        </div>
+
+                        <div>
+                            <label style="font-weight: 700; font-size: 0.82rem; color: #334155; display: block; margin-bottom: 0.35rem;">Upload Paper File (PDF / DOC / Excel)</label>
+                            <input type="file" name="multi_paper_file" class="form-control" accept=".pdf,.doc,.docx,.xlsx,.xls" style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; background: #f8fafc;">
+                        </div>
+                    </div>
+
+                    <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.85rem; margin-bottom: 0.85rem;">
+                        <label style="font-weight: 700; font-size: 0.82rem; color: #1e293b; display: block; margin-bottom: 0.5rem;">Rounds included in this paper</label>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.88rem; color: #334155; cursor: pointer;">
+                                <input type="checkbox" name="multi_stage_aptitude" value="on" checked style="width: 16px; height: 16px; accent-color: #008037;">
+                                Round 1: Quantitative, Logical & Verbal Aptitude Round
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.88rem; color: #334155; cursor: pointer;">
+                                <input type="checkbox" name="multi_stage_technical" value="on" checked style="width: 16px; height: 16px; accent-color: #008037;">
+                                Round 2: Technical Domain Assessment (Coding Compiler)
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label style="font-weight: 700; font-size: 0.82rem; color: #334155; display: block; margin-bottom: 0.35rem;">Round 2 Format for this paper</label>
+                        <select name="multi_technical_round_format" class="form-control" style="width: 100%; padding: 0.55rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.88rem; background: #ffffff;">
+                            <option value="MCQ">MCQ (Multiple Choice Questions) Only</option>
+                            <option value="Compiler">Coding Compiler Sandbox Only</option>
+                        </select>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- 5. Question Paper Bulk Upload (General Excel Format) -->
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem;">
+                <label class="form-label" for="question_excel" style="font-weight: 700; color: #1e293b; margin: 0;">Upload Question Paper in Bulk (Excel Format Only)</label>
+                <a href="{% url 'company_prep:download_sample_excel' %}" style="font-size: 0.85rem; color: #008037; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 0.25rem;">
+                     Download Sample Excel Template (.xlsx)
+                </a>
+            </div>
+            <div style="background: #f0fdf4; border: 1.5px dashed #008037; border-radius: 8px; padding: 1.25rem; text-align: center;">
+                <input type="file" class="form-control" id="question_excel" name="question_excel" accept=".xlsx, .xls" style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff;">
+                <p style="margin-top: 0.5rem; margin-bottom: 0; font-size: 0.82rem; color: #15803d; font-weight: 500;">
+                    Upload question paper in Excel format (.xlsx or .xls). Questions will automatically populate Aptitude and Technical rounds for this company.
+                </p>
+            </div>
+        </div>
+
+        <!-- Expandable Round 2 Options & Upload Panel -->
+        <div id="round2_details_panel" style="margin-bottom: 1.5rem; padding: 1.25rem; background: #ffffff; border: 1.5px solid #008037; border-radius: 8px; display: none; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0, 128, 55, 0.08);">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; color: #008037; font-weight: 700; font-size: 0.95rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.5rem;">
+                <span> Round 2 Details & Upload Options</span>
+                <button type="button" id="close_round2_btn" style="background: transparent; border: none; color: #64748b; font-size: 1rem; cursor: pointer; padding: 0 4px; display: flex; align-items: center; justify-content: center;"><svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label for="technical_round_format" style="font-weight: 600; font-size: 0.85rem; color: #334155; display: block; margin-bottom: 0.35rem;">
+                    Round 2 Technical Format
+                </label>
+                <select class="form-control" id="technical_round_format" name="technical_round_format" style="width: 100%; padding: 0.65rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9rem; background: #f8fafc;">
+                    <option value="MCQ" {% if company.technical_round_format == 'MCQ' or company is None %}selected{% endif %}>MCQ (Multiple Choice Questions) Only</option>
+                    <option value="Compiler" {% if company.technical_round_format == 'Compiler' %}selected{% endif %}>Coding Compiler Sandbox Only</option>
+                </select>
+            </div>
+
+            <div>
+                <label for="technical_question_excel" style="font-weight: 600; font-size: 0.85rem; color: #334155; display: block; margin-bottom: 0.35rem;">
+                    Round 2 Specific Question Paper Upload (Excel Format)
+                </label>
+                <input type="file" class="form-control" id="technical_question_excel" name="technical_question_excel" accept=".xlsx, .xls" style="width: 100%; padding: 0.55rem; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85rem; background: #f8fafc;">
+                <span style="font-size: 0.78rem; color: #16a34a; margin-top: 0.25rem; display: block; font-weight: 500;">
+                    Upload question paper specifically for Round 2 Technical assessment in Excel format.
+                </span>
+            </div>
+        </div>
+
+        <!-- 5. Target Schedule & Access Control (Optional) -->
+        <div style="margin-top: 1.5rem; margin-bottom: 2rem; background: #fafdfb; border: 1.5px solid #a3e635; border-radius: 12px; padding: 1.5rem; box-shadow: 0 4px 12px rgba(0, 128, 55, 0.04);">
+            <h3 style="margin-top: 0; margin-bottom: 1rem; color: #008037; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 0.5rem; font-weight: 800;">
+                <span></span> Target Schedule & Access Control (Optional)
+            </h3>
+            <p style="font-size: 0.8rem; color: #475569; margin-top: -0.25rem; margin-bottom: 1rem; line-height: 1.4;">
+                Specify a target college to restrict this placement preparation paper. If dates are provided, the test will only be accessible to eligible students during this schedule window.
+            </p>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div class="form-group">
+                    <label class="form-label" for="target_college" style="font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.35rem; font-size: 0.88rem;">Restrict to College</label>
+                    <select class="form-control" id="target_college" name="target_college" style="width: 100%; padding: 0.7rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background-color: #ffffff; cursor: pointer;">
+                        <option value="">-- Open to All Colleges (General Pool) --</option>
+                        {% for col in colleges %}
+                        <option value="{{ col.id }}" {% if company.college.id == col.id %}selected{% endif %}>{{ col.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="start_datetime" style="font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.35rem; font-size: 0.88rem;">Start Datetime</label>
+                    <input type="datetime-local" class="form-control" id="start_datetime" name="start_datetime" value="{{ company.start_datetime|date:'Y-m-d\TH:i' }}" style="width: 100%; padding: 0.6rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background-color: #ffffff;">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="end_datetime" style="font-weight: 700; color: #1e293b; display: block; margin-bottom: 0.35rem; font-size: 0.88rem;">End Datetime</label>
+                    <input type="datetime-local" class="form-control" id="end_datetime" name="end_datetime" value="{{ company.end_datetime|date:'Y-m-d\TH:i' }}" style="width: 100%; padding: 0.6rem; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; background-color: #ffffff;">
+                </div>
+            </div>
+        </div>
+
+        <!-- 6. Bottom Toolbar: + Add Round 2 Options & Upload, Cancel, Save Company -->
+        <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+            
+            <button type="button" id="toggle_round2_btn" style="display: {% if has_technical %}inline-flex{% else %}none{% endif %}; align-items: center; gap: 0.35rem; padding: 0.65rem 1.1rem; background: #f0fdf4; color: #008037; border: 1.5px solid #008037; border-radius: 8px; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: all 0.2s ease;">
+                <span>+ Add Round 2 Options & Upload</span>
+            </button>
+
+            <div style="display: flex; gap: 0.75rem; align-items: center; margin-left: auto;">
+                <a href="{% url 'company_prep:admin_placement' %}" class="btn-cancel" style="padding: 0.65rem 1.25rem; border-radius: 8px; background: #f1f5f9; color: #475569; text-decoration: none; font-weight: 600; font-size: 0.95rem;">Cancel</a>
+                <button type="submit" class="btn-submit" style="padding: 0.65rem 1.75rem; border-radius: 8px; background: #008037; color: #ffffff; border: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 10px rgba(0, 128, 55, 0.2);">Save Company</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="{% static 'js/admin_company_form.js' %}?v=1.0"></script>
+{% endblock %}

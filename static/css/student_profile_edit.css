@@ -1,0 +1,228 @@
+/* =========================
+GLOBAL
+========================= */
+
+.edit-profile-container{
+
+font-family:"Century Gothic";
+max-width:650px;
+
+margin:60px auto;
+padding:30px;
+
+background:#fff;
+
+border-radius:18px;
+
+box-shadow:0 12px 30px rgba(0,0,0,.08);
+
+animation:fadeSlide .5s ease;
+
+}
+
+
+/* =========================
+TITLE
+========================= */
+
+.edit-profile-container h2{
+
+font-size:32px;
+margin-bottom:25px;
+
+position:relative;
+
+}
+
+.edit-profile-container h2::after{
+
+content:"";
+width:70px;
+height:4px;
+
+background:#008037;
+
+display:block;
+margin-top:8px;
+
+}
+
+
+/* =========================
+FORM
+========================= */
+
+.edit-profile-form{
+
+display:flex;
+flex-direction:column;
+gap:18px;
+
+}
+
+
+/* =========================
+FORM GROUP
+========================= */
+
+.form-group{
+
+display:flex;
+flex-direction:column;
+
+}
+
+
+.form-group label{
+
+font-size:14px;
+margin-bottom:6px;
+font-weight:600;
+
+color:#008037;
+
+}
+
+
+/* =========================
+INPUTS
+========================= */
+
+.form-group input,
+.form-group select{
+
+padding:10px 12px;
+
+border-radius:8px;
+border:1px solid #ccc;
+
+font-size:14px;
+
+font-family:"Century Gothic";
+
+transition:.25s;
+
+}
+
+
+.form-group input:focus,
+.form-group select:focus{
+
+border-color:#008037;
+
+outline:none;
+
+box-shadow:0 0 6px rgba(0,128,55,.3);
+
+}
+
+
+/* =========================
+BUTTON
+========================= */
+
+.btn-save{
+
+margin-top:10px;
+
+padding:12px;
+
+border:none;
+
+border-radius:10px;
+
+background:#008037;
+color:#fff;
+
+font-family:"Century Gothic";
+font-size:15px;
+
+cursor:pointer;
+
+transition:.3s;
+
+}
+
+
+/* hover */
+
+.btn-save:hover{
+
+background:#000;
+
+box-shadow:
+0 0 10px #008037,
+0 0 20px #008037;
+
+transform:translateY(-2px);
+
+}
+
+
+/* =========================
+ANIMATION
+========================= */
+
+@keyframes fadeSlide{
+
+from{
+opacity:0;
+transform:translateY(20px);
+}
+
+to{
+opacity:1;
+transform:translateY(0);
+}
+
+}
+
+
+/* =========================
+RESPONSIVE
+========================= */
+
+@media (max-width:768px){
+
+.edit-profile-container{
+
+margin:40px 15px;
+padding:20px;
+
+}
+
+}
+
+/* ==========================================================================
+   Dark Mode Overrides
+   ========================================================================== */
+body.dark-mode {
+  background-color: #121212 !important;
+  color: #ffffff !important;
+}
+
+body.dark-mode .edit-profile-container {
+  background: #1e1e1e !important;
+  color: #ffffff !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3) !important;
+}
+
+body.dark-mode .edit-profile-container h2 {
+  color: #ffffff !important;
+}
+
+body.dark-mode .form-group label {
+  color: #00a84c !important;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group select {
+  background: #121212 !important;
+  border-color: #333333 !important;
+  color: #ffffff !important;
+}
+
+body.dark-mode .form-group input:focus,
+body.dark-mode .form-group select:focus {
+  border-color: #00a84c !important;
+}

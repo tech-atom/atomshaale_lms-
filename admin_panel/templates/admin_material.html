@@ -1,0 +1,101 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_material.css' %}?v=3">
+<link rel="stylesheet" href="{% static 'css/toast.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="material-container">
+  <h1>Manage Materials</h1>
+
+  <!-- Upload Form -->
+  <form id="material-form" enctype="multipart/form-data" method="post">
+    {% csrf_token %}
+    <input type="text" name="title" placeholder="Title" required>
+    <textarea name="description" placeholder="Description" required></textarea>
+
+    <select id="domain" name="domain" required>
+      <option value="">Select Domain</option>
+    </select>
+
+    <select id="subdomain" name="subdomain">
+      <option value="">Select Subdomain</option>
+    </select>
+
+    <select id="module" name="module" required>
+      <option value="">Select Module</option>
+    </select>
+
+    <label><strong>Upload Files:</strong></label>
+    <input type="file" id="universal_file" name="universal_files" multiple
+           accept=".pdf,.doc,.docx,.odt,.ppt,.pptx,.xls,.xlsx,.ods,video/*" required>
+
+    <input type="url" name="video_url" placeholder="Video URL (optional)">
+    <button type="submit" class="btn-primary">Upload Material</button>
+  </form>
+
+  <!-- Search -->
+  <input type="text" id="search-material" placeholder="Search materials...">
+
+  <!-- Materials Table -->
+  <h2>Uploaded Materials</h2>
+  <table id="materials-table" class="data-table">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>Domain</th>
+        <th>Subdomain</th>
+        <th>Module</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <!-- Scheduled Materials Table -->
+  <h2>Scheduled Materials</h2>
+  <table id="scheduled-table" class="data-table">
+    <thead>
+      <tr>
+        <th>Material</th>
+        <th>College</th>
+        <th>Course</th>
+        <th>Section</th>
+        <th>Semester</th>
+        <th>Year</th>
+        <th>Start</th>
+        <th>End</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+</div>
+
+<!-- Toast Container -->
+<div class="toast-container"></div>
+
+<!-- API URLs -->
+<div id="material-api-urls"
+     data-get-domains="{% url 'admin_get_domain' %}"
+     data-get-subdomains="{% url 'get_subdomains_by_domain' '00000000-0000-0000-0000-000000000000' %}"
+     data-get-modules="{% url 'admin_get_modules' %}"
+     data-upload-material="{% url 'upload_material' %}"
+     data-list-materials="{% url 'list_materials' %}"
+     data-delete-material="{% url 'delete_material' '00000000-0000-0000-0000-000000000000' %}"
+     data-schedule-material="{% url 'schedule_material' %}"
+     data-list-schedules="{% url 'list_schedules' %}"
+     data-delete-schedule="{% url 'delete_schedule' '00000000-0000-0000-0000-000000000000' %}"
+     data-get-colleges="{% url 'admin_get_colleges' %}"
+     data-get-courses="{% url 'admin_get_courses' '00000000-0000-0000-0000-000000000000' %}"
+     data-get-sections="{% url 'admin_get_sections' '00000000-0000-0000-0000-000000000000' %}"
+     data-get-semesters="{% url 'admin_get_semesters' %}"
+     data-get-years="{% url 'admin_get_years' %}">
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{% static 'js/admin_material.js' %}" defer></script>
+{% endblock %}

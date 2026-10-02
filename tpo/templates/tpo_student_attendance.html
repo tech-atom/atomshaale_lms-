@@ -1,0 +1,395 @@
+{% extends "tpo_base.html" %}
+{% load static %}
+
+{% block title %}Student Attendance - TPO Portal{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+<link rel="stylesheet" href="{% static 'css/tpo_student_attendance.css' %}?v=4.0">
+
+<div class="attendance-dashboard-wrapper">
+
+  <!-- 1. HEADER TITLE SECTION -->
+  <div class="attn-header-bar">
+    <div class="attn-header-title">
+      <div class="header-icon-box">
+        <i class="fas fa-calendar-check"></i>
+      </div>
+      <div>
+        <h2>Student Attendance</h2>
+        <p class="attn-subtitle">Track and analyze student attendance across courses, years, semesters, dates and time slots.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. PRIMARY FILTERS BAR (Dark Green Container Card) -->
+  <form method="get" id="primaryFilterForm" class="attn-primary-filters-card">
+    <div class="filter-field-group">
+      <label>Course:</label>
+      <select name="course" id="courseFilter" class="filter-select">
+        <option value="">All</option>
+        {% for course in courses %}
+          <option value="{{ course.id }}" {% if selected_course == course.id|stringformat:"s" %}selected{% endif %}>{{ course.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-field-group">
+      <label>Year:</label>
+      <select name="year" id="yearFilter" class="filter-select">
+        <option value="">All</option>
+        {% for y in years %}
+          <option value="{{ y }}" {% if selected_year == y|stringformat:"s" %}selected{% endif %}>{{ y }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-field-group">
+      <label>Semester:</label>
+      <select name="semester" id="semesterFilter" class="filter-select">
+        <option value="">All</option>
+        {% for s in semesters %}
+          <option value="{{ s }}" {% if selected_semester == s|stringformat:"s" %}selected{% endif %}>{{ s }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <input type="hidden" name="start_date" id="hiddenStartDate" value="{{ start_date }}">
+    <input type="hidden" name="end_date" id="hiddenEndDate" value="{{ end_date }}">
+    <input type="hidden" name="slot_no" id="hiddenSlotNo" value="{{ slot_no }}">
+    <input type="hidden" name="quick_filter" id="hiddenQuickFilter" value="{{ quick_filter }}">
+
+    <div class="filter-actions-group">
+      <button type="submit" class="btn-primary-filter"><i class="fas fa-filter"></i> Filter</button>
+      <a href="{% url 'download_attendance_excel' %}?course={{ selected_course }}&year={{ selected_year }}&semester={{ selected_semester }}&start_date={{ start_date }}&end_date={{ end_date }}" class="btn-download-excel">
+        <i class="fas fa-download"></i> Download Excel
+      </a>
+    </div>
+  </form>
+
+  <!-- 3. SECONDARY TOOLBAR (Date Range, View By, Slot, Quick Filters) -->
+  <div class="attn-secondary-toolbar">
+    <div class="sec-filter-item">
+      <label>Date</label>
+      <div class="date-picker-wrap">
+        <i class="far fa-calendar-alt icon-cal"></i>
+        <input type="date" id="startDateInput" value="{{ start_date }}">
+        <span>-</span>
+        <input type="date" id="endDateInput" value="{{ end_date }}">
+      </div>
+    </div>
+
+    <div class="sec-filter-item">
+      <label>View By</label>
+      <select id="viewBySelect" class="sec-select">
+        <option value="student" selected>Date</option>
+        <option value="student">Student</option>
+        <option value="course">Course</option>
+      </select>
+    </div>
+
+    <div class="sec-filter-item">
+      <label>Slot / Time</label>
+      <select id="slotSelectInput" class="sec-select">
+        <option value="all" {% if not slot_no or slot_no == 'all' %}selected{% endif %}>All Slots</option>
+        <option value="1" {% if slot_no == '1' %}selected{% endif %}>Slot 1 </option>
+        <option value="2" {% if slot_no == '2' %}selected{% endif %}>Slot 2 </option>
+        <option value="3" {% if slot_no == '3' %}selected{% endif %}>Slot 3 </option>
+      </select>
+    </div>
+
+    
+
+    <div class="sec-filter-item quick-dates-group">
+      <label>Quick Date Filters</label>
+      <div class="quick-btn-group">
+        <button type="button" class="quick-btn {% if quick_filter == 'today' %}active{% endif %}" data-preset="today">Today</button>
+        <button type="button" class="quick-btn {% if quick_filter == 'yesterday' %}active{% endif %}" data-preset="yesterday">Yesterday</button>
+        <button type="button" class="quick-btn {% if quick_filter == 'this_week' %}active{% endif %}" data-preset="this_week">This Week</button>
+        <button type="button" class="quick-btn {% if not quick_filter or quick_filter == 'this_month' %}active{% endif %}" data-preset="this_month">This Month</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. 6 METRICS STAT CARDS GRID -->
+  <div class="attn-metrics-grid">
+    <!-- Card 1: Total Students -->
+    <div class="metric-card">
+      <div class="metric-icon-wrap icon-bg-green">
+        <i class="fas fa-user-friends"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Total Students</span>
+        <h3 class="metric-val">{{ total_students }}</h3>
+        <span class="metric-sub">Enrolled Students</span>
+      </div>
+    </div>
+
+    <!-- Card 2: Average Attendance -->
+    <div class="metric-card">
+      <div class="metric-icon-wrap icon-bg-blue">
+        <i class="fas fa-calendar-check"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Average Attendance</span>
+        <h3 class="metric-val">{{ avg_attendance }}</h3>
+        <span class="metric-sub">Across All Students</span>
+      </div>
+    </div>
+
+    <!-- Card 3: Highest Attendance -->
+    <div class="metric-card">
+      <div class="metric-icon-wrap icon-bg-light-green">
+        <i class="fas fa-arrow-trend-up"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Highest Attendance</span>
+        <h3 class="metric-val">{{ highest_attendance }}</h3>
+        <span class="metric-sub">{{ highest_students_cnt }} Students</span>
+      </div>
+    </div>
+
+    <!-- Card 4: Lowest Attendance -->
+    <div class="metric-card">
+      <div class="metric-icon-wrap icon-bg-pink">
+        <i class="fas fa-arrow-trend-down"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Lowest Attendance</span>
+        <h3 class="metric-val">{{ lowest_attendance }}</h3>
+        <span class="metric-sub">{{ lowest_students_cnt }} Student</span>
+      </div>
+    </div>
+
+    <!-- Card 5: Total Present -->
+    <div class="metric-card">
+      <div class="metric-icon-wrap icon-bg-emerald">
+        <i class="fas fa-check-square"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Total Present</span>
+        <h3 class="metric-val">{{ total_present }}</h3>
+        <span class="metric-sub">Out of {{ total_expected }}</span>
+      </div>
+    </div>
+
+    <!-- Card 6: Total Absent -->
+    <div class="metric-card">
+      <div class="metric-icon-wrap icon-bg-red">
+        <i class="fas fa-window-close"></i>
+      </div>
+      <div class="metric-info">
+        <span class="metric-label">Total Absent</span>
+        <h3 class="metric-val">{{ total_absent }}</h3>
+        <span class="metric-sub">Out of {{ total_expected }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. MIDDLE SECTION: CHARTS & TOP STUDENTS -->
+  <div class="attn-charts-row">
+    <!-- Left Panel: Attendance Overview (%) Bar Chart -->
+    <div class="chart-panel-left">
+      <div class="panel-head">
+        <h4>Attendance Overview (%)</h4>
+        <div class="toggle-switch-btns">
+          <button type="button" class="chart-toggle-btn active" id="btnChartStudent"><i class="fas fa-user"></i> By Student</button>
+          <button type="button" class="chart-toggle-btn" id="btnChartCourse"><i class="fas fa-graduation-cap"></i> By Course</button>
+        </div>
+      </div>
+      <div class="chart-canvas-wrapper">
+        <canvas id="attendanceOverviewChart"
+                data-student-labels='{{ chart_student_labels }}'
+                data-student-values='{{ chart_student_values }}'
+                data-course-labels='{{ chart_course_labels }}'
+                data-course-values='{{ chart_course_values }}'></canvas>
+      </div>
+    </div>
+
+    <!-- Right Panel: Distribution & Top 5 -->
+    <div class="chart-panel-right">
+      <!-- Attendance Distribution Donut Chart -->
+      <div class="dist-card">
+        <h4>Attendance Distribution</h4>
+        <div class="dist-chart-flex">
+          <div class="donut-wrapper">
+            <canvas id="attendanceDistributionChart" data-dist='{{ dist_chart_values }}'></canvas>
+            <div class="donut-center-text">
+              <span class="cnt">{{ total_students }}</span>
+              <span class="lbl">Students</span>
+            </div>
+          </div>
+          <div class="dist-legend-list">
+            <div class="dist-legend-item">
+              <span class="dot dot-excellent"></span>
+              <span class="legend-name">&gt;= 90% (Excellent)</span>
+              <span class="legend-val">{{ dist.excellent_cnt }} ({{ dist.excellent_pct }}%)</span>
+            </div>
+            <div class="dist-legend-item">
+              <span class="dot dot-good"></span>
+              <span class="legend-name">75% - 89% (Good)</span>
+              <span class="legend-val">{{ dist.good_cnt }} ({{ dist.good_pct }}%)</span>
+            </div>
+            <div class="dist-legend-item">
+              <span class="dot dot-average"></span>
+              <span class="legend-name">50% - 74% (Average)</span>
+              <span class="legend-val">{{ dist.average_cnt }} ({{ dist.average_pct }}%)</span>
+            </div>
+            <div class="dist-legend-item">
+              <span class="dot dot-poor"></span>
+              <span class="legend-name">&lt; 50% (Poor)</span>
+              <span class="legend-val">{{ dist.poor_cnt }} ({{ dist.poor_pct }}%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Top 5 Students -->
+      <div class="top-students-card">
+        <div class="top-students-head">
+          <h4>Top 5 Students</h4>
+        </div>
+        <div class="top-students-list">
+          {% for st in top_5 %}
+          <div class="top-student-row">
+            <span class="rank-num">{{ forloop.counter }}</span>
+            <span class="student-name">{{ st.name }}</span>
+            <div class="progress-bar-wrap">
+              <div class="progress-fill" style="width: {{ st.pct }}%;"></div>
+            </div>
+            <span class="pct-text">{{ st.pct_str }}</span>
+          </div>
+          {% empty %}
+          <p class="no-data-sm">No student data available.</p>
+          {% endfor %}
+        </div>
+        <div class="view-all-link-wrap">
+          <a href="#tableSection" class="view-all-link">View All Students <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. STUDENT ATTENDANCE DETAILS TABLE SECTION -->
+  <div class="attn-table-card" id="tableSection">
+    <div class="table-card-head">
+      <h3>Student Attendance Details</h3>
+      <div class="table-controls-right">
+        <div class="search-box-wrap">
+          <i class="fas fa-search search-icon"></i>
+          <input type="text" id="tableSearchInput" placeholder="Search student..." value="{{ search_q }}">
+        </div>
+        <button type="button" class="icon-tool-btn" id="refreshTableBtn" title="Refresh Table"><i class="fas fa-sync-alt"></i></button>
+      </div>
+    </div>
+
+    <div class="table-scroll-container">
+      <table class="attn-data-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Student Name</th>
+            <th>USN</th>
+            <th>Course</th>
+            <th>Year</th>
+            <th>Semester</th>
+            <th>Date</th>
+            <th>Slot / Time</th>
+            <th>Present</th>
+            <th>Absent</th>
+            <th>Total</th>
+            <th>Attendance (%)</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="attendanceTableBody">
+          {% for st in students %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td class="font-bold-name">{{ st.name }}</td>
+            <td class="usn-code">{{ st.usn }}</td>
+            <td>{{ st.course }}</td>
+            <td>{{ st.year }}</td>
+            <td>{{ st.semester }}</td>
+            <td>{{ st.date }}</td>
+            <td>{{ st.slot }}</td>
+            <td><span class="badge-num present">{{ st.present }}</span></td>
+            <td><span class="badge-num absent">{{ st.absent }}</span></td>
+            <td>{{ st.total }}</td>
+            <td class="font-bold-pct">{{ st.pct_str }}</td>
+            <td>
+              <span class="status-pill {{ st.status_class }}">{{ st.status_text }}</span>
+            </td>
+            <td>
+              <div class="action-btns-group">
+                <button type="button" class="btn-action view-detail-btn" data-id="{{ st.student_id }}" data-name="{{ st.name }}" data-usn="{{ st.usn }}" title="View Attendance Log"><i class="far fa-eye"></i></button>
+                <button type="button" class="btn-action stats-btn" data-usn="{{ st.usn }}" title="View Stats"><i class="fas fa-chart-line"></i></button>
+              </div>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="14" class="no-records-cell">No attendance records found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Table Footer / Pagination -->
+    <div class="table-card-footer">
+      <div class="entries-info">
+        Showing <span id="showingStart">1</span> to <span id="showingEnd">{{ students|length }}</span> of <span id="totalEntries">{{ total_students }}</span> entries
+      </div>
+      <div class="pagination-controls">
+        <button type="button" class="page-btn" id="firstPageBtn">&lt;&lt;</button>
+        <button type="button" class="page-btn" id="prevPageBtn">&lt;</button>
+        <div id="pageNumbersGroup" class="page-numbers-group">
+          <button type="button" class="page-btn active">1</button>
+        </div>
+        <button type="button" class="page-btn" id="nextPageBtn">&gt;</button>
+        <button type="button" class="page-btn" id="lastPageBtn">&gt;&gt;</button>
+      </div>
+      <div class="rows-per-page-wrap">
+        <span>Rows per page:</span>
+        <select id="rowsPerPageSelect" class="rows-select">
+          <option value="10" selected>10</option>
+          <option value="25">25</option>
+          <option value="50">50</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- STUDENT ATTENDANCE LOG MODAL -->
+<div id="studentDetailModal" class="attn-modal-backdrop">
+  <div class="attn-modal-content">
+    <div class="attn-modal-header">
+      <h4><i class="fas fa-user-clock"></i> Attendance Log: <span id="modalStudentName"></span> (<span id="modalStudentUSN"></span>)</h4>
+      <button type="button" class="modal-close-btn" id="closeModalBtn">&times;</button>
+    </div>
+    <div class="attn-modal-body">
+      <table class="modal-log-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Slot / Time</th>
+            <th>Domain</th>
+            <th>Trainer</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="modalLogTableBody">
+          <!-- Populated by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="{% static 'js/tpo_student_attendance.js' %}?v=4.0"></script>
+{% endblock %}

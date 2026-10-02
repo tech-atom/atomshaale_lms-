@@ -1,0 +1,932 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block title %}Placement Prep Hub | Admin Console{% endblock %}
+
+{% block extra_head %}
+<meta name="csrf-token" content="{{ csrf_token }}">
+<link rel="stylesheet" href="{% static 'css/admin_placement.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin_placement_questions.css' %}">
+<style>
+    /* Premium Glassmorphic Layout Styles */
+    .hub-container {
+        display: grid;
+        grid-template-columns: 320px 1fr;
+        gap: 1.5rem;
+        min-height: calc(100vh - 180px);
+        margin-top: 1rem;
+    }
+    .left-panel {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 1.25rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        display: flex;
+        flex-direction: column;
+    }
+    .right-panel {
+        background: rgba(255, 255, 255, 0.95);
+        border: 1px solid #cbd5e1;
+        border-radius: 16px;
+        padding: 1.5rem;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        display: flex;
+        flex-direction: column;
+    }
+    .company-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 1px solid transparent;
+        margin-bottom: 0.5rem;
+    }
+    .company-item:hover {
+        background: #f1f5f9;
+    }
+    .company-item.active {
+        background: #f0fdf4;
+        border-color: #bbf7d0;
+        color: #166534;
+        font-weight: 700;
+    }
+    .year-pill {
+        background: #f1f5f9;
+        color: #475569;
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: 1.5px solid transparent;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .year-pill:hover {
+        background: #e2e8f0;
+        color: #0f172a;
+    }
+    .year-pill.active {
+        background: #f0fdf4;
+        color: #008037;
+        border-color: #008037;
+    }
+    .config-card {
+        background: #ffffff;
+        border: 1px solid #cbd5e1;
+        border-radius: 12px;
+        padding: 1.25rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.01);
+        margin-bottom: 1rem;
+    }
+    .step-header {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .round-toggle-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: #334155;
+        cursor: pointer;
+    }
+    .round-toggle-btn input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        accent-color: #008037;
+    }
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.45rem 0.85rem;
+        border-radius: 6px;
+        font-weight: 700;
+        font-size: 0.82rem;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        border: 1.5px solid transparent;
+    }
+    .btn-action-primary {
+        background: #008037;
+        color: #ffffff !important;
+    }
+    .btn-action-primary:hover {
+        background: #00662c;
+    }
+    .btn-action-secondary {
+        background: #f0fdf4;
+        color: #008037 !important;
+        border-color: #bbf7d0;
+    }
+    .btn-action-secondary:hover {
+        background: #dcfce7;
+    }
+    .btn-action-danger {
+        background: #fef2f2;
+        color: #ef4444 !important;
+        border-color: #fca5a5;
+    }
+    .btn-action-danger:hover {
+        background: #fee2e2;
+    }
+    .btn-action-gray {
+        background: #f1f5f9;
+        color: #475569 !important;
+        border-color: #cbd5e1;
+    }
+    .btn-action-gray:hover {
+        background: #e2e8f0;
+    }
+    .btn-action:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        background: #cbd5e1 !important;
+        color: #64748b !important;
+        border-color: #cbd5e1 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: 0.75rem;">
+    <div>
+        <h1 class="admin-title" style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0;">Company Q's</h1>
+        <p style="color: #64748b; margin: 0.15rem 0 0 0; font-size: 0.85rem;">Configure company papers, assessments structure, and scheduling for colleges.</p>
+    </div>
+    <a href="{% url 'company_prep:tpo_dashboard' %}" class="btn-create" style="background: transparent; color: #64748b !important; border: 1.5px solid #cbd5e1; padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 4px;">
+        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg> View Reports
+    </a>
+</div>
+
+<!-- Stats Bar -->
+<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+    <div class="stats-card" style="background: rgba(255, 255, 255, 0.75); border: 1px solid #cbd5e1; border-radius: 12px; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 0.85rem; box-shadow: 0 4px 10px rgba(0,0,0,0.015);">
+        <div style="font-size: 1.5rem; background: #f0fdf4; color: #008037; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid #bbf7d0;"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><line x1="9" y1="22" x2="9" y2="16"></line><line x1="15" y1="22" x2="15" y2="16"></line><line x1="9" y1="16" x2="15" y2="16"></line><path d="M8 6h2v2H8V6zm6 0h2v2h-2V6zm-6 4h2v2H8v-2zm6 0h2v2h-2v-2z"/></svg></div>
+        <div>
+            <div style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Companies</div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: #0f172a;" id="stat-total-brands">{{ grouped_companies|length }}</div>
+        </div>
+    </div>
+    <div class="stats-card" style="background: rgba(255, 255, 255, 0.75); border: 1px solid #cbd5e1; border-radius: 12px; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 0.85rem; box-shadow: 0 4px 10px rgba(0,0,0,0.015);">
+        <div style="font-size: 1.5rem; background: #e0f2fe; color: #0369a1; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid #bae6fd;"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></div>
+        <div>
+            <div style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Year Papers</div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: #0f172a;" id="stat-total-papers">{{ total_papers }}</div>
+        </div>
+    </div>
+    <div class="stats-card" style="background: rgba(255, 255, 255, 0.75); border: 1px solid #cbd5e1; border-radius: 12px; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 0.85rem; box-shadow: 0 4px 10px rgba(0,0,0,0.015);">
+        <div style="font-size: 1.5rem; background: #fef2f2; color: #ef4444; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid #fca5a5;"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></div>
+        <div>
+            <div style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Aptitude Qs</div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: #0f172a;" id="stat-apt-count">{{ aptitude_count }}</div>
+        </div>
+    </div>
+    <div class="stats-card" style="background: rgba(255, 255, 255, 0.75); border: 1px solid #cbd5e1; border-radius: 12px; padding: 0.85rem 1.25rem; display: flex; align-items: center; gap: 0.85rem; box-shadow: 0 4px 10px rgba(0,0,0,0.015);">
+        <div style="font-size: 1.5rem; background: #fffbeb; color: #d97706; border-radius: 8px; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; border: 1px solid #fde68a;"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg></div>
+        <div>
+            <div style="color: #64748b; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Technical Qs</div>
+            <div style="font-size: 1.25rem; font-weight: 800; color: #0f172a;" id="stat-tech-count">{{ technical_count }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="hub-container">
+    <!-- LEFT PANEL: COMPANIES LIST (Accordion Trigger) -->
+    <div class="left-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <span style="font-weight: 800; font-size: 0.95rem; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">Companies</span>
+            <button class="btn-action btn-action-primary" id="btn-add-company" style="padding: 0.35rem 0.65rem; font-size: 0.78rem;">
+                ＋ Add Company
+            </button>
+        </div>
+        
+        <input type="text" id="company-search" placeholder="Search companies..." style="width: 100%; padding: 0.55rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; outline: none; transition: border-color 0.2s;" oninput="filterCompaniesList()">
+
+        <div style="overflow-y: auto; flex-grow: 1;" id="companies-list-wrapper">
+            {% for comp in grouped_companies %}
+            <div class="company-item" data-name="{{ comp.name }}" data-logo="{% if comp.logo %}{{ comp.logo.url }}{% endif %}" onclick="selectCompany('{{ comp.name }}', this)">
+                {% if comp.logo %}
+                <img src="{{ comp.logo.url }}" alt="{{ comp.name }}" style="width: 32px; height: 32px; object-fit: contain; border-radius: 6px; border: 1px solid #e2e8f0; padding: 1px; background: #ffffff;">
+                {% else %}
+                <div style="width: 32px; height: 32px; border-radius: 6px; background: #f1f5f9; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #008037; font-size: 0.9rem;">
+                    {{ comp.name|slice:":1"|upper }}
+                </div>
+                {% endif %}
+                <div style="flex-grow: 1;">
+                    <div style="font-size: 0.88rem; font-weight: 700; color: #1e293b;">{{ comp.name }}</div>
+                    <span style="font-size: 0.72rem; color: #64748b;" id="papers-count-{{ comp.name|slugify }}">{{ comp.papers|length }} Year Paper{{ comp.papers|length|pluralize }}</span>
+                </div>
+            </div>
+            {% empty %}
+            <div style="text-align: center; color: #64748b; font-size: 0.82rem; padding: 2rem 1rem;">
+                No companies added yet. Click "+ Add Company" above.
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: DETAILS, CONFIG & SCHEDULING -->
+    <div class="right-panel" id="detail-panel">
+        <!-- Empty State -->
+        <div id="empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; color: #64748b; padding: 3rem 1rem;">
+            <span style="font-size: 4rem; margin-bottom: 1rem;"></span>
+            <h3 style="margin: 0 0 0.5rem 0; font-weight: 800; color: #334155; font-size: 1.15rem;">No Company Selected</h3>
+            <p style="margin: 0; font-size: 0.88rem; max-width: 400px; line-height: 1.45;">Select a company from the left panel to configure its papers, assessment rounds, and scheduling target audience.</p>
+        </div>
+
+        <!-- Selected Company Workspace -->
+        <div id="workspace-state" style="display: none; flex-direction: column; gap: 1rem; height: 100%;">
+            <!-- Header Details -->
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div id="workspace-logo-container"></div>
+                    <div>
+                        <h2 id="workspace-company-name" style="margin: 0; font-size: 1.4rem; font-weight: 800; color: #0f172a;">Google</h2>
+                        <span style="font-size: 0.8rem; color: #64748b; font-weight: 600;">Year Papers & Rounds Management</span>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn-action btn-action-secondary" id="btn-add-year">＋ Add Year Paper</button>
+                </div>
+            </div>
+
+            <!-- Step 2: Year Papers Grid -->
+            <div>
+                <div class="step-header" style="display: flex; align-items: center; gap: 6px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg> Step 2: Select or Add Company Year</div>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;" id="workspace-years-grid"></div>
+            </div>
+
+            <!-- Settings Workspace (Loaded on year click) -->
+            <div id="year-workspace" style="display: none; flex-direction: column; gap: 1rem;">
+                <!-- Selected Paper Meta Info -->
+                <div style="background: rgba(0, 128, 55, 0.03); border: 1.5px solid rgba(0, 128, 55, 0.2); border-radius: 12px; padding: 0.85rem 1.25rem; display: flex; gap: 2rem; align-items: center; flex-wrap: wrap; font-size: 0.88rem; color: #334155;">
+                    <div>
+                        <strong style="color: #475569;">Role:</strong> <span id="workspace-paper-role" style="font-weight: 700; color: #0f172a;">General</span>
+                    </div>
+                    <div>
+                        <strong style="color: #475569;">Package:</strong> <span id="workspace-paper-package" style="font-weight: 700; color: #0f172a;">N/A</span>
+                    </div>
+                    <div>
+                        <strong style="color: #475569;">Place:</strong> <span id="workspace-paper-place" style="font-weight: 700; color: #0f172a;">N/A</span>
+                    </div>
+                    <!-- Quick link to edit company/paper details -->
+                    <button type="button" id="workspace-paper-edit-btn" onclick="openEditYearModal()" style="margin-left: auto; display: inline-flex; align-items: center; gap: 4px; color: #008037; font-weight: 700; background: none; border: none; cursor: pointer; padding: 0; font-size: 0.88rem;">
+                        <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path></svg>
+                        Edit Details
+                    </button>
+                </div>
+
+                <!-- Step 3: Configure Assessment Rounds -->
+                <div class="config-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 0.5rem; margin-bottom: 1rem;">
+                        <div class="step-header" style="margin: 0; display: flex; align-items: center; gap: 6px;"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle;"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg> Step 3: Configure Assessment Rounds</div>
+                    </div>
+
+                    <!-- Toggle round selectors -->
+                    <div style="display: flex; gap: 2rem; margin-bottom: 1.25rem; background: #f8fafc; padding: 0.85rem; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        <label class="round-toggle-btn">
+                            <input type="checkbox" id="chk-round1" onchange="toggleRoundCollapse('round1')">
+                            Round 1 - Aptitude Assessment
+                        </label>
+                        <label class="round-toggle-btn">
+                            <input type="checkbox" id="chk-round2" onchange="toggleRoundCollapse('round2')">
+                            Round 2 - Technical Assessment
+                        </label>
+                    </div>
+
+                    <form id="rounds-config-form">
+                        <!-- Round 1 Area -->
+                        <div id="round1-config-area" style="display: none; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; background: #fafdfb;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #cbd5e1; padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
+                                <strong style="color: #008037; font-size: 0.9rem;">Round 1 Configuration</strong>
+                                <span style="font-size: 0.75rem; color: #475569; font-weight: 700; background: #cbd5e1; padding: 0.15rem 0.40rem; border-radius: 4px;" id="round1-status-q">0 Qs Configured</span>
+                            </div>
+                            
+                            <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                <div>
+                                    <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Title</label>
+                                    <input type="text" id="round1-name" class="form-control" style="padding: 0.45rem; font-size: 0.82rem;" required>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Duration (min)</label>
+                                    <input type="number" id="round1-duration" class="form-control" style="padding: 0.45rem; font-size: 0.82rem;" required min="1">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Max Marks</label>
+                                    <input type="number" id="round1-questions" class="form-control" style="padding: 0.45rem; font-size: 0.82rem;" required min="1" oninput="checkRoundQuestionThresholds()">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Passing Marks</label>
+                                    <input type="number" id="round1-passing" class="form-control" style="padding: 0.45rem; font-size: 0.82rem;" required min="1" max="100">
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
+                                <button type="button" class="btn-action btn-action-gray" onclick="manageQuestionsList('aptitude')">📄 Questions list</button>
+                                <button type="button" class="btn-action btn-action-secondary" onclick="openBulkUploadModal('aptitude')">Excel Upload</button>
+                                <button type="button" class="btn-action btn-action-primary" onclick="openAddQuestionModal('aptitude')">＋ Add Question</button>
+                            </div>
+                        </div>
+
+                        <!-- Round 2 Area -->
+                        <div id="round2-config-area" style="display: none; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 1rem; margin-bottom: 1rem; background: #fafdfb;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #cbd5e1; padding-bottom: 0.5rem; margin-bottom: 0.75rem;">
+                                <strong style="color: #008037; font-size: 0.9rem;">Round 2 Technical Assessment Configuration</strong>
+                                <span style="font-size: 0.75rem; color: #475569; font-weight: 700; background: #cbd5e1; padding: 0.15rem 0.40rem; border-radius: 4px;" id="round2-status-q">0 Qs Configured</span>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 2fr 1.5fr 1fr 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                                <div>
+                                    <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Title</label>
+                                    <input type="text" id="round2-name" class="form-control" style="padding: 0.45rem; font-size: 0.82rem;" required>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Format</label>
+                                    <select id="round2-format" class="form-control" style="padding: 0.4rem; font-size: 0.82rem; background: #ffffff;" required>
+                                        <option value="MCQ">MCQ Only</option>
+                                        <option value="Coding">Coding Only</option>
+                                        <option value="MCQ_Coding">MCQ + Coding</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Duration (min)</label>
+                                    <input type="number" id="round2-duration" class="form-control" style="padding: 0.45rem; font-size: 0.82rem;" required min="1">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Max Marks</label>
+                                    <input type="number" id="round2-questions" class="form-control" style="padding: 0.45rem; font-size: 0.82rem;" required min="1" oninput="checkRoundQuestionThresholds()">
+                                </div>
+                                <div>
+                                    <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Passing Marks</label>
+                                    <input type="number" id="round2-passing" class="form-control" style="padding: 0.45rem; font-size: 0.82rem;" required min="1" max="100">
+                                </div>
+                            </div>
+
+                            <div style="display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem;">
+                                <button type="button" class="btn-action btn-action-gray" onclick="manageQuestionsList('technical')">Questions list</button>
+                                <button type="button" class="btn-action btn-action-secondary" onclick="openBulkUploadModal('technical')">Excel Upload</button>
+                                <button type="button" class="btn-action btn-action-primary" onclick="openAddQuestionModal('technical')">＋ Add Question</button>
+                            </div>
+                        </div>
+
+                        <!-- Save button for Step 3 Config -->
+                        <div style="text-align: right; display: flex; justify-content: space-between; align-items: center; border-top: 1.5px solid #f1f5f9; padding-top: 0.85rem;">
+                            <span id="rounds-completeness-text" style="font-size: 0.8rem; font-weight: 600; color: #64748b; display: none;">Configure rounds settings above</span>
+                            <button type="submit" class="btn-action btn-action-primary" id="btn-save-rounds-config">Save Rounds Settings</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Step 4: Schedule Assessment -->
+                <div class="config-card" style="border-left: 5px solid #a3e635;" id="scheduling-panel">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: #1e293b;"> Step 4: Target Scheduling & Access Settings</h3>
+                            <p style="margin: 0.15rem 0 0 0; font-size: 0.78rem; color: #64748b;" id="schedule-summary-text">No schedule configured. Configure rounds completeness thresholds to enable scheduling.</p>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <button class="btn-action btn-action-primary" id="btn-schedule-trigger" onclick="openScheduleModal()" disabled>
+                                Schedule Assessment
+                            </button>
+                            <button class="btn-action btn-action-danger" id="btn-delete-year" style="padding: 0.45rem 0.75rem;">
+                                Delete Year Paper
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========================================== MODALS ========================================== -->
+
+<!-- MODAL 1: ADD COMPANY (Simple Step 1) -->
+<div id="company-modal-step1" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 450px; padding: 1.5rem; border-radius: 12px; background: #ffffff; position: relative;">
+        <button type="button" class="close-modal" id="close-company-step1" style="position: absolute; right: 1rem; top: 1rem; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">×</button>
+        <h3 style="margin-top: 0; color: #008037; font-size: 1.15rem; font-weight: 800; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 0.5rem; margin-bottom: 1rem;">Add Company</h3>
+        
+        <form id="company-step1-form" autocomplete="off" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div style="margin-bottom: 1rem;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.35rem;">Company Name *</label>
+                <input type="text" id="step1-company-name" name="name" class="form-control" placeholder="e.g. Google, Amazon, Microsoft" required style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            <div style="margin-bottom: 1.25rem;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.35rem;">Company Logo</label>
+                <input type="file" id="step1-company-logo" name="logo" class="form-control" accept="image/*" style="width: 100%; padding: 0.45rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            
+            <div style="text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" class="btn-action btn-action-gray" id="cancel-company-step1">Cancel</button>
+                <button type="submit" class="btn-action btn-action-primary" id="btn-save-step1">Save Company</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL 2: ADD YEAR (Simple Step 2) -->
+<div id="year-modal-step2" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px; padding: 1.5rem; border-radius: 12px; background: #ffffff; position: relative;">
+        <button type="button" class="close-modal" id="close-year-step2" style="position: absolute; right: 1rem; top: 1rem; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">×</button>
+        <h3 id="year-modal-title" style="margin-top: 0; color: #008037; font-size: 1.15rem; font-weight: 800; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 0.5rem; margin-bottom: 1rem;">Add Year Paper</h3>
+        
+        <form id="year-step2-form" autocomplete="off">
+            {% csrf_token %}
+            <div style="margin-bottom: 1rem;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.35rem;">Year *</label>
+                <input type="number" id="step2-paper-year" name="year" class="form-control" placeholder="e.g. 2025" required style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.35rem;">Job Role</label>
+                <input type="text" id="step2-paper-role" name="job_role" class="form-control" placeholder="e.g. Software Engineer" style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.35rem;">Salary Package</label>
+                <input type="text" id="step2-paper-package" name="package" class="form-control" placeholder="e.g. 6 LPA" style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            <div style="margin-bottom: 1.25rem;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.35rem;">Placement Location</label>
+                <input type="text" id="step2-paper-place" name="place" class="form-control" placeholder="e.g. Bengaluru" style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            
+            <div style="text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" class="btn-action btn-action-gray" id="cancel-year-step2">Cancel</button>
+                <button type="submit" class="btn-action btn-action-primary" id="btn-save-step2">Save Paper</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL 8: EDIT YEAR PAPER DETAILS -->
+<div id="edit-year-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 400px; padding: 1.5rem; border-radius: 12px; background: #ffffff; position: relative;">
+        <button type="button" class="close-modal" id="close-edit-year" style="position: absolute; right: 1rem; top: 1rem; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">×</button>
+        <h3 style="margin-top: 0; color: #008037; font-size: 1.15rem; font-weight: 800; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 0.5rem; margin-bottom: 1rem;">Edit Paper Details</h3>
+        
+        <form id="edit-year-form" autocomplete="off">
+            {% csrf_token %}
+            <div style="margin-bottom: 1rem;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.35rem;">Year *</label>
+                <input type="number" id="edit-paper-year" name="year" class="form-control" placeholder="e.g. 2025" required style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.35rem;">Job Role</label>
+                <input type="text" id="edit-paper-role" name="job_role" class="form-control" placeholder="e.g. Software Engineer" style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            <div style="margin-bottom: 1rem;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.35rem;">Salary Package</label>
+                <input type="text" id="edit-paper-package" name="package" class="form-control" placeholder="e.g. 6 LPA" style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            <div style="margin-bottom: 1.25rem;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.35rem;">Placement Location</label>
+                <input type="text" id="edit-paper-place" name="place" class="form-control" placeholder="e.g. Bengaluru" style="width: 100%; padding: 0.6rem; border: 1px solid #cbd5e1; border-radius: 6px;">
+            </div>
+            
+            <div style="text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" class="btn-action btn-action-gray" id="cancel-edit-year">Cancel</button>
+                <button type="submit" class="btn-action btn-action-primary" id="btn-save-edit-year">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL 3: IMPORT FROM QUESTION BANK -->
+<div id="import-bank-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 700px; padding: 1.5rem; border-radius: 12px; background: #ffffff; position: relative;">
+        <button type="button" class="close-modal" id="close-import-bank" style="position: absolute; right: 1rem; top: 1rem; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">×</button>
+        <h3 id="import-bank-title" style="margin-top: 0; color: #008037; font-size: 1.15rem; font-weight: 800; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 0.5rem; margin-bottom: 1rem;">Import from Question Bank</h3>
+        
+        <input type="text" id="bank-search" placeholder="Filter bank questions..." style="width: 100%; padding: 0.55rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; outline: none;" oninput="filterBankQuestionsList()">
+
+        <div style="max-height: 350px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px; margin-bottom: 1.25rem;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.82rem;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 1px solid #cbd5e1; color: #475569; font-weight: 700; text-transform: uppercase;">
+                        <th style="padding: 0.5rem 1rem; width: 8%; text-align: center;"><input type="checkbox" id="chk-bank-select-all" onchange="toggleSelectAllBankQuestions(this)"></th>
+                        <th style="padding: 0.5rem 1rem; width: 22%;">Topic</th>
+                        <th style="padding: 0.5rem 1rem; width: 15%;">Type / Branch</th>
+                        <th style="padding: 0.5rem 1rem; width: 55%;">Question Text</th>
+                    </tr>
+                </thead>
+                <tbody id="import-bank-tbody">
+                    <!-- Loaded dynamically -->
+                </tbody>
+            </table>
+        </div>
+        
+        <div style="text-align: right; display: flex; justify-content: flex-end; gap: 8px; align-items: center;">
+            <span style="font-size: 0.8rem; color: #64748b; margin-right: auto;" id="bank-selected-count">0 questions selected</span>
+            <button type="button" class="btn-action btn-action-gray" id="cancel-import-bank">Cancel</button>
+            <button type="button" class="btn-action btn-action-primary" id="btn-submit-import" onclick="submitImportFromBank()">Import Selected</button>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 4: SCHEDULE ASSESSMENT (Step 4) -->
+<div id="schedule-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 600px; padding: 1.5rem; border-radius: 12px; background: #ffffff; position: relative;">
+        <button type="button" class="close-modal" id="close-schedule" style="position: absolute; right: 1rem; top: 1rem; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">×</button>
+        <h3 id="schedule-modal-title" style="margin-top: 0; color: #008037; font-size: 1.15rem; font-weight: 800; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 0.5rem; margin-bottom: 1rem;">Schedule Assessment</h3>
+        
+        <form id="schedule-config-form" autocomplete="off">
+            {% csrf_token %}
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.25rem;">Company Name</label>
+                    <input type="text" id="schedule-company" class="form-control" style="padding: 0.5rem; font-size: 0.85rem; background: #f8fafc;" readonly>
+                </div>
+                <div>
+                    <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.25rem;">Paper Year *</label>
+                    <input type="number" id="schedule-year" class="form-control" style="padding: 0.5rem; font-size: 0.85rem; background: #ffffff;" required>
+                </div>
+            </div>
+
+            <div style="background: #fafdfb; border: 1.5px solid #a3e635; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #008037; font-size: 0.85rem; font-weight: 800;">Target Audience Batch</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">College *</label>
+                        <select id="schedule-college" class="form-control" style="padding: 0.45rem; font-size: 0.82rem; background: #ffffff;" required>
+                            <option value="">-- Select College --</option>
+                            {% for col in colleges %}
+                            <option value="{{ col.id }}">{{ col.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Course *</label>
+                        <select id="schedule-course" class="form-control" style="padding: 0.45rem; font-size: 0.82rem; background: #ffffff;" required>
+                            <option value="">-- Select Course --</option>
+                            {% for crs in courses %}
+                            <option value="{{ crs.id }}">{{ crs.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Semester *</label>
+                        <select id="schedule-semester" class="form-control" style="padding: 0.45rem; font-size: 0.82rem; background: #ffffff;" required>
+                            <option value="">-- Select Semester --</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Section (Optional)</label>
+                        <select id="schedule-section" class="form-control" style="padding: 0.45rem; font-size: 0.82rem; background: #ffffff;">
+                            <option value="all">-- All Sections --</option>
+                            {% for sec in sections %}
+                            <option value="{{ sec.name }}">{{ sec.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.25rem;">Start Date & Time</label>
+                    <input type="datetime-local" id="schedule-start-dt" class="form-control" style="padding: 0.45rem; font-size: 0.82rem;">
+                </div>
+                <div>
+                    <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.25rem;">End Date & Time</label>
+                    <input type="datetime-local" id="schedule-end-dt" class="form-control" style="padding: 0.45rem; font-size: 0.82rem;">
+                </div>
+            </div>
+
+            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 10px; padding: 1rem; margin-bottom: 1.25rem;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #475569; font-size: 0.85rem; font-weight: 800;">Settings</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                    <div>
+                        <label style="font-size: 0.75rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Maximum Attempts</label>
+                        <input type="number" id="schedule-max-attempts" class="form-control" value="1" min="1" style="padding: 0.45rem; font-size: 0.82rem;">
+                    </div>
+                    <div style="display: flex; align-items: flex-end; padding-bottom: 0.35rem;">
+                        <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.82rem; color: #334155; cursor: pointer;">
+                            <input type="checkbox" id="schedule-negative" style="width: 16px; height: 16px; accent-color: #008037;">
+                            Negative Marking
+                        </label>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 2rem; margin-top: 0.5rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.82rem; color: #334155; cursor: pointer;">
+                        <input type="checkbox" id="schedule-shuffle-q" style="width: 16px; height: 16px; accent-color: #008037;">
+                        Shuffle Questions
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.82rem; color: #334155; cursor: pointer;">
+                        <input type="checkbox" id="schedule-shuffle-o" style="width: 16px; height: 16px; accent-color: #008037;">
+                        Shuffle Options
+                    </label>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1.5px solid #cbd5e1; padding-top: 1rem;">
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-weight: 800; font-size: 0.9rem; color: #008037; cursor: pointer;">
+                    <input type="checkbox" id="schedule-publish" style="width: 18px; height: 18px; accent-color: #008037;">
+                    Publish Assessment
+                </label>
+                <div style="display: flex; gap: 8px;">
+                    <button type="button" class="btn-action btn-action-gray" id="cancel-schedule">Cancel</button>
+                    <button type="submit" class="btn-action btn-action-primary" id="btn-save-schedule">Schedule & Publish</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL 5: BULK UPLOAD QUESTIONS EXCEL -->
+<div id="bulk-upload-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 450px; padding: 1.5rem; border-radius: 12px; background: #ffffff; position: relative;">
+        <button type="button" class="close-modal" id="close-bulk-upload" style="position: absolute; right: 1rem; top: 1rem; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">×</button>
+        <h3 style="margin-top: 0; color: #008037; font-size: 1.15rem; font-weight: 800; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 0.5rem; margin-bottom: 1rem;">Bulk Upload Excel</h3>
+        
+        <form id="bulk-upload-excel-form">
+            <input type="hidden" id="bulk-upload-category">
+            
+            <div style="margin-bottom: 1rem;">
+                <a href="{% url 'company_prep:download_sample_excel' %}" style="font-size: 0.8rem; color: #008037; font-weight: 700; text-decoration: none;">
+                    📥 Download Sample Excel Template (.xlsx)
+                </a>
+            </div>
+            
+            <div style="margin-bottom: 1.25rem;">
+                <label style="font-weight: 700; font-size: 0.8rem; color: #334155; display: block; margin-bottom: 0.35rem;">Select Excel File (.xlsx, .xls) *</label>
+                <input type="file" id="bulk-excel-file" accept=".xlsx, .xls" class="form-control" required style="width: 100%; padding: 0.5rem; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff;">
+            </div>
+            
+            <div style="text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" class="btn-action btn-action-gray" id="cancel-bulk-upload">Cancel</button>
+                <button type="submit" class="btn-action btn-action-primary" id="btn-submit-bulk-upload">Upload File</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL 6: QUESTIONS LIST VIEWER -->
+<div id="questions-list-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 800px; padding: 1.5rem; border-radius: 12px; background: #ffffff; position: relative;">
+        <button type="button" class="close-modal" id="close-questions-list" style="position: absolute; right: 1rem; top: 1rem; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">×</button>
+        <h3 id="questions-list-title" style="margin-top: 0; color: #008037; font-size: 1.15rem; font-weight: 800; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 0.5rem; margin-bottom: 1rem;">Questions List</h3>
+        
+        <input type="text" id="questions-list-search" placeholder="Filter questions..." style="width: 100%; padding: 0.55rem; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; margin-bottom: 1rem; outline: none;" oninput="filterQuestionsViewerList()">
+
+        <div style="max-height: 350px; overflow-y: auto; border: 1px solid #cbd5e1; border-radius: 8px;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.82rem;">
+                <thead>
+                    <tr style="background: #f8fafc; border-bottom: 1px solid #cbd5e1; color: #475569; font-weight: 700; text-transform: uppercase;">
+                        <th style="padding: 0.5rem 1rem; width: 25%;">Topic</th>
+                        <th style="padding: 0.5rem 1rem; width: 15%;">Type / Difficulty</th>
+                        <th style="padding: 0.5rem 1rem; width: 45%;">Question Text</th>
+                        <th style="padding: 0.5rem 1rem; width: 15%; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="questions-list-tbody">
+                    <!-- Dynamic -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- MODAL 7: ADD/EDIT SINGLE QUESTION -->
+<div id="single-question-modal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 550px; padding: 1.5rem; border-radius: 12px; background: #ffffff; position: relative;">
+        <button type="button" class="close-modal" id="close-single-question" style="position: absolute; right: 1rem; top: 1rem; background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: #64748b;">×</button>
+        <h3 id="single-question-title" style="margin-top: 0; color: #008037; font-size: 1.15rem; font-weight: 800; border-bottom: 1.5px solid #cbd5e1; padding-bottom: 0.5rem; margin-bottom: 1rem;">Add Question</h3>
+        
+        <form id="single-question-form" autocomplete="off" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input type="hidden" id="q-form-id">
+            <input type="hidden" id="q-form-category" name="category">
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-bottom: 0.75rem;">
+                <div>
+                    <label style="font-weight: 700; font-size: 0.78rem; color: #334155; display: block; margin-bottom: 0.25rem;">Topic *</label>
+                    <input type="text" id="q-form-topic" name="topic" class="form-control" required style="padding: 0.45rem; font-size: 0.82rem;" placeholder="e.g. Percentage, OOP">
+                </div>
+                <div id="q-form-diff-wrapper">
+                    <label style="font-weight: 700; font-size: 0.78rem; color: #334155; display: block; margin-bottom: 0.25rem;">Difficulty *</label>
+                    <select id="q-form-difficulty" name="difficulty" class="form-control" style="padding: 0.4rem; font-size: 0.82rem; background: #ffffff;">
+                        <option value="Easy">Easy</option>
+                        <option value="Medium" selected>Medium</option>
+                        <option value="Hard">Hard</option>
+                    </select>
+                </div>
+                <div id="q-form-branch-wrapper" style="display: none;">
+                    <label style="font-weight: 700; font-size: 0.78rem; color: #334155; display: block; margin-bottom: 0.25rem;">Branch *</label>
+                    <select id="q-form-branch" name="branch" class="form-control" style="padding: 0.4rem; font-size: 0.82rem; background: #ffffff;">
+                        <option value="CSE" selected>CSE</option>
+                        <option value="ECE">ECE</option>
+                        <option value="Mechanical">Mechanical</option>
+                        <option value="Civil">Civil</option>
+                        <option value="MBA">MBA</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+                <label style="font-weight: 700; font-size: 0.78rem; color: #334155; display: block; margin-bottom: 0.25rem;">Question Type *</label>
+                <select id="q-form-type" name="type" class="form-control" style="padding: 0.4rem; font-size: 0.82rem; background: #ffffff;" required onchange="toggleQFormFields(this.value)">
+                    <option value="MCQ" selected>Multiple Choice (MCQ)</option>
+                    <option value="TF">True / False</option>
+                    <option value="Code" id="q-form-type-code-opt">Coding Problem</option>
+                </select>
+            </div>
+
+            <div style="margin-bottom: 0.75rem;">
+                <label style="font-weight: 700; font-size: 0.78rem; color: #334155; display: block; margin-bottom: 0.25rem;">Question Text *</label>
+                <textarea id="q-form-text" name="question_text" class="form-control" required rows="3" style="padding: 0.45rem; font-size: 0.82rem; font-family: monospace;"></textarea>
+            </div>
+
+            <!-- MCQ Options Area -->
+            <div id="q-form-options-area" style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem;">
+                <label style="font-weight: 700; font-size: 0.78rem; color: #334155; display: block; margin-bottom: 0.5rem;">Options *</label>
+                <div style="display: flex; flex-direction: column; gap: 0.5rem;" id="q-form-options-list">
+                    <input type="text" class="form-control q-form-opt-input" style="padding: 0.4rem; font-size: 0.8rem;" placeholder="Option A" required>
+                    <input type="text" class="form-control q-form-opt-input" style="padding: 0.4rem; font-size: 0.8rem;" placeholder="Option B" required>
+                    <input type="text" class="form-control q-form-opt-input" style="padding: 0.4rem; font-size: 0.8rem;" placeholder="Option C">
+                    <input type="text" class="form-control q-form-opt-input" style="padding: 0.4rem; font-size: 0.8rem;" placeholder="Option D">
+                </div>
+            </div>
+
+            <!-- Correct Answer Selection -->
+            <div style="margin-bottom: 0.75rem;" id="q-form-correct-answer-area">
+                <label style="font-weight: 700; font-size: 0.78rem; color: #334155; display: block; margin-bottom: 0.25rem;">Correct Answer *</label>
+                <input type="text" id="q-form-correct" name="correct_answer" class="form-control" required style="padding: 0.45rem; font-size: 0.82rem;" placeholder="Exact matching option text">
+            </div>
+
+            <!-- Coding Sandbox Extra Fields -->
+            <div id="q-form-coding-area" style="display: none; background: #fffdf5; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 0.75rem; margin-bottom: 0.75rem;">
+                <h4 style="margin: 0 0 0.5rem 0; color: #b45309; font-size: 0.8rem; font-weight: 800;">Coding Sandbox Evaluation Settings</h4>
+                <div style="margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Input Example</label>
+                    <textarea id="q-form-input-example" name="input_example" class="form-control" rows="2" style="padding: 0.45rem; font-size: 0.8rem; font-family: monospace;"></textarea>
+                </div>
+                <div style="margin-bottom: 0.5rem;">
+                    <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Expected Output *</label>
+                    <textarea id="q-form-expected-output" name="expected_output" class="form-control" rows="2" style="padding: 0.45rem; font-size: 0.8rem; font-family: monospace;" placeholder="Output matching input example"></textarea>
+                </div>
+                <div style="margin-top: 0.75rem;">
+                    <label style="font-size: 0.72rem; font-weight: 700; color: #475569; display: block; margin-bottom: 0.25rem;">Test Cases</label>
+                    <div id="q-form-testcases-list" style="display: flex; flex-direction: column; gap: 0.5rem; margin-bottom: 0.5rem;">
+                        <!-- Dynamic test case rows go here -->
+                    </div>
+                    <button type="button" class="btn-action btn-action-secondary" id="btn-add-testcase" onclick="addTestCaseRow()" style="padding: 0.35rem 0.75rem; font-size: 0.78rem;">
+                        ＋ Test Case
+                    </button>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 1rem;">
+                <label style="font-weight: 700; font-size: 0.78rem; color: #334155; display: block; margin-bottom: 0.25rem;">Explanation (Optional)</label>
+                <textarea id="q-form-explanation" name="explanation" class="form-control" rows="2" style="padding: 0.45rem; font-size: 0.82rem;"></textarea>
+            </div>
+
+            <div style="text-align: right; display: flex; justify-content: flex-end; gap: 8px;">
+                <button type="button" class="btn-action btn-action-gray" id="cancel-single-question">Cancel</button>
+                <button type="submit" class="btn-action btn-action-primary" id="btn-save-single-question">Save Question</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Custom Glassmorphic Modal Styles -->
+<style>
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1050;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        overflow: auto;
+        background-color: rgba(15, 23, 42, 0.4);
+        backdrop-filter: blur(8px);
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.25s ease-out;
+    }
+    .modal.modal-show {
+        display: flex;
+        opacity: 1;
+    }
+    .modal-content {
+        background-color: #ffffff;
+        margin: auto;
+        border: 1px solid rgba(226, 232, 240, 0.8);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        width: 90%;
+        transform: scale(0.95);
+        transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .modal.modal-show .modal-content {
+        transform: scale(1);
+    }
+    .close-modal {
+        transition: color 0.15s ease;
+    }
+    .close-modal:hover {
+        color: #ef4444 !important;
+    }
+</style>
+
+<!-- Placement API Config Div -->
+<div id="placement-api-urls"
+     data-get-company-questions="{% url 'company_prep:api_get_company_questions' '00000000-0000-0000-0000-000000000000' %}"
+     data-add-company-question="{% url 'company_prep:api_add_company_question' '00000000-0000-0000-0000-000000000000' %}"
+     data-update-company-question="{% url 'company_prep:api_update_company_question' '00000000-0000-0000-0000-000000000000' 'qtype' '00000000-0000-0000-0000-000000000000' %}"
+     data-delete-company-question="{% url 'company_prep:api_delete_company_question' '00000000-0000-0000-0000-000000000000' 'qtype' '00000000-0000-0000-0000-000000000000' %}"
+     data-bulk-upload="{% url 'company_prep:admin_bulk_upload' %}"
+     data-download-template="{% url 'company_prep:download_sample_excel' %}"
+     data-add-company="{% url 'company_prep:admin_company_add' %}"
+     data-edit-company="{% url 'company_prep:admin_company_edit' '00000000-0000-0000-0000-000000000000' %}"
+     data-delete-company="{% url 'company_prep:admin_company_delete' '00000000-0000-0000-0000-000000000000' %}"
+     data-get-general-questions="{% url 'company_prep:api_get_general_questions' '00000000-0000-0000-0000-000000000000' 'qcat' %}"
+     data-import-question-bank="{% url 'company_prep:api_import_question_bank' '00000000-0000-0000-0000-000000000000' %}"
+     data-save-rounds="{% url 'company_prep:api_save_rounds' '00000000-0000-0000-0000-000000000000' %}"
+     data-schedule-assessment="{% url 'company_prep:api_schedule_assessment' '00000000-0000-0000-0000-000000000000' %}">
+</div>
+
+<!-- Toast container -->
+<div id="assessment-toast"
+     class="toast"
+     role="alert"
+     aria-live="assertive"
+     aria-atomic="true"></div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Embedded template data for years mapping
+    const companyYearPapers = {
+        {% for comp in grouped_companies %}
+        "{{ comp.name }}": [
+            {% for paper in comp.papers %}
+            {
+                id: "{{ paper.id }}",
+                year: {% if paper.year %}{{ paper.year }}{% else %}null{% endif %},
+                job_role: "{{ paper.job_role|escapejs }}",
+                package: "{{ paper.package|escapejs }}",
+                place: "{{ paper.place|escapejs }}",
+                duration: {{ paper.test_duration_minutes }},
+                college_id: "{{ paper.college.id|default:'' }}",
+                course_id: "{{ paper.course.id|default:'' }}",
+                semester: "{{ paper.semester|default:'' }}",
+                section: "{{ paper.section.name|default:'' }}",
+                start_dt: "{{ paper.start_datetime|date:'Y-m-d\TH:i' }}",
+                end_dt: "{{ paper.end_datetime|date:'Y-m-d\TH:i' }}",
+                
+                round1_active: {% if paper.round1_active %}true{% else %}false{% endif %},
+                round1_name: "{{ paper.round1_name|escapejs }}",
+                round1_duration: {{ paper.round1_duration }},
+                round1_questions: {{ paper.round1_questions }},
+                round1_passing: {{ paper.round1_passing_pct }},
+
+                round2_active: {% if paper.round2_active %}true{% else %}false{% endif %},
+                round2_name: "{{ paper.round2_name|escapejs }}",
+                round2_format: "{{ paper.round2_technical_format }}",
+                round2_duration: {{ paper.round2_duration }},
+                round2_questions: {{ paper.round2_questions }},
+                round2_passing: {{ paper.round2_passing_pct }},
+
+                max_attempts: {{ paper.max_attempts }},
+                shuffle_questions: {% if paper.shuffle_questions %}true{% else %}false{% endif %},
+                shuffle_options: {% if paper.shuffle_options %}true{% else %}false{% endif %},
+                negative_marking: {% if paper.negative_marking %}true{% else %}false{% endif %},
+                is_published: {% if paper.is_published %}true{% else %}false{% endif %},
+            },
+            {% endfor %}
+        ],
+        {% endfor %}
+    };
+</script>
+<script src="{% static 'js/admin_placement.js' %}?v=6" nonce="{{ request.csp_nonce }}" defer></script>
+{% endblock %}

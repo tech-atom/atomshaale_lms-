@@ -1,0 +1,260 @@
+{% extends "admin_base.html" %}
+{% load static %}
+
+{% block title %}Feedback Analytics Dashboard{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/admin_feedback.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="feedback-container animate-fade-in">
+  
+  <!-- API URL Config Node -->
+  <div id="feedback-api-urls"
+       data-list-url="{% url 'admin_feedback_list' %}"
+       data-download-url="{% url 'admin_feedback_download' %}"
+       data-colleges-url="{% url 'admin_college_list_api' %}"
+       data-courses-url="{% url 'admin_course_list_api' %}"
+       data-sections-url="{% url 'admin_sections_api' %}"
+       data-trainers-url="{% url 'admin_trainers_api' %}"
+       data-years-url="{% url 'get_year_choices' %}"
+       data-semesters-url="{% url 'get_semester_choices' %}"
+       data-session-detail-url="{% url 'admin_feedback_session_detail' %}">
+  </div>
+
+  <!-- Header Section -->
+  <div class="feedback-header">
+    <div class="header-text-group">
+      <h1 class="main-title">Feedback Analytics Dashboard</h1>
+      <p class="subtitle-text">Track, filter, and analyze student and trainer performance feedback across colleges.</p>
+    </div>
+    <div class="header-actions">
+      <button id="download-btn" class="btn btn-primary btn-glowing">
+        <svg xmlns="http://www.w3.org/2000/svg" class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        <span>Download CSV</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Dynamic Toolbar Filters (Glassmorphic) -->
+  <div class="toolbar glass-panel">
+    <div class="toolbar-search-row">
+      <div class="search-input-wrapper">
+        <span class="search-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" style="width: 16px; height: 16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        </span>
+        <input type="text" id="table-search" placeholder="Search by trainer, college, course, section...">
+      </div>
+      <div class="date-range-wrapper">
+        <div class="date-field">
+          <label for="start">From</label>
+          <input type="date" id="start">
+        </div>
+        <div class="date-field">
+          <label for="end">To</label>
+          <input type="date" id="end">
+        </div>
+      </div>
+      <button id="reset-btn" class="btn btn-secondary">Reset Filters</button>
+    </div>
+
+    <!-- Multi-select checkboxed dropdowns grid -->
+    <div class="filters-grid">
+      <!-- College -->
+      <div class="custom-dropdown" id="dropdown-college">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Colleges (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-search">
+            <input type="text" class="popover-search-input" placeholder="Search Colleges...">
+          </div>
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-college">
+            <div class="popover-loading">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Course -->
+      <div class="custom-dropdown" id="dropdown-course">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Courses (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-search">
+            <input type="text" class="popover-search-input" placeholder="Search Courses...">
+          </div>
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-course">
+            <div class="popover-loading">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section -->
+      <div class="custom-dropdown" id="dropdown-section">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Sections (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-search">
+            <input type="text" class="popover-search-input" placeholder="Search Sections...">
+          </div>
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-section">
+            <div class="popover-placeholder">All Sections</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trainer -->
+      <div class="custom-dropdown" id="dropdown-trainer">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Trainers (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-search">
+            <input type="text" class="popover-search-input" placeholder="Search Trainers...">
+          </div>
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-trainer">
+            <div class="popover-loading">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Year -->
+      <div class="custom-dropdown" id="dropdown-year">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Years (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-year">
+            <div class="popover-loading">Loading...</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Semester -->
+      <div class="custom-dropdown" id="dropdown-semester">
+        <button class="dropdown-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+          <span class="trigger-label">Semesters (All)</span>
+          <span class="trigger-arrow"></span>
+        </button>
+        <div class="dropdown-popover">
+          <div class="popover-actions">
+            <button type="button" class="btn-text select-all">Select All</button>
+            <button type="button" class="btn-text clear-all">Clear</button>
+          </div>
+          <div class="popover-options" id="options-semester">
+            <div class="popover-loading">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Summary Cards Container (Live Metrics) -->
+  <div class="summary-grid" id="summary-box">
+     <!-- Populated dynamically via JS -->
+     <div class="summary-loading-placeholder">Calculating analytics...</div>
+  </div>
+
+  <!-- Visual Charts for Ratings -->
+  <div class="charts-grid">
+    <div class="chart-card glass-panel animate-fade-in" style="animation-delay: 0.1s;">
+      <div class="chart-header">
+        <h3 class="chart-title"><svg xmlns="http://www.w3.org/2000/svg" class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>Course Content & Satisfaction Ratings</h3>
+      </div>
+      <div class="chart-body">
+        <canvas id="studentChart"></canvas>
+      </div>
+    </div>
+    <div class="chart-card glass-panel animate-fade-in" style="animation-delay: 0.15s;">
+      <div class="chart-header">
+        <h3 class="chart-title"><svg xmlns="http://www.w3.org/2000/svg" class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 113.536 0V21h2v-2.243a5.002 5.002 0 01-3.536-8.757" /></svg>Trainer Knowledge Rating</h3>
+      </div>
+      <div class="chart-body">
+        <canvas id="trainerChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Feedback Sessions Table -->
+  <div class="sessions-card glass-panel animate-fade-in" style="animation-delay: 0.2s;">
+    <div class="table-header-flex">
+      <div class="header-left">
+        <h3 class="table-title"><svg xmlns="http://www.w3.org/2000/svg" class="btn-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; display: inline-block; vertical-align: middle; margin-right: 6px;"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>Feedback Sessions</h3>
+        <span class="badge" id="session-count-badge">0 Sessions</span>
+      </div>
+    </div>
+
+    <div class="feedback-table-wrapper">
+      <table id="feedback-table">
+        <thead>
+          <tr>
+            <th>Trainer</th>
+            <th>College</th>
+            <th>Course</th>
+            <th>Year</th>
+            <th>Semester</th>
+            <th>Section</th>
+            <th>Date</th>
+            <th>Slot</th>
+            <th>Feedback Count</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td colspan="10" class="loading-state">
+              <div class="loading-spinner"></div>
+              <span>Fetching feedback sessions...</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="table-footer-controls">
+      <div class="pagination-info" id="pagination-info">
+        Showing 0 to 0 of 0 sessions
+      </div>
+      <div class="pagination-controls" id="pagination-controls">
+        <!-- Pagination links -->
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast Container -->
+<div id="toast-container" class="toast-container"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="{% static 'js/admin_feedback.js' %}" defer></script>
+{% endblock %}

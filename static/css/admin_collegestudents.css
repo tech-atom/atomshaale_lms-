@@ -1,0 +1,362 @@
+/* ---------- CSS Variables (Standardized) ---------- */
+:root {
+  --font-family: 'Century Gothic';
+
+  /* Light Theme */
+  --bg-primary: #ffffff;
+  --bg-surface: #ffffff;
+  
+  --text-main: #000000;
+  --text-muted: #333333;
+  
+  --color-brand: #008037;
+  --color-brand-hover: #00682d;
+  --color-brand-glow: rgba(0, 128, 55, 0.12);
+  
+  --color-teal: #008037;
+  --color-teal-hover: #00682d;
+  
+  --color-danger: #000000;
+  --color-danger-hover: #222222;
+  --color-danger-glow: rgba(0, 0, 0, 0.05);
+  
+  --color-slate: #000000;
+  --color-slate-hover: #222222;
+  
+  --color-blue: #008037;
+  --color-blue-hover: #00682d;
+  
+  --color-warning: #000000;
+  --color-warning-hover: #222222;
+  --color-warning-glow: rgba(0, 0, 0, 0.05);
+
+  --border-light: #e5e7eb;
+  --border-medium: #cbd5e1;
+  
+  --row-alt: #fafafa;
+  --row-hover: #f3faf5;
+  
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.05);
+  
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s ease;
+}
+
+body.dark-mode {
+  /* Dark Theme */
+  --bg-primary: #121212;
+  --bg-surface: #1e1e1e;
+  
+  --text-main: #ffffff;
+  --text-muted: #b3b3b3;
+  
+  --border-light: #2d2d2d;
+  --border-medium: #444444;
+  
+  --row-alt: #1a1a1a;
+  --row-hover: #1a2a1a;
+}
+
+/* ---------- Page Layout ---------- */
+.college-students-wrapper {
+  font-family: var(--font-family);
+  background: var(--bg-primary);
+  color: var(--text-main);
+  padding: 1.5rem;
+  min-height: 100%;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+/* ---------- Page Header ---------- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 1.25rem;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.page-header h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0 0 0.25rem 0;
+  letter-spacing: -0.025em;
+}
+
+.subtitle-text {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+/* ---------- Back Button ---------- */
+.back-btn {
+  text-decoration: none;
+  background: var(--bg-surface);
+  color: var(--text-main);
+  border: 1px solid var(--border-medium);
+  padding: 0.6rem 1.2rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all var(--transition-fast);
+  box-shadow: var(--shadow-sm);
+  font-family: var(--font-family);
+}
+
+.back-btn:hover {
+  background: var(--border-light);
+  transform: translateX(-3px);
+}
+
+/* ---------- Table Container ---------- */
+.table-container {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  overflow-x: auto;
+  margin-bottom: 2rem;
+}
+
+.student-group-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+.student-group-table th {
+  background: var(--row-alt);
+  color: var(--text-muted);
+  font-weight: 700;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.student-group-table td {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-main);
+  vertical-align: middle;
+}
+
+.student-group-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.student-group-table tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+.student-group-table tbody tr:hover {
+  background-color: var(--row-hover) !important;
+}
+
+/* ---------- Badges ---------- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.badge-section {
+  background: rgba(0, 128, 55, 0.1);
+  color: var(--color-brand);
+}
+
+.badge-course {
+  background: rgba(0, 128, 55, 0.1);
+  color: var(--color-brand);
+}
+
+/* ---------- Status Badge ---------- */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+  line-height: 1;
+}
+
+.status-badge.active {
+  background: rgba(0, 128, 55, 0.1);
+  color: var(--color-brand);
+  border-color: rgba(0, 128, 55, 0.2);
+}
+
+.status-badge.paused {
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-main);
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .status-badge.paused {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ---------- View / Action Buttons ---------- */
+.view-btn {
+  background: rgba(0, 128, 55, 0.1);
+  color: var(--color-brand);
+  border: 1px solid rgba(0, 128, 55, 0.2);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all var(--transition-fast);
+}
+
+.view-btn:hover {
+  background: var(--color-brand);
+  color: #ffffff;
+}
+
+.toggle-access-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1.1rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  font-family: var(--font-family);
+}
+
+.toggle-access-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.pause-btn {
+  background: rgba(0, 0, 0, 0.08);
+  color: #000000;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
+body.dark-mode .pause-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.pause-btn:hover:not(:disabled) {
+  background: #000000;
+  color: #ffffff;
+}
+
+body.dark-mode .pause-btn:hover:not(:disabled) {
+  background: #ffffff;
+  color: #000000;
+}
+
+.resume-btn {
+  background: rgba(0, 128, 55, 0.1);
+  color: var(--color-brand);
+  border-color: rgba(0, 128, 55, 0.2);
+}
+
+.resume-btn:hover:not(:disabled) {
+  background: var(--color-brand);
+  color: #ffffff;
+}
+
+/* ---------- Empty State ---------- */
+.empty-row {
+  text-align: center;
+  padding: 4rem !important;
+  color: var(--text-muted);
+}
+
+.empty-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  opacity: 0.5;
+}
+
+/* ---------- Toast Notification ---------- */
+.access-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  padding: 1rem 1.5rem;
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  box-shadow: var(--shadow-xl);
+}
+
+.access-toast.toast-show {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.access-toast.toast-success {
+  background: var(--color-brand);
+}
+
+.access-toast.toast-error {
+  background: var(--color-danger);
+}
+
+/* ---------- Responsive ---------- */
+@media (max-width: 768px) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .back-btn {
+    align-self: flex-start;
+  }
+  
+  td, th {
+    padding: 0.75rem 0.85rem;
+  }
+}

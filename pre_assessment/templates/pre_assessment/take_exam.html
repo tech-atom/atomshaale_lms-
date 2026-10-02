@@ -1,0 +1,329 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assessment: {{ exam.title }} - Atom Shaale</title>
+  <link rel="icon" type="image/png" href="{% static 'images/atomshaalelogo.png' %}">
+
+  <!-- Core stylesheets -->
+  <link rel="stylesheet" href="{% static 'css/exam.css' %}?v=3.8" nonce="{{ request.csp_nonce }}">
+  <link rel="stylesheet" href="{% static 'css/exam_compiler.css' %}?v=2.7" nonce="{{ request.csp_nonce }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <style nonce="{{ request.csp_nonce }}">
+    :root {
+      --primary-color: #004d20;
+      --secondary-color: #008037;
+      --bg-dark: #121212;
+      --card-bg-dark: #1e1e1e;
+      --text-dark: #f0f0f0;
+      --text-muted: #a0a0a0;
+    }
+
+    body {
+      font-family: 'Century Gothic';
+      margin: 0;
+      padding: 0;
+      background: #f4f6f8;
+      min-height: 100vh;
+      color: #2c3e50;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Standalone Header */
+    .portal-header {
+      background: white;
+      padding: 12px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1.5px solid #e2e8f0;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+      z-index: 100;
+    }
+    .portal-branding {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .portal-logo {
+      height: 48px;
+      width: auto;
+    }
+    .portal-title-divider {
+      width: 1.5px;
+      height: 24px;
+      background: #cbd5e1;
+    }
+    .portal-title-text {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--primary-color);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .candidate-info-badge {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f1f5f9;
+      padding: 8px 16px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+    }
+    .candidate-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .candidate-meta {
+      display: flex;
+      flex-direction: column;
+    }
+    .candidate-meta-name {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #1e293b;
+      line-height: 1.2;
+    }
+    .candidate-meta-email {
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+
+    /* Main Container override */
+    .portal-main {
+      flex: 1;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .assessment-shell {
+      flex: 1;
+      max-width: 1300px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* Overriding exam.css styles for standalone aesthetics */
+    .exam-details-table {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 24px;
+    }
+    
+    .exam-declaration {
+      background: white;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+      border: 1px solid #e2e8f0;
+    }
+
+    #startButton {
+      display: none;
+      margin: 24px auto;
+      padding: 14px 48px;
+      font-family: inherit;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: white;
+      background: var(--primary-color);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 8px 16px rgba(0, 77, 32, 0.15);
+      transition: all 0.25s ease;
+    }
+    #startButton:not([hidden]) {
+      display: block;
+    }
+
+    /* Hide the dates/times columns rendered by the shared exam.js script */
+    .desktop-exam-table-view th:nth-child(5),
+    .desktop-exam-table-view th:nth-child(6),
+    .desktop-exam-table-view th:nth-child(7),
+    .desktop-exam-table-view th:nth-child(8),
+    .desktop-exam-table-view td:nth-child(5),
+    .desktop-exam-table-view td:nth-child(6),
+    .desktop-exam-table-view td:nth-child(7),
+    .desktop-exam-table-view td:nth-child(8) {
+      display: none !important;
+    }
+    #startButton:hover {
+      background: #003314;
+      transform: translateY(-2px);
+      box-shadow: 0 12px 24px rgba(0, 77, 32, 0.25);
+    }
+    #startButton:disabled {
+      background: #cbd5e1;
+      cursor: not-allowed;
+      box-shadow: none;
+      transform: none;
+    }
+
+    /* Dark Mode Settings if active */
+    html[data-theme="dark"] body {
+      background: var(--bg-dark);
+      color: var(--text-dark);
+    }
+    html[data-theme="dark"] .portal-header {
+      background: var(--card-bg-dark);
+      border-bottom-color: #333;
+    }
+    html[data-theme="dark"] .candidate-info-badge {
+      background: #2a2a2a;
+      border-color: #333;
+    }
+    html[data-theme="dark"] .candidate-meta-name {
+      color: var(--text-dark);
+    }
+    html[data-theme="dark"] .candidate-meta-email {
+      color: var(--text-muted);
+    }
+    html[data-theme="dark"] .exam-details-table,
+    html[data-theme="dark"] .exam-declaration {
+      background: var(--card-bg-dark);
+      border-color: #333;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Nonce and API configurations expected by exam.js -->
+  <div id="exam-api-urls" 
+    data-current-user="pre_{{ candidate.email }}" 
+    data-get-exam="{% url 'pre_assessment_get_exam_api' code %}"
+    data-get-questions="{% url 'pre_assessment_get_questions_api' code %}"
+    data-live-update="{% url 'pre_assessment_live_update_api' code %}"
+    data-submit="{% url 'pre_assessment_submit_api' code %}"
+    data-performance="{% url 'pre_assessment_thank_you' code %}">
+  </div>
+
+  <!-- Header Section -->
+  <header class="portal-header">
+    <div class="portal-branding">
+      <img src="{% static 'images/atomshaalelogo.png' %}" alt="Atom Logo" class="portal-logo" />
+      <div class="portal-title-divider"></div>
+      <span class="portal-title-text">PRE-Assessment Portal</span>
+    </div>
+    
+    <div class="candidate-info-badge">
+      <div class="candidate-avatar">
+        {{ candidate.name.0|upper }}
+      </div>
+      <div class="candidate-meta">
+        <span class="candidate-meta-name">{{ candidate.name }}</span>
+        <span class="candidate-meta-email">{{ candidate.email }}</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="portal-main">
+    <section class="assessment-shell">
+      
+      <!-- Loader -->
+      <div id="exam-loader" class="assessment-loader" aria-live="polite">Loading your assessment...</div>
+
+      <!-- Exam Metadata details (Populated dynamically) -->
+      <div id="exam-details-table" class="exam-details-table" hidden>
+        <div class="desktop-exam-table-view">
+          <table>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Duration (min)</th>
+                <th>Total Marks</th>
+                <th>Negative Mark</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="exam-table-body"></tbody>
+          </table>
+        </div>
+        
+        <div class="mobile-exam-card-view" id="exam-mobile-card"></div>
+        <p class="hint" style="text-align: center; margin-top: 16px; color: var(--text-grey); font-size: 0.85rem;">
+          Click "Take Exam" to continue to the consent guidelines.
+        </p>
+      </div>
+
+      <!-- Guidelines Consent screen -->
+      <div id="declaration" class="exam-declaration" hidden>
+        <div class="declaration-card">
+          <label>
+            <strong style="font-size: 1.1rem; color: var(--primary-color); display: block; margin-bottom: 12px;">
+              Important Instructions Before You Begin
+            </strong>
+            <div>
+              <ul style="padding-left: 20px; line-height: 1.7; margin-bottom: 20px;">
+                <li>Read all questions carefully before starting.</li>
+                <li>Use a laptop/desktop with a stable internet connection.</li>
+                <li>Use the latest Google Chrome (or a compatible browser).</li>
+                <li>Do not refresh, close, or switch browser tabs during the exam.</li>
+                <li>Stay in full-screen mode throughout the exam.</li>
+                <li>Copying, pasting, tab switching, and using external devices are strictly prohibited.</li>
+                <li>Ensure your device is charged or connected to a power source.</li>
+                <li>The exam will be auto-submitted when the timer expires.</li>
+                <li>Click Submit only after completing all questions.</li>
+              </ul>
+              
+              <div class="declaration-consent" style="display: flex; gap: 10px; align-items: flex-start; padding: 12px; background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px;">
+                <input type="checkbox" id="agreeDeclaration" style="margin-top: 4px; width: 18px; height: 18px; cursor: pointer;" aria-label="I agree to follow the exam rules" />
+                <p style="margin: 0; font-size: 0.9rem; line-height: 1.4; color: #1e293b;">
+                  <strong>I agree to follow the exam rules and understand that any violation may lead to penalties.</strong>
+                </p>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Start Exam trigger -->
+      <button id="startButton" hidden>Start Exam</button>
+
+      <!-- Dynamic Exam Taking Workspace (Populated by exam.js) -->
+      <div id="examArea" hidden>
+        <div class="exam-area-head">
+          <h3 id="exam-title" style="color: var(--primary-color); font-weight: 700;"></h3>
+          <div class="exam-head-meta">
+            <p id="question-progress" class="question-progress"></p>
+            <p id="tab-switch-counter" class="tab-switch-counter" hidden></p>
+            <p class="timer-line">
+              <i class="far fa-clock"></i> <strong>Time Left:</strong> 
+              <span id="timer" class="timer green" style="font-family: monospace; font-weight: 700; font-size: 1.15rem;">00:00</span>
+            </p>
+          </div>
+        </div>
+        <div class="exam-layout">
+          <div class="question-panel">
+            <form id="exam-form" method="post" autocomplete="off">{% csrf_token %}</form>
+          </div>
+          <aside id="question-side-panel" class="palette-panel"></aside>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Load compilers and exam controller scripts -->
+  <script src="{% static 'js/exam_compiler.js' %}?v=2.10" nonce="{{ request.csp_nonce }}"></script>
+  <script src="{% static 'js/exam.js' %}?v=3.8" nonce="{{ request.csp_nonce }}"></script>
+</body>
+</html>

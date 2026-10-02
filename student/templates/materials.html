@@ -1,0 +1,110 @@
+{% extends 'student_base.html' %}
+{% load static %}
+
+{% block title %}Study Materials{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/materials.css' %}?v=2.0">
+{% endblock %}
+
+{% block content %}
+<div id="materials-urls"
+     data-get-domains="{% url 'student_get_domain' %}"
+     data-get-subdomains="{% url 'student_get_subdomains' %}"
+     data-get-modules="{% url 'student_get_modules' %}"
+     data-get-materials="{% url 'api_student_get_materials' %}">
+</div>
+
+<div class="materials-page-wrap">
+  <!-- Top Hero Header -->
+  <div class="materials-hero-header">
+    <div class="hero-left">
+      <h1 class="page-title">Study Materials</h1>
+      <p class="page-subtitle">Access and download your learning materials anytime, anywhere.</p>
+    </div>
+    <div class="hero-right">
+      <div class="hero-books-illustration">
+        <svg width="110" height="90" viewBox="0 0 120 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M20 70L80 40L100 50L40 80L20 70Z" fill="#15803D"/>
+          <path d="M20 70L40 80V86L20 76V70Z" fill="#166534"/>
+          <path d="M40 80L100 50V56L40 86V80Z" fill="#22C55E"/>
+          <path d="M25 50L85 20L105 30L45 60L25 50Z" fill="#22C55E"/>
+          <path d="M25 50L45 60V66L25 56V50Z" fill="#15803D"/>
+          <path d="M45 60L105 30V36L45 66V60Z" fill="#4ADE80"/>
+          <path d="M15 30L75 0L95 10L35 40L15 30Z" fill="#166534"/>
+          <path d="M15 30L35 40V46L15 36V30Z" fill="#14532D"/>
+          <path d="M35 40L95 10V16L35 46V40Z" fill="#15803D"/>
+          <circle cx="105" cy="75" r="8" fill="#22C55E"/>
+          <path d="M105 67V83" stroke="#ffffff" stroke-width="2"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Search & Filter Controls Toolbar -->
+  <div class="materials-toolbar">
+    <div class="toolbar-left">
+      <div class="custom-select-wrap">
+        <select id="categoryFilter" class="toolbar-select">
+          <option value="all">All Materials</option>
+        </select>
+        <span class="select-chevron">▾</span>
+      </div>
+
+      <div class="search-input-wrap">
+        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input type="text" id="searchInput" placeholder="Search materials..." />
+      </div>
+    </div>
+
+    <div class="toolbar-right">
+      <span class="sort-label">Sort by:</span>
+      <div class="custom-select-wrap">
+        <select id="sortSelect" class="toolbar-select">
+          <option value="newest">Newest First</option>
+          <option value="oldest">Oldest First</option>
+        </select>
+        <span class="select-chevron">▾</span>
+      </div>
+
+      <div class="view-mode-toggle">
+        <button type="button" class="view-mode-btn grid-view-btn active" title="Grid View">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"></rect>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"></rect>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"></rect>
+          </svg>
+        </button>
+        <button type="button" class="view-mode-btn list-view-btn" title="List View">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="8" y1="6" x2="21" y2="6"></line>
+            <line x1="8" y1="12" x2="21" y2="12"></line>
+            <line x1="8" y1="18" x2="21" y2="18"></line>
+            <line x1="3" y1="6" x2="3.01" y2="6"></line>
+            <line x1="3" y1="12" x2="3.01" y2="12"></line>
+            <line x1="3" y1="18" x2="3.01" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Materials Cards Grid -->
+  <div id="materialsList" class="materials-cards-grid"></div>
+</div>
+
+<!-- Legacy Hidden Selectors Container for Compatibility -->
+<div class="filter-wrapper hidden" style="display: none;">
+  <select id="domain"></select>
+  <select id="subdomain"></select>
+  <select id="module"></select>
+</div>
+{% endblock %}
+
+{% block extra_script %}
+<script src="{% static 'js/materials.js' %}"></script>
+{% endblock %}

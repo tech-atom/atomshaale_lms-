@@ -1,0 +1,56 @@
+{% extends 'admin_base.html' %}
+{% load static %}
+
+{% block extra_head %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Fallback CSP (django-csp will set headers, but meta is safe) -->
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self' https://cdnjs.cloudflare.com;
+                 style-src 'self' https://fonts.googleapis.com https://cdnjs.cloudflare.com;
+                 font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;
+                 img-src 'self' data: blob: https://s3.amazonaws.com https://*.amazonaws.com;
+                 connect-src 'self' https://s3.amazonaws.com https://*.amazonaws.com;
+                 object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';">
+  <!-- CSRF token for JS fetch -->
+  <meta name="csrf-token" content="{{ csrf_token }}">
+  <link rel="stylesheet" href="{% static 'css/admin_assessment.css' %}?v=20260409-1">
+{% endblock %}
+
+{% block content %}
+
+  <div id="assessment-root"></div>
+
+  <div id="assessment-api-urls"
+       data-list-exams="{% url 'admin_list_exams' %}"
+       data-add-exam="{% url 'admin_add_exam'  %}"
+       data-update-exam="{% url 'admin_update_exam' '00000000-0000-0000-0000-000000000000' %}"
+       data-delete-exam="{% url 'admin_delete_exam' '00000000-0000-0000-0000-000000000000' %}"
+       data-get-exam-questions="{% url 'admin_get_exam_questions' '00000000-0000-0000-0000-000000000000' %}"
+       data-add-question="{% url 'admin_add_question' '00000000-0000-0000-0000-000000000000' %}"
+       data-update-question="{% url 'admin_update_question' '00000000-0000-0000-0000-000000000000' 1 %}"
+       data-delete-question="{% url 'admin_delete_question' '00000000-0000-0000-0000-000000000000' 1 %}"
+       data-schedule-exam="{% url 'admin_schedule_exam' '00000000-0000-0000-0000-000000000000' %}"
+       data-list-scheduled-exams="{% url 'admin_list_scheduled_exams' %}"
+       data-update-schedule="{% url 'admin_update_schedule' '00000000-0000-0000-0000-000000000000' %}"
+       data-delete-schedule="{% url 'admin_delete_schedule' '00000000-0000-0000-0000-000000000000' %}"
+       data-dropdowns-url="{% url 'admin_dropdown_data' %}"
+       data-download-exam-paper="{% url 'admin_download_exam_paper' '00000000-0000-0000-0000-000000000000' %}"
+        data-bulk-upload="{% url 'admin_bulk_upload_questions' '00000000-0000-0000-0000-000000000000' %}"
+        data-view-submissions="{% url 'admin_exam_submissions' '00000000-0000-0000-0000-000000000000' %}"
+        data-allow-retake="{% url 'allow_exam_retake' 1 %}"
+        data-remove-attempt="{% url 'remove_student_exam_attempt' 1 %}">
+  </div>
+
+  <!-- Toast container -->
+  <div id="assessment-toast"
+       class="toast"
+       role="alert"
+       aria-live="assertive"
+       aria-atomic="true"></div>
+{% endblock %}
+
+{% block extra_scripts %}
+ <script src="{% static 'js/admin_assessment.js' %}?v=20260409-1" nonce="{{ request.csp_nonce }}" defer></script>
+
+{% endblock %}

@@ -1,0 +1,38 @@
+{% extends "admin_base.html" %}
+{% load static %}
+
+{% block content %}
+
+<h2>Live Exam Monitor</h2>
+
+<div id="monitor-root">
+
+<table class="exam-table">
+
+<thead>
+<tr>
+<th>Student</th>
+<th>Status</th>
+<th>Attempted</th>
+<th>Score</th>
+<th>Cheating</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="live-monitor-body"></tbody>
+
+</table>
+
+</div>
+
+<div id="monitor-api"
+     data-schedule-id="{{ schedule_id }}"
+     data-live-url="{% url 'admin_live_exam_status' schedule_id %}"
+     data-force-submit-url="{% url 'admin_force_submit_exam' '00000000-0000-0000-0000-000000000000' %}"
+     data-kick-url="{% url 'admin_kick_student_exam' '00000000-0000-0000-0000-000000000000' %}">
+</div>
+
+<script src="{% static 'js/exam_monitor.js' %}" defer></script>
+
+{% endblock %}

@@ -1,0 +1,363 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ATOM</title>
+
+  <!-- Fonts & Icons -->
+  <!-- Font Awesome for the stat icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <!-- External CSS -->
+  <link rel="stylesheet" href="{% static 'css/home.css' %}?v=1.1.5">
+</head>
+
+<body>
+
+  <!-- Background Decorative Elements -->
+  <div class="bg-elements">
+    <!-- Top-Left Curves -->
+    <svg class="bg-curve bg-curve-top" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"
+      preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="grad-top-back" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#00a84f" />
+          <stop offset="100%" stop-color="#a3e2bb" stop-opacity="0.1" />
+        </linearGradient>
+        <linearGradient id="grad-top-front" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#004d20" />
+          <stop offset="100%" stop-color="#008037" />
+        </linearGradient>
+      </defs>
+      <!-- Back Light Green Layer -->
+      <path d="M0,380 C270,50 510,50 750,140 C990,230 1230,10 1440,0 L1440,0 L0,0 Z" fill="url(#grad-top-back)"
+        opacity="0.6" />
+      <!-- Front Dark Green Layer -->
+      <path d="M0,320 C240,40 480,40 720,120 C960,200 1200,8 1440,0 L1440,0 L0,0 Z" fill="url(#grad-top-front)" />
+    </svg>
+
+    <!-- Bottom-Right Curves -->
+    <svg class="bg-curve bg-curve-bottom" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320"
+      preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="grad-bottom-back" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#a3e2bb" stop-opacity="0.1" />
+          <stop offset="100%" stop-color="#00a84f" />
+        </linearGradient>
+        <linearGradient id="grad-bottom-front" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#008037" />
+          <stop offset="100%" stop-color="#004d20" />
+        </linearGradient>
+      </defs>
+      <!-- Back Light Green Layer -->
+      <path d="M600,320 C850,160 1100,80 1440,100 L1440,320 L600,320 Z" fill="url(#grad-bottom-back)" opacity="0.6" />
+      <!-- Front Dark Green Layer -->
+      <path d="M700,320 C920,200 1180,120 1440,160 L1440,320 L700,320 Z" fill="url(#grad-bottom-front)" />
+    </svg>
+
+    <!-- Dot Grids -->
+    <!-- Top Left Dot Grid -->
+    <svg class="dot-grid grid-top-left" width="84" height="84">
+      <defs>
+        <pattern id="dotPatternTopLeft" x="0" y="0" width="14" height="14" patternUnits="userSpaceOnUse">
+          <circle cx="3" cy="3" r="2.2" fill="#a5d6a7" opacity="0.5" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#dotPatternTopLeft)" />
+    </svg>
+
+    <!-- Top Right Dot Grid -->
+    <svg class="dot-grid grid-top-right" width="84" height="84">
+      <defs>
+        <pattern id="dotPatternTopRight" x="0" y="0" width="14" height="14" patternUnits="userSpaceOnUse">
+          <circle cx="3" cy="3" r="2.2" fill="#a5d6a7" opacity="0.5" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#dotPatternTopRight)" />
+    </svg>
+
+    <!-- Bottom Left Dot Grid -->
+    <svg class="dot-grid grid-bottom-left" width="84" height="84">
+      <defs>
+        <pattern id="dotPatternBottomLeft" x="0" y="0" width="14" height="14" patternUnits="userSpaceOnUse">
+          <circle cx="3" cy="3" r="2.2" fill="#a5d6a7" opacity="0.5" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#dotPatternBottomLeft)" />
+    </svg>
+
+    <!-- Bottom Right Dot Grid -->
+    <svg class="dot-grid grid-bottom-right" width="84" height="84">
+      <defs>
+        <pattern id="dotPatternBottomRight" x="0" y="0" width="14" height="14" patternUnits="userSpaceOnUse">
+          <circle cx="3" cy="3" r="2.2" fill="#a5d6a7" opacity="0.5" />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" fill="url(#dotPatternBottomRight)" />
+    </svg>
+
+    <!-- Subtle Stars -->
+    <svg class="bg-star star-1" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a5d6a7"
+      stroke-width="1.5" opacity="0.6">
+      <path d="M12,2 L14.5,9.5 L22,12 L14.5,14.5 L12,22 L9.5,14.5 L2,12 L9.5,9.5 Z" />
+    </svg>
+    <svg class="bg-star star-2" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a5d6a7"
+      stroke-width="1.5" opacity="0.6">
+      <path d="M12,2 L14.5,9.5 L22,12 L14.5,14.5 L12,22 L9.5,14.5 L2,12 L9.5,9.5 Z" />
+    </svg>
+    <svg class="bg-star star-3" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#a5d6a7"
+      stroke-width="1.5" opacity="0.6">
+      <path d="M12,2 L14.5,9.5 L22,12 L14.5,14.5 L12,22 L9.5,14.5 L2,12 L9.5,9.5 Z" />
+    </svg>
+  </div>
+
+  <!-- Navbar -->
+  <div class="navbar">
+    <div class="nav-right">
+      <!-- PRE-Assessment Code Section Inline -->
+      <form id="preAssessmentCodeForm" class="pre-form">
+        {% csrf_token %}
+        <div class="pre-input-group">
+
+          <input type="hidden" id="preCode" name="code" value="">
+          <button type="button" id="preCodeLaunchBtn" class="pre-submit-btn">
+            <span>Access Code</span>
+          </button>
+        </div>
+        <p id="preCodeError" class="pre-error-message" style="display: none;"></p>
+      </form>
+
+      <div class="auth-btns">
+        <a href="{% url 'student_register' %}" class="register-btn">Register</a>
+        <a href="{% url 'login' %}" class="login-btn"> Login</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero Section -->
+  <div class="hero-container">
+    <!-- Left Column: Branding and Intro -->
+    <div class="hero-left">
+      <div class="logo-wrapper">
+        <img src="{% static 'images/atomshaalelogo.png' %}" alt="ATOM Logo" class="main-logo" />
+      </div>
+      <div class="pill-tag">LEARN • UNLEARN • RELEARN</div>
+      <h1 class="hero-title">Welcome to <span class="green-text">ATOM </span></h1>
+      <div class="hero-desc-static">
+        <span class="subtitle-text">What Makes ATOM  Different?</span>
+        <div class="slide-bullet-columns">
+          <div class="bullet-column">
+            <span class="bullet-item">• Instant Access to Learning</span>
+            <span class="bullet-item">• Progress that Speaks</span>
+          </div>
+          <div class="bullet-column">
+            <span class="bullet-item">• Smarter Assessments that Teach</span>
+            <span class="bullet-item">• Learn at Your Speed</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="features-bar">
+        <div class="feature-item">
+          <i class="fa-regular fa-clipboard"></i>
+          <span>ASSESSMENTS</span>
+        </div>
+        <div class="feature-divider"></div>
+        <div class="feature-item">
+          <i class="fa-regular fa-circle-play"></i>
+          <span>CONTENT</span>
+        </div>
+        <div class="feature-divider"></div>
+        <div class="feature-item">
+          <i class="fa-solid fa-chart-column"></i>
+          <span>PROGRESS</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Center Column: Animated Graphic -->
+    <div class="hero-center">
+      <img src="{% static 'images/img.png' %}" alt="Hero Image" class="center-graphic" />
+    </div>
+  </div>
+
+  <!-- Bottom Stats Section -->
+  <div class="stats-section">
+    <div class="stats-container">
+      <div class="stat-card">
+        <div class="stat-icon-wrapper">
+          <i class="fa-solid fa-graduation-cap"></i>
+        </div>
+        <div class="stat-content">
+          <h2 class="stat-number"><span id="studentCount">0</span></h2>
+          <h3 class="stat-title">Happy Students</h3>
+          <p class="stat-desc">Growing every day</p>
+        </div>
+        <div class="card-line"></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon-wrapper">
+          <i class="fa-solid fa-handshake"></i>
+        </div>
+        <div class="stat-content">
+          <h2 class="stat-number"><span id="clientCount">0</span></h2>
+          <h3 class="stat-title">Clients</h3>
+          <p class="stat-desc">Trusted by leading organizations</p>
+        </div>
+        <div class="card-line"></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon-wrapper">
+          <i class="fa-solid fa-award"></i>
+        </div>
+        <div class="stat-content">
+          <h2 class="stat-number"><span id="yearCount">0</span></h2>
+          <h3 class="stat-title">Years of Training</h3>
+          <p class="stat-desc">Excellence in education & training</p>
+        </div>
+        <div class="card-line"></div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon-wrapper">
+          <i class="fa-solid fa-users"></i>
+        </div>
+        <div class="stat-content">
+          <h2 class="stat-number"><span id="visitorCount">0</span></h2>
+          <h3 class="stat-title">Visitors</h3>
+          <p class="stat-desc">Exploring knowledge with us</p>
+        </div>
+        <div class="card-line"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- External JavaScript -->
+  <script src="{% static 'js/home.js' %}?v=1.0.7"></script>
+
+  <script nonce="{{ request.csp_nonce }}">
+    document.addEventListener('DOMContentLoaded', function () {
+      const form = document.getElementById('preAssessmentCodeForm');
+      const errorEl = document.getElementById('preCodeError');
+      const submitBtn = document.getElementById('preCodeLaunchBtn');
+      const codeInput = document.getElementById('preCode');
+
+      function createPopup() {
+        const existing = document.getElementById('preCodePopup');
+        if (existing) return existing;
+
+        const popup = document.createElement('div');
+        popup.id = 'preCodePopup';
+        popup.style.position = 'fixed';
+        popup.style.top = '0';
+        popup.style.left = '0';
+        popup.style.width = '100%';
+        popup.style.height = '100%';
+        popup.style.background = 'rgba(0, 0, 0, 0.5)';
+        popup.style.display = 'flex';
+        popup.style.alignItems = 'center';
+        popup.style.justifyContent = 'center';
+        popup.style.zIndex = '9999';
+
+        popup.innerHTML = `
+          <div style="width:min(440px,90%); background:#fff; border-radius:20px; padding:26px; box-shadow:0 18px 45px rgba(15,23,42,0.18);">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+              <div>
+                <h2 style="margin:0; font-size:1.2rem; color:#0f172a;">Enter Exam Code</h2>
+                <p style="margin:4px 0 0; color:#64748b; font-size:0.95rem;">Please enter the access code to continue.</p>
+              </div>
+              <button type="button" id="preCodePopupClose" style="background:none; border:none; font-size:1.7rem; color:#334155; cursor:pointer; line-height:1;">&times;</button>
+            </div>
+            <label for="popupPreCode" style="display:block; margin-bottom:10px; font-weight:600; color:#0f172a;">Access Code</label>
+            <input id="popupPreCode" type="text" placeholder="Enter access code" style="width:100%; padding:14px 16px; border:1px solid #cbd5e1; border-radius:14px; font-size:0.95rem; outline:none; color:#0f172a;" maxlength="20" autocomplete="off" />
+            <p id="popupPreCodeError" style="display:none; margin:10px 0 0; color:#dc2626; font-size:0.92rem;"></p>
+            <button type="button" id="popupPreCodeSubmit" style="width:100%; margin-top:18px; padding:13px 16px; border:none; border-radius:14px; background:#0f172a; color:#fff; font-size:0.95rem; font-weight:700; cursor:pointer;">Continue</button>
+          </div>
+        `;
+
+        document.body.appendChild(popup);
+        return popup;
+      }
+
+      function closePopup() {
+        const popup = document.getElementById('preCodePopup');
+        if (popup) popup.remove();
+      }
+
+      async function submitCode() {
+        errorEl.style.display = 'none';
+        submitBtn.disabled = true;
+        const origText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+
+        try {
+          const formData = new FormData(form);
+          const response = await fetch('/pre-assessment/enter-code/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          });
+
+          const data = await response.json();
+          if (response.ok && data.success) {
+            window.location.href = data.redirect_url;
+          } else {
+            errorEl.textContent = data.error || 'Invalid code. Please try again.';
+            errorEl.style.display = 'block';
+          }
+        } catch (err) {
+          console.error(err);
+          errorEl.textContent = 'Connection error. Please try again.';
+          errorEl.style.display = 'block';
+        } finally {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = origText;
+        }
+      }
+
+      if (form && submitBtn) {
+        submitBtn.addEventListener('click', function () {
+          errorEl.style.display = 'none';
+          const popup = createPopup();
+          const popupInput = popup.querySelector('#popupPreCode');
+          const popupError = popup.querySelector('#popupPreCodeError');
+          const popupSubmit = popup.querySelector('#popupPreCodeSubmit');
+          const popupClose = popup.querySelector('#preCodePopupClose');
+
+          popupInput.value = codeInput.value || '';
+          popupInput.focus();
+
+          popupClose.addEventListener('click', closePopup);
+          popup.addEventListener('click', function (e) {
+            if (e.target === popup) closePopup();
+          });
+
+          popupSubmit.addEventListener('click', async function () {
+            popupError.style.display = 'none';
+            const popupValue = popupInput.value.trim();
+            if (!popupValue) {
+              popupError.textContent = 'Please enter the exam code.';
+              popupError.style.display = 'block';
+              return;
+            }
+            codeInput.value = popupValue;
+            closePopup();
+            await submitCode();
+          });
+        });
+      }
+    });
+  </script>
+
+</body>
+
+</html>

@@ -1,0 +1,304 @@
+/* ========================================================================
+   Admin Dashboard — Futuristic Glassmorphic Theme (Light & Dark Mode)
+   ======================================================================== */
+
+:root {
+  --dash-primary: #f8fafc;
+  --dash-surface: rgba(255, 255, 255, 0.7);
+  --dash-input: #ffffff;
+  --dash-border: rgba(226, 232, 240, 0.8);
+  --dash-border-glass: rgba(255, 255, 255, 0.45);
+  
+  --dash-text-main: #1e293b;
+  --dash-text-muted: #64748b;
+  --dash-text-inverse: #ffffff;
+  
+  --dash-green: #008037;
+  --dash-green-hover: #00662c;
+  --dash-green-glow: rgba(0, 128, 55, 0.12);
+
+  --accent-blue: #3b82f6;
+  --accent-purple: #8b5cf6;
+  --accent-orange: #f97316;
+  --accent-rose: #f43f5e;
+  --accent-teal: #0d9488;
+  --accent-indigo: #4f46e5;
+  
+  --dash-card-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+  --dash-hero-shadow: 0 12px 30px rgba(0, 128, 55, 0.06);
+  --dash-backdrop-blur: blur(16px);
+  --dash-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --dash-font: 'Inter', 'Outfit', sans-serif;
+}
+
+/* Dark Mode Tokens Override */
+body.dark-mode {
+  --dash-primary: #0b0f19;
+  --dash-surface: rgba(20, 27, 45, 0.65);
+  --dash-input: #151d30;
+  --dash-border: rgba(51, 65, 85, 0.45);
+  --dash-border-glass: rgba(255, 255, 255, 0.06);
+  
+  --dash-text-main: #f1f5f9;
+  --dash-text-muted: #94a3b8;
+  --dash-text-inverse: #0b0f19;
+  
+  --dash-green: #10b981;
+  --dash-green-hover: #34d399;
+  --dash-green-glow: rgba(16, 185, 129, 0.25);
+  
+  --dash-card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+  --dash-hero-shadow: 0 12px 35px rgba(0, 0, 0, 0.4);
+}
+
+/* ---------- Reset & Layout Wrapper ---------- */
+.dash-wrap {
+  font-family: "Century Gothic";
+  background-color: var(--dash-primary);
+  color: var(--dash-text-main);
+  padding: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  box-sizing: border-box;
+  min-height: calc(100vh - 60px);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.25; }
+  50% { opacity: 0.4; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ---------- Glassmorphism Base Panel ---------- */
+.glass-panel {
+  background: var(--dash-surface);
+  backdrop-filter: var(--dash-backdrop-blur);
+  -webkit-backdrop-filter: var(--dash-backdrop-blur);
+  border: 1px solid var(--dash-border-glass);
+  border-radius: 18px;
+  box-shadow: var(--dash-card-shadow);
+  transition: var(--dash-transition);
+}
+
+/* ---------- Dashboard Hero Panel ---------- */
+.dash-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 35px 30px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, rgba(0, 128, 55, 0.04) 0%, rgba(59, 130, 246, 0.04) 100%), var(--dash-surface);
+  border: 1px solid var(--dash-border-glass);
+  box-shadow: var(--dash-hero-shadow);
+  backdrop-filter: var(--dash-backdrop-blur);
+  -webkit-backdrop-filter: var(--dash-backdrop-blur);
+}
+
+.dash-hero::before {
+  content: "";
+  position: absolute;
+  width: 250px;
+  height: 250px;
+  right: -50px;
+  top: -80px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--dash-green-glow) 0%, rgba(0, 128, 55, 0) 70%);
+  pointer-events: none;
+  animation: pulseGlow 6s infinite ease-in-out;
+}
+
+.dash-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dash-green);
+  background: var(--dash-green-glow);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  margin-bottom: 15px;
+  font-weight: 700;
+}
+
+.dash-title {
+  margin: 0;
+  font-size: 2.2rem;
+  color: var(--dash-text-main);
+  font-family: "Century Gothic";
+  font-weight: 800;
+  line-height: 1.1;
+  background: linear-gradient(135deg, var(--dash-text-main) 30%, var(--dash-green) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+body.dark-mode .dash-title {
+  background: linear-gradient(135deg, var(--dash-text-main) 60%, var(--dash-green) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dash-subtitle {
+  margin: 10px 0 0 0;
+  color: var(--dash-text-muted);
+  font-size: 0.95rem;
+  max-width: 680px;
+  line-height: 1.5;
+}
+
+/* ---------- Quick Action Buttons ---------- */
+.dash-quick {
+  margin-top: 25px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  position: relative;
+  z-index: 1;
+}
+
+.dash-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-decoration: none;
+  border-radius: 12px;
+  padding: 12px 18px;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border: 1px solid transparent;
+  transition: var(--dash-transition);
+  cursor: pointer;
+}
+
+.dash-btn-primary {
+  background: var(--dash-green);
+  color: var(--dash-text-inverse);
+  box-shadow: 0 4px 15px var(--dash-green-glow);
+}
+.dash-btn-primary:hover {
+  background: var(--dash-green-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.35);
+}
+
+.dash-btn-soft {
+  background: var(--dash-input);
+  border-color: var(--dash-border);
+  color: var(--dash-text-main);
+}
+.dash-btn-soft:hover {
+  background: var(--dash-primary);
+  border-color: var(--dash-text-muted);
+  transform: translateY(-2px);
+}
+
+/* ---------- Statistics Cards Grid ---------- */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 20px;
+}
+
+.stat-card {
+  padding: 20px;
+}
+.stat-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 35px 0 rgba(31, 38, 135, 0.08);
+  border-color: rgba(255, 255, 255, 0.6);
+}
+body.dark-mode .stat-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.stat-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.stat-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+}
+
+/* Dynamic color modes for card indicators */
+.bg-blue { background-color: rgba(59, 130, 246, 0.12); color: var(--accent-blue); }
+.bg-emerald { background-color: rgba(16, 185, 129, 0.12); color: var(--dash-green); }
+.bg-teal { background-color: rgba(13, 148, 136, 0.12); color: var(--accent-teal); }
+.bg-purple { background-color: rgba(139, 92, 246, 0.12); color: var(--accent-purple); }
+.bg-orange { background-color: rgba(249, 115, 22, 0.12); color: var(--accent-orange); }
+.bg-indigo { background-color: rgba(79, 70, 229, 0.12); color: var(--accent-indigo); }
+.bg-rose { background-color: rgba(244, 63, 94, 0.12); color: var(--accent-rose); }
+
+.stat-label {
+  color: var(--dash-text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  margin: 0;
+}
+
+.stat-value {
+  margin: 4px 0 0 0;
+  color: var(--dash-text-main);
+  font-size: 2.1rem;
+  font-weight: 800;
+  font-family: 'Century Gothic';
+  line-height: 1;
+}
+
+.stat-note {
+  margin: 8px 0 0 0;
+  color: var(--dash-text-muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+}
+
+/* ---------- Responsive Layout Breakpoints ---------- */
+@media (max-width: 900px) {
+  .dash-wrap {
+    padding: 20px;
+    gap: 20px;
+  }
+  .dash-hero {
+    padding: 25px 20px;
+  }
+  .dash-title {
+    font-size: 1.8rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .dash-quick {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .dash-btn {
+    width: 100%;
+  }
+  .dash-stats {
+    grid-template-columns: 1fr;
+  }
+}

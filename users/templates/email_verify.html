@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load i18n static %}
+
+{% block title %}Verify Your Email & Set Password{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/user/email_verify.css' %}">
+<script defer src="{% static 'js/email_verify.js' %}?v=2"></script>
+{% endblock %}
+
+{% block content %}
+<div class="verify-wrapper">
+  <div class="verify-card">
+    <div class="verify-header">
+      <img src="{% static 'images/atomshaalelogo.png' %}" alt="AtomShaale Logo" class="logo">
+      <h2>{% trans "Set Your Password" %}</h2>
+      <p>{% trans "Please choose a strong password to complete your email verification." %}</p>
+    </div>
+
+    <div id="server-popups" class="hidden-popups" aria-hidden="true">
+      {% if messages %}
+        {% for message in messages %}
+          <div class="popup-message" data-level="{{ message.tags|default:'info' }}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+      {% for field in form %}
+        {% for error in field.errors %}
+          <div class="popup-message" data-level="error">{{ field.label }}: {{ error }}</div>
+        {% endfor %}
+      {% endfor %}
+      {% for error in form.non_field_errors %}
+        <div class="popup-message" data-level="error">{{ error }}</div>
+      {% endfor %}
+    </div>
+
+    <form method="post" novalidate class="verify-form">
+      {% csrf_token %}
+
+      <div class="field-group password-field">
+        <label for="{{ form.new_password1.id_for_label }}">{{ form.new_password1.label }}</label>
+        <div class="password-wrapper">
+          {{ form.new_password1 }}
+          <button type="button" class="toggle-password" data-target="id_new_password1" aria-label="Show password">Show</button>
+        </div>
+        {% if form.new_password1.errors %}
+          <div class="field-error">{{ form.new_password1.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="field-group password-field">
+        <label for="{{ form.new_password2.id_for_label }}">{{ form.new_password2.label }}</label>
+        <div class="password-wrapper">
+          {{ form.new_password2 }}
+          <button type="button" class="toggle-password" data-target="id_new_password2" aria-label="Show password">Show</button>
+        </div>
+        {% if form.new_password2.errors %}
+          <div class="field-error">{{ form.new_password2.errors.0 }}</div>
+        {% endif %}
+      </div>
+
+      <div class="password-guidelines">
+        <p class="guidelines-title">Password must include:</p>
+        <ul>
+          <li data-rule="length">At least 8 characters</li>
+          <li data-rule="upper">One uppercase letter</li>
+          <li data-rule="lower">One lowercase letter</li>
+          <li data-rule="number">One number</li>
+          <li data-rule="special">One special character</li>
+          <li data-rule="match">Both passwords should match</li>
+        </ul>
+      </div>
+
+      <button type="submit" class="verify-btn">
+        {% trans "Set Password & Verify" %}
+      </button>
+
+      <div class="back-link-wrapper text-center">
+        <a href="{% url 'login' %}" class="back-to-login">&larr; {% trans "Back to Login" %}</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

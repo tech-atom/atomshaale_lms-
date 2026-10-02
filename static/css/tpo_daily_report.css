@@ -1,0 +1,105 @@
+/* ========== REPORT STYLES (Original) ========== */
+.filter-section {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.filter-section label {
+  font-weight: bold;
+}
+
+.report-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.report-table th,
+.report-table td {
+  padding: 10px;
+  border: 1px solid #ccc;
+}
+
+.report-table th {
+  background-color: #007b3e;
+  color: white;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  width: 80%;
+  max-width: 600px;
+  position: relative;
+}
+
+#modal-close {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+/* ========== MOBILE VERSION (≤480px) ========== */
+@media screen and (max-width: 480px) {
+  /* --- Filter Section --- */
+  .filter-section {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .filter-section label {
+    font-size: 14px;
+  }
+
+  .filter-section select,
+  .filter-section input,
+  .filter-section button {
+    width: 100%;
+  }
+
+  /* --- Table --- */
+  .report-table {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .report-table table {
+    min-width: 600px;
+    font-size: 13px;
+  }
+
+  .report-table th,
+  .report-table td {
+    padding: 8px;
+  }
+
+  /* --- Modal --- */
+  .modal-content {
+    width: 90%;
+    padding: 15px;
+    max-width: 95%;
+    font-size: 14px;
+  }
+
+  #modal-close {
+    font-size: 18px;
+    top: 8px;
+    right: 10px;
+  }
+}

@@ -1,0 +1,568 @@
+/* static/css/tpo_resume.css */
+
+:root {
+  --primary-green: #008037;
+  --dark-green: #005c27;
+  --light-green-bg: #e6f4ed;
+  --text-dark: #1f2937;
+  --text-muted: #6b7280;
+  --card-bg: #ffffff;
+  --border-color: #e5e7eb;
+}
+
+body {
+  font-family: "Century Gothic";
+  background-color: #f4f6f9;
+  color: var(--text-dark);
+  margin: 0;
+  padding: 0;
+}
+
+.resume-dashboard-wrapper {
+  padding: 20px 24px 40px 24px;
+  max-width: 1600px;
+  margin: 0 auto;
+}
+
+/* 1. HERO HEADER TITLE SECTION */
+.resume-header-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.resume-header-title {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.header-icon-box {
+  width: 48px;
+  height: 48px;
+  background-color: #e6f4ed;
+  color: var(--primary-green);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  box-shadow: 0 2px 6px rgba(0, 128, 55, 0.15);
+}
+
+.resume-header-title h2 {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0 0 2px 0;
+}
+
+.resume-subtitle {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin: 0;
+}
+
+/* 2. PRIMARY FILTERS BAR (Dark Green Card) */
+.resume-filter-card {
+  background: linear-gradient(135deg, #008037 0%, #005c27 100%);
+  border-radius: 12px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 22px;
+  box-shadow: 0 4px 14px rgba(0, 92, 39, 0.2);
+}
+
+.filter-field-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.filter-field-group label {
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 13.5px;
+  white-space: nowrap;
+}
+
+.filter-select {
+  background-color: #ffffff;
+  color: #111827;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  min-width: 140px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.filter-select:focus {
+  border-color: #008037;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+}
+
+.filter-actions-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.btn-primary-filter {
+  background-color: #004d20;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  padding: 8px 18px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s, transform 0.15s;
+}
+
+.btn-primary-filter:hover {
+  background-color: #003817;
+  transform: translateY(-1px);
+}
+
+.btn-reset-filter {
+  background-color: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  border-radius: 8px;
+  padding: 8px 16px;
+  font-size: 13.5px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s;
+}
+
+.btn-reset-filter:hover {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* 3. 4 FUTURISTIC METRIC CARDS */
+.resume-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.metric-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+.metric-icon-wrap {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.icon-bg-blue { background-color: #dbeafe; color: #1d4ed8; }
+.icon-bg-green { background-color: #dcfce7; color: #15803d; }
+.icon-bg-amber { background-color: #fef3c7; color: #b45309; }
+.icon-bg-teal { background-color: #ccfbf1; color: #0d9488; }
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.metric-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+
+.metric-val {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0 0 2px 0;
+  line-height: 1.1;
+}
+
+.metric-sub {
+  font-size: 11px;
+  color: #6b7280;
+  font-weight: 600;
+}
+
+/* 4. STUDENT RESUMES DIRECTORY TABLE CARD */
+.resume-table-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+}
+
+.table-card-head {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #ffffff;
+}
+
+.table-card-head h3 {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-dark);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.table-card-head h3 i {
+  color: var(--primary-green);
+}
+
+.search-box-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.search-box-wrap input {
+  padding: 8px 12px 8px 34px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 13px;
+  width: 240px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-box-wrap input:focus {
+  border-color: #008037;
+  box-shadow: 0 0 0 3px rgba(0, 128, 55, 0.15);
+}
+
+.table-scroll-container {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.resume-data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13.5px;
+  text-align: left;
+}
+
+.resume-data-table th {
+  background-color: #008037;
+  color: #ffffff;
+  font-weight: 700;
+  padding: 12px 16px;
+  white-space: nowrap;
+  border-bottom: 2px solid #005c27;
+}
+
+.resume-data-table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.resume-data-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.student-name-cell {
+  font-weight: 700;
+  color: #111827;
+}
+
+.name-avatar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.small-avatar-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e6f4ed;
+  color: #008037;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+
+.font-bold-name {
+  font-weight: 700;
+  color: #111827;
+}
+
+.usn-code-badge {
+  font-family: 'Century Gothic';
+  font-weight: 700;
+  background-color: #f3f4f6;
+  color: #374151;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  border: 1px solid #e5e7eb;
+}
+
+.level-pill {
+  font-weight: 700;
+  background-color: #f0fdf4;
+  color: #166534;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+/* STATUS BADGES */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.status-badge.uploaded {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+}
+
+.status-badge.not-uploaded {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
+}
+
+/* ACTION BUTTONS */
+.btn-download-action {
+  background-color: #008037;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background-color 0.2s, transform 0.15s;
+  box-shadow: 0 2px 4px rgba(0, 128, 55, 0.2);
+}
+
+.btn-download-action:hover {
+  background-color: #005c27;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-disabled-action {
+  background-color: #f3f4f6;
+  color: #9ca3af;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  cursor: not-allowed;
+}
+
+.no-records-cell {
+  text-align: center;
+  padding: 28px;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+/* TABLE FOOTER */
+.table-card-footer {
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.rows-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+/* DARK MODE OVERRIDES */
+body.dark-mode .resume-dashboard-wrapper,
+body.dark-mode .metric-card,
+body.dark-mode .resume-table-card,
+body.dark-mode .table-card-head,
+body.dark-mode .table-card-footer {
+  background-color: #1a1a1a !important;
+  color: #ffffff !important;
+  border-color: #2a2a2a !important;
+}
+
+body.dark-mode .resume-header-title h2,
+body.dark-mode .metric-val,
+body.dark-mode .table-card-head h3,
+body.dark-mode .font-bold-name {
+  color: #ffffff !important;
+}
+
+body.dark-mode .resume-subtitle,
+body.dark-mode .metric-label,
+body.dark-mode .metric-sub,
+body.dark-mode .table-card-footer {
+  color: #aaaaaa !important;
+}
+
+body.dark-mode .resume-data-table td {
+  color: #dddddd !important;
+  border-bottom-color: #2a2a2a !important;
+}
+
+body.dark-mode .resume-data-table tbody tr:hover {
+  background-color: #222222 !important;
+}
+
+body.dark-mode .usn-code-badge {
+  background-color: #2a2a2a !important;
+  color: #eeeeee !important;
+  border-color: #333333 !important;
+}
+
+body.dark-mode .search-box-wrap input {
+  background-color: #242424 !important;
+  color: #ffffff !important;
+  border-color: #333333 !important;
+}
+
+/* RESPONSIVE BREAKPOINTS */
+@media (max-width: 1024px) {
+  .resume-metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .resume-filter-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .filter-actions-group {
+    margin-left: 0;
+    justify-content: space-between;
+  }
+  .search-box-wrap input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .resume-metrics-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .metric-card {
+    padding: 12px 10px !important;
+  }
+  .metric-val {
+    font-size: 1.25rem !important;
+  }
+  .metric-label {
+    font-size: 10.5px !important;
+  }
+  .metric-sub {
+    font-size: 9.5px !important;
+  }
+  .resume-filter-card {
+    padding: 12px 16px !important;
+  }
+  .filter-field-group {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 4px !important;
+    width: 100% !important;
+  }
+  .filter-field-group label {
+    font-size: 12px !important;
+  }
+  .filter-select {
+    width: 100% !important;
+    min-width: 0 !important;
+    box-sizing: border-box !important;
+  }
+  .filter-actions-group {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 8px !important;
+    width: 100% !important;
+    margin-top: 8px !important;
+  }
+  .btn-primary-filter,
+  .btn-reset-filter {
+    width: 100% !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+}

@@ -1,0 +1,310 @@
+{% extends 'student_base.html' %}
+{% load static %}
+
+{% block title %}Your Performance{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/student_performance.css' %}?v=6.1">
+<script src="https://cdn.jsdelivr.net/npm/echarts/dist/echarts.min.js"></script>
+{% endblock %}
+
+{% block content %}
+<!-- Header Section -->
+<div class="perf-header">
+  <div class="perf-header-left">
+    <div class="perf-header-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+        stroke-linejoin="round">
+        <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+      </svg>
+    </div>
+    <div>
+      <h2>Your Performance</h2>
+      <p class="perf-subtitle">Track. Analyze. Improve. Succeed.</p>
+    </div>
+  </div>
+  <div class="perf-header-right">
+    <div class="select-wrapper">
+      <svg class="select-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+        <line x1="16" y1="2" x2="16" y2="6" />
+        <line x1="8" y1="2" x2="8" y2="6" />
+        <line x1="3" y1="10" x2="21" y2="10" />
+      </svg>
+      <select id="examFilterSelect">
+        <option value="all">All Exams</option>
+      </select>
+    </div>
+    <button id="toggleTable" class="hide-table-btn" type="button">
+      <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+        <circle cx="12" cy="12" r="3" />
+      </svg>
+      <span>Hide Table</span>
+    </button>
+  </div>
+</div>
+
+<!-- Metric Cards Grid -->
+<div class="perf-metrics-grid">
+  <!-- Average Score Card (Gauge + Sparkline) -->
+  <div class="metric-card average-score-card">
+    <div class="average-score-gauge">
+      <svg class="gauge-ring" viewBox="0 0 100 100">
+        <circle class="gauge-ring-bg" cx="50" cy="50" r="40" />
+        <circle class="gauge-ring-fill" id="avgScoreGaugeFill" cx="50" cy="50" r="40" />
+      </svg>
+      <span class="gauge-percentage" id="avgScorePercent">0%</span>
+    </div>
+    <div class="average-score-details">
+      <div class="metric-label">Average Score</div>
+      <div class="metric-sub-label">Keep going! You're performing well.</div>
+      <div class="sparkline-wrapper">
+        <div id="avgScoreSparkline" style="width: 100%; height: 35px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Highest Score -->
+  <div class="metric-card mini-metric-card">
+    <div class="metric-icon-bg green-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="20" x2="18" y2="10" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="14" />
+      </svg>
+    </div>
+    <div class="metric-info">
+      <span class="metric-title-small">Highest Score</span>
+      <span class="metric-val" id="highestScoreVal">0%</span>
+    </div>
+  </div>
+
+  <!-- Lowest Score -->
+  <div class="metric-card mini-metric-card">
+    <div class="metric-icon-bg red-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="18" y1="20" x2="18" y2="14" />
+        <line x1="12" y1="20" x2="12" y2="4" />
+        <line x1="6" y1="20" x2="6" y2="10" />
+      </svg>
+    </div>
+    <div class="metric-info">
+      <span class="metric-title-small">Lowest Score</span>
+      <span class="metric-val" id="lowestScoreVal">0%</span>
+    </div>
+  </div>
+
+  <!-- Best Subject -->
+  <div class="metric-card mini-metric-card">
+    <div class="metric-icon-bg green-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+      </svg>
+    </div>
+    <div class="metric-info">
+      <span class="metric-title-small">Best Subject</span>
+      <span class="metric-val" id="bestSubjectVal">-</span>
+    </div>
+  </div>
+
+  <!-- Most Attempted -->
+  <div class="metric-card mini-metric-card">
+    <div class="metric-icon-bg green-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+      </svg>
+    </div>
+    <div class="metric-info">
+      <span class="metric-title-small">Most Attempted</span>
+      <span class="metric-val" id="mostAttemptedVal">-</span>
+    </div>
+  </div>
+
+  <!-- Avg. Time per Question -->
+  <div class="metric-card mini-metric-card">
+    <div class="metric-icon-bg green-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    </div>
+    <div class="metric-info">
+      <span class="metric-title-small">Avg. Time per Question</span>
+      <span class="metric-val" id="avgTimePerQuestionVal">00:00:00</span>
+    </div>
+  </div>
+</div>
+
+<!-- Middle Grid (Charts) -->
+<div class="perf-charts-grid">
+  <!-- Performance Overview -->
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <h3>Performance Overview</h3>
+      <div class="card-dropdown">
+        <span>Bar Chart</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+    </div>
+    <div class="chart-card-body">
+      <div id="barChart" class="echart-container"></div>
+    </div>
+  </div>
+
+  <!-- Score Trend -->
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <h3>Score Trend</h3>
+      <div class="card-dropdown">
+        <span>Line Chart</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+    </div>
+    <div class="chart-card-body">
+      <div id="lineChart" class="echart-container"></div>
+    </div>
+  </div>
+
+  <!-- Attempts Distribution -->
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <h3>Accuracy Distribution</h3>
+      <div class="card-dropdown">
+        <span>Donut Chart</span>
+        <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+      </div>
+    </div>
+    <div class="chart-card-body">
+      <div class="donut-flex-container">
+        <div class="donut-chart-wrapper">
+          <div id="pieChart" class="echart-container donut-canvas"></div>
+          <div class="donut-inner-text">
+            <span id="donutTotalVal">0</span>
+            <span class="donut-total-lbl">Total</span>
+          </div>
+        </div>
+        <div class="donut-legend-list">
+          <div class="legend-item">
+            <span class="dot correct-dot"></span>
+            <span class="legend-lbl">Correct</span>
+            <span class="legend-val" id="donutCorrectPct">0 (0%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="dot wrong-dot"></span>
+            <span class="legend-lbl">Wrong</span>
+            <span class="legend-val" id="donutWrongPct">0 (0%)</span>
+          </div>
+          <div class="legend-item">
+            <span class="dot unattempted-dot"></span>
+            <span class="legend-lbl">Unattempted</span>
+            <span class="legend-val" id="donutUnattemptedPct">0 (0%)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Time Spent (Total) -->
+  <div class="chart-card">
+    <div class="chart-card-header">
+      <h3>Time Spent (Total)</h3>
+    </div>
+    <div class="chart-card-body">
+      <div class="time-spent-wrapper">
+        <div class="time-spent-gauge">
+          <svg class="time-gauge-ring" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" class="gauge-ring-bg" />
+            <circle cx="50" cy="50" r="40" class="gauge-ring-fill time-gauge-fill" />
+          </svg>
+          <div class="time-text-wrapper">
+            <span class="time-val" id="timeSpentVal">00:00:00</span>
+            <span class="time-unit">hrs</span>
+          </div>
+        </div>
+        <div class="time-spent-footer">
+          <svg class="trend-icon" viewBox="0 0 24 24" fill="none" stroke="#008037" stroke-width="2.5">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+            <polyline points="17 6 23 6 23 12" />
+          </svg>
+          <span>Keep practicing to improve more!</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Detailed Performance Card -->
+<div class="detailed-perf-card">
+  <div class="detailed-header">
+    <div class="detailed-header-left">
+      <svg class="table-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+        <polyline points="14 2 14 8 20 8" />
+        <line x1="16" y1="13" x2="8" y2="13" />
+        <line x1="16" y1="17" x2="8" y2="17" />
+        <polyline points="10 9 9 9 8 9" />
+      </svg>
+      <h3>Detailed Performance</h3>
+    </div>
+    <div class="detailed-header-right">
+      <div class="search-wrapper">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="11" cy="11" r="8" />
+          <line x1="21" y1="21" x2="16.65" y2="16.65" />
+        </svg>
+        <input type="text" id="examSearchInput" placeholder="Search exam...">
+      </div>
+      <button class="icon-action-btn" type="button" aria-label="Filter options">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+        </svg>
+      </button>
+      <button class="icon-action-btn" type="button" aria-label="Export options">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+          <polyline points="7 10 12 15 17 10" />
+          <line x1="12" y1="15" x2="12" y2="3" />
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="table-scroll-wrapper">
+    <table id="performanceTable">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Exam</th>
+          <th>Marks</th>
+          <th>Total</th>
+          <th>%</th>
+          <th>Attempted</th>
+          <th>Correct</th>
+          <th>Wrong</th>
+          <th>Unattempted</th>
+          <th>Tab Switch</th>
+          <th>Time Spent (Each Question)</th>
+          <th>Submitted At</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Dynamic contents -->
+      </tbody>
+    </table>
+  </div>
+  <div id="performanceMessage"></div>
+</div>
+
+
+{% endblock %}
+
+{% block extra_script %}
+<script src="{% static 'js/student_performance.js' %}?v=6.1"></script>
+{% endblock %}
