@@ -276,12 +276,17 @@ body {
 
 .logo-wrapper {
   margin-bottom: 15px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
 }
 
 .main-logo {
-  height: 150px;
-  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 120px;
   object-fit: contain;
+  display: block;
 }
 
 .pill-tag {
