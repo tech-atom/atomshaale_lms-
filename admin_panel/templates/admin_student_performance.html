@@ -351,6 +351,7 @@
           <th>Time Spent (Each Question)</th>
           <th>Submission Mode</th>
           <th>Section / Topic Analysis</th>
+          <th>Device / OS</th>
           <th>Submitted At</th>
           <th>Action</th>
         </tr>
@@ -405,6 +406,9 @@
         <div><strong>Year:</strong> <span id="detailStudentYear">—</span></div>
         <div><strong>Semester:</strong> <span id="detailStudentSemester">—</span></div>
         <div><strong>Section:</strong> <span id="detailStudentSection">—</span></div>
+        <div id="detailDeviceGroup"><strong>Device / OS:</strong> <span id="detailDevice">—</span></div>
+        <div id="detailBrowserGroup"><strong>Browser:</strong> <span id="detailBrowser">—</span></div>
+        <div id="detailIpAddressGroup"><strong>IP Address:</strong> <span id="detailIpAddress">—</span></div>
       </div>
     </div>
 
@@ -440,269 +444,326 @@
 
 <!-- HIDDEN PDF REPORT CONTAINER FOR EXPORTS -->
 <div style="position: absolute; left: -9999px; top: -9999px;">
-  <div id="pdfReportContainer" style="width: 794px; background: #f8fafc; font-family: 'Segoe UI', Arial, sans-serif; color: #1e293b; box-sizing: border-box;">
+  <div id="pdfReportContainer" style="width: 794px; background: #ffffff; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; color: #1e293b; box-sizing: border-box; line-height: 1.4;">
     
     <!-- PAGE 1: ANALYTICS DASHBOARD -->
-    <div id="pdfPage1" style="padding: 30px; box-sizing: border-box; min-height: 1123px; display: flex; flex-direction: column; justify-content: space-between; background: #f8fafc;">
-      <div>
-        <!-- HEADER BANNER -->
-        <div class="pdf-header" style="background: #008037; color: white; padding: 25px; border-radius: 8px; display: flex; align-items: center; gap: 20px; margin-bottom: 25px;">
-          <div style="background: rgba(255,255,255,0.2); width: 60px; height: 60px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 28px;">
-            <i class="fas fa-file-invoice"></i>
+    <div id="pdfPage1" style="padding: 24px 28px; box-sizing: border-box; background: #ffffff; width: 794px;">
+      
+      <!-- TOP INSTITUTION / DRIVE HEADER -->
+      <div style="border: 1.5px solid #008037; border-radius: 8px; padding: 10px 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; background: #f0fdf4;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="background: #008037; color: white; width: 28px; height: 28px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+            <i class="fas fa-graduation-cap"></i>
           </div>
+          <span id="pdfCollegeHeader" style="font-weight: 800; font-size: 14px; color: #008037; letter-spacing: 0.5px; text-transform: uppercase;">ATOM LMS</span>
+        </div>
+        <div style="font-size: 10px; font-weight: 700; color: #166534; letter-spacing: 0.5px; text-transform: uppercase;">
+          STUDENT PERFORMANCE & ANALYTICS REPORT
+        </div>
+      </div>
+
+      <!-- MAIN BANNER -->
+      <div style="background: linear-gradient(135deg, #008037 0%, #005a26 100%); color: white; padding: 16px 20px; border-radius: 8px; margin-bottom: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.04);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
           <div>
-            <h1 style="margin: 0; font-size: 26px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Student Performance Report</h1>
-            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">
-              Exam Type: <span id="pdfExamType">Exam</span> | Generated On: <span id="pdfGeneratedDate">-</span>
-            </p>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+              <span id="pdfExamTypeBadge" style="background: rgba(255,255,255,0.22); color: #ffffff; font-size: 9.5px; font-weight: 700; padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;">EXAM REPORT</span>
+              <span style="font-size: 11px; opacity: 0.85;">•</span>
+              <span id="pdfGeneratedDate" style="font-size: 10.5px; opacity: 0.9;">-</span>
+            </div>
+            <h1 id="pdfReportTitle" style="margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.3px; line-height: 1.2;">Comprehensive Student Performance Report</h1>
+            <p id="pdfTestSubtitle" style="margin: 4px 0 0 0; font-size: 11.5px; opacity: 0.92; font-weight: 500;">Test: <span id="pdfTestTitleName" style="font-weight: 700;">-</span></p>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.85;">Pass Rate</div>
+            <div id="pdfHeaderPassRate" style="font-size: 22px; font-weight: 900; line-height: 1.1; margin-top: 2px;">0%</div>
           </div>
         </div>
 
-        <!-- METRIC CARDS (6 in one row) -->
-        <div class="pdf-metrics-row" style="display: flex; gap: 10px; margin-bottom: 25px;">
-          <!-- CARD 1 -->
-          <div style="flex: 1; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-            <div style="background: #e0f2fe; color: #0284c7; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; font-size: 14px;">
-              <i class="fas fa-user-friends"></i>
-            </div>
-            <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">Total Students</div>
-            <div id="pdfTotalStudents" style="font-size: 20px; font-weight: bold; color: #0f172a; margin-top: 4px;">0</div>
+        <!-- FILTER CHIPS STRIP -->
+        <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.18); display: flex; flex-wrap: wrap; gap: 12px; font-size: 10px;">
+          <div><strong style="opacity: 0.75;">College:</strong> <span id="pdfChipCollege" style="font-weight: 600;">-</span></div>
+          <div><strong style="opacity: 0.75;">Course:</strong> <span id="pdfChipCourse" style="font-weight: 600;">-</span></div>
+          <div><strong style="opacity: 0.75;">Batch / Sec:</strong> <span id="pdfChipBatch" style="font-weight: 600;">-</span></div>
+        </div>
+      </div>
+
+      <!-- 6 KPI METRIC CARDS -->
+      <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 14px;">
+        <!-- Total Students -->
+        <div style="background: #ffffff; padding: 10px 8px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <div style="background: #f0f9ff; color: #0284c7; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px auto; font-size: 11px;">
+            <i class="fas fa-users"></i>
           </div>
-          <!-- CARD 2 -->
-          <div style="flex: 1; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-            <div style="background: #dcfce7; color: #16a34a; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; font-size: 14px;">
-              <i class="fas fa-check-circle"></i>
-            </div>
-            <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">Passed</div>
-            <div id="pdfPassedVal" style="font-size: 20px; font-weight: bold; color: #16a34a; margin-top: 4px;">0</div>
-            <div id="pdfPassedPct" style="font-size: 10px; color: #16a34a; font-weight: bold; margin-top: 2px;">0%</div>
+          <div style="font-size: 8.5px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.4px;">Total Students</div>
+          <div id="pdfTotalStudents" style="font-size: 17px; font-weight: 800; color: #0f172a; margin-top: 2px;">0</div>
+        </div>
+
+        <!-- Passed -->
+        <div style="background: #ffffff; padding: 10px 8px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <div style="background: #f0fdf4; color: #16a34a; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px auto; font-size: 11px;">
+            <i class="fas fa-check"></i>
           </div>
-          <!-- CARD 3 -->
-          <div style="flex: 1; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-            <div style="background: #fee2e2; color: #dc2626; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; font-size: 14px;">
-              <i class="fas fa-times-circle"></i>
-            </div>
-            <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">Failed</div>
-            <div id="pdfFailedVal" style="font-size: 20px; font-weight: bold; color: #dc2626; margin-top: 4px;">0</div>
-            <div id="pdfFailedPct" style="font-size: 10px; color: #dc2626; font-weight: bold; margin-top: 2px;">0%</div>
+          <div style="font-size: 8.5px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.4px;">Passed</div>
+          <div id="pdfPassedVal" style="font-size: 17px; font-weight: 800; color: #16a34a; margin-top: 2px;">0</div>
+          <div id="pdfPassedPct" style="font-size: 8.5px; color: #16a34a; font-weight: 700;">(0%)</div>
+        </div>
+
+        <!-- Failed -->
+        <div style="background: #ffffff; padding: 10px 8px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <div style="background: #fef2f2; color: #dc2626; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px auto; font-size: 11px;">
+            <i class="fas fa-times"></i>
           </div>
-          <!-- CARD 4 -->
-          <div style="flex: 1; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-            <div style="background: #e0e7ff; color: #4f46e5; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; font-size: 14px;">
-              <i class="fas fa-chart-line"></i>
-            </div>
-            <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">Avg Score</div>
-            <div id="pdfAvgScore" style="font-size: 20px; font-weight: bold; color: #4f46e5; margin-top: 4px;">0%</div>
+          <div style="font-size: 8.5px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.4px;">Failed</div>
+          <div id="pdfFailedVal" style="font-size: 17px; font-weight: 800; color: #dc2626; margin-top: 2px;">0</div>
+          <div id="pdfFailedPct" style="font-size: 8.5px; color: #dc2626; font-weight: 700;">(0%)</div>
+        </div>
+
+        <!-- Avg Score -->
+        <div style="background: #ffffff; padding: 10px 8px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <div style="background: #eef2ff; color: #4f46e5; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px auto; font-size: 11px;">
+            <i class="fas fa-chart-line"></i>
           </div>
-          <!-- CARD 5 -->
-          <div style="flex: 1; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-            <div style="background: #fef3c7; color: #d97706; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; font-size: 14px;">
-              <i class="fas fa-trophy"></i>
-            </div>
-            <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">Highest</div>
-            <div id="pdfHighestScore" style="font-size: 20px; font-weight: bold; color: #d97706; margin-top: 4px;">0%</div>
+          <div style="font-size: 8.5px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.4px;">Avg Score</div>
+          <div id="pdfAvgScore" style="font-size: 17px; font-weight: 800; color: #4f46e5; margin-top: 2px;">0%</div>
+        </div>
+
+        <!-- Highest -->
+        <div style="background: #ffffff; padding: 10px 8px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <div style="background: #fefce8; color: #ca8a04; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px auto; font-size: 11px;">
+            <i class="fas fa-trophy"></i>
           </div>
-          <!-- CARD 6 -->
-          <div style="flex: 1; background: white; padding: 12px; border-radius: 8px; border: 1px solid #e2e8f0; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-            <div style="background: #fee2e2; color: #b91c1c; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px auto; font-size: 14px;">
-              <i class="fas fa-chart-bar"></i>
+          <div style="font-size: 8.5px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.4px;">Highest</div>
+          <div id="pdfHighestScore" style="font-size: 17px; font-weight: 800; color: #ca8a04; margin-top: 2px;">0%</div>
+        </div>
+
+        <!-- Lowest -->
+        <div style="background: #ffffff; padding: 10px 8px; border-radius: 6px; border: 1px solid #e2e8f0; text-align: center;">
+          <div style="background: #fff1f2; color: #e11d48; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px auto; font-size: 11px;">
+            <i class="fas fa-chart-bar"></i>
+          </div>
+          <div style="font-size: 8.5px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.4px;">Lowest</div>
+          <div id="pdfLowestScore" style="font-size: 17px; font-weight: 800; color: #e11d48; margin-top: 2px;">0%</div>
+        </div>
+      </div>
+
+      <!-- DISTRIBUTION & TEST SUMMARY (2 COLUMNS) -->
+      <div style="display: flex; gap: 14px; margin-bottom: 14px;">
+        <!-- LEFT: PERFORMANCE DISTRIBUTION -->
+        <div style="flex: 1.25; background: #ffffff; padding: 14px 16px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; font-weight: 800; color: #008037; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-chart-pie" style="color: #008037;"></i>
+            <span>Performance Distribution</span>
+          </div>
+
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <!-- Excellent -->
+            <div style="display: flex; align-items: center;">
+              <span style="font-size: 10px; font-weight: 600; width: 110px; color: #475569;">Excellent (90-100%)</span>
+              <div style="flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; margin: 0 10px; overflow: hidden;">
+                <div id="pdfExcellentBar" style="height: 100%; background: #16a34a; border-radius: 4px; width: 0%;"></div>
+              </div>
+              <span id="pdfExcellentText" style="font-size: 10px; font-weight: 700; color: #1e293b; width: 65px; text-align: right;">0 (0%)</span>
             </div>
-            <div style="font-size: 9px; text-transform: uppercase; color: #64748b; font-weight: bold; letter-spacing: 0.5px; white-space: nowrap;">Lowest</div>
-            <div id="pdfLowestScore" style="font-size: 20px; font-weight: bold; color: #b91c1c; margin-top: 4px;">0%</div>
+
+            <!-- Good -->
+            <div style="display: flex; align-items: center;">
+              <span style="font-size: 10px; font-weight: 600; width: 110px; color: #475569;">Good (75-89%)</span>
+              <div style="flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; margin: 0 10px; overflow: hidden;">
+                <div id="pdfGoodBar" style="height: 100%; background: #2563eb; border-radius: 4px; width: 0%;"></div>
+              </div>
+              <span id="pdfGoodText" style="font-size: 10px; font-weight: 700; color: #1e293b; width: 65px; text-align: right;">0 (0%)</span>
+            </div>
+
+            <!-- Average -->
+            <div style="display: flex; align-items: center;">
+              <span style="font-size: 10px; font-weight: 600; width: 110px; color: #475569;">Average (50-74%)</span>
+              <div style="flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; margin: 0 10px; overflow: hidden;">
+                <div id="pdfAverageBar" style="height: 100%; background: #eab308; border-radius: 4px; width: 0%;"></div>
+              </div>
+              <span id="pdfAverageText" style="font-size: 10px; font-weight: 700; color: #1e293b; width: 65px; text-align: right;">0 (0%)</span>
+            </div>
+
+            <!-- Poor -->
+            <div style="display: flex; align-items: center;">
+              <span style="font-size: 10px; font-weight: 600; width: 110px; color: #475569;">Poor (25-49%)</span>
+              <div style="flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; margin: 0 10px; overflow: hidden;">
+                <div id="pdfPoorBar" style="height: 100%; background: #ea580c; border-radius: 4px; width: 0%;"></div>
+              </div>
+              <span id="pdfPoorText" style="font-size: 10px; font-weight: 700; color: #1e293b; width: 65px; text-align: right;">0 (0%)</span>
+            </div>
+
+            <!-- Very Poor -->
+            <div style="display: flex; align-items: center;">
+              <span style="font-size: 10px; font-weight: 600; width: 110px; color: #475569;">Very Poor (0-24%)</span>
+              <div style="flex: 1; height: 8px; background: #f1f5f9; border-radius: 4px; margin: 0 10px; overflow: hidden;">
+                <div id="pdfVeryPoorBar" style="height: 100%; background: #dc2626; border-radius: 4px; width: 0%;"></div>
+              </div>
+              <span id="pdfVeryPoorText" style="font-size: 10px; font-weight: 700; color: #1e293b; width: 65px; text-align: right;">0 (0%)</span>
+            </div>
+          </div>
+
+          <!-- PROPERLY ALIGNED CHART SCALE -->
+          <div style="display: flex; align-items: center; margin-top: 8px;">
+            <div style="width: 110px;"></div>
+            <div style="flex: 1; margin: 0 10px; display: flex; justify-content: space-between; font-size: 8.5px; color: #94a3b8; border-top: 1px solid #f1f5f9; padding-top: 3px;">
+              <span>0%</span>
+              <span>25%</span>
+              <span>50%</span>
+              <span>75%</span>
+              <span>100%</span>
+            </div>
+            <div style="width: 65px;"></div>
           </div>
         </div>
 
-        <!-- DISTRIBUTION & TEST SUMMARY -->
-        <div style="display: flex; gap: 20px; margin-bottom: 25px;">
-          <!-- LEFT: PERFORMANCE DISTRIBUTION -->
-          <div style="flex: 1.2; background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-            <h3 style="margin: 0 0 15px 0; font-size: 13px; font-weight: bold; color: #008037; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #008037; padding-bottom: 5px;">
-              Performance Distribution
-            </h3>
-            <!-- DISTRIBUTION BARS -->
-            <div style="display: flex; flex-direction: column; gap: 12px;">
-              <!-- Excellent -->
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <span style="font-size: 11px; width: 120px; color: #475569;">Excellent (90-100%)</span>
-                <div style="flex: 1; height: 10px; background: #e2e8f0; border-radius: 6px; margin: 0 12px; overflow: hidden;">
-                  <div id="pdfExcellentBar" style="height: 100%; background: #15803d; border-radius: 6px; width: 0%;"></div>
-                </div>
-                <span id="pdfExcellentText" style="font-size: 11px; font-weight: bold; color: #334155; width: 70px; text-align: right;">0 (0.0%)</span>
-              </div>
-              <!-- Good -->
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <span style="font-size: 11px; width: 120px; color: #475569;">Good (75-89%)</span>
-                <div style="flex: 1; height: 10px; background: #e2e8f0; border-radius: 6px; margin: 0 12px; overflow: hidden;">
-                  <div id="pdfGoodBar" style="height: 100%; background: #94a3b8; border-radius: 6px; width: 0%;"></div>
-                </div>
-                <span id="pdfGoodText" style="font-size: 11px; font-weight: bold; color: #334155; width: 70px; text-align: right;">0 (0.0%)</span>
-              </div>
-              <!-- Average -->
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <span style="font-size: 11px; width: 120px; color: #475569;">Average (50-74%)</span>
-                <div style="flex: 1; height: 10px; background: #e2e8f0; border-radius: 6px; margin: 0 12px; overflow: hidden;">
-                  <div id="pdfAverageBar" style="height: 100%; background: #94a3b8; border-radius: 6px; width: 0%;"></div>
-                </div>
-                <span id="pdfAverageText" style="font-size: 11px; font-weight: bold; color: #334155; width: 70px; text-align: right;">0 (0.0%)</span>
-              </div>
-              <!-- Poor -->
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <span style="font-size: 11px; width: 120px; color: #475569;">Poor (25-49%)</span>
-                <div style="flex: 1; height: 10px; background: #e2e8f0; border-radius: 6px; margin: 0 12px; overflow: hidden;">
-                  <div id="pdfPoorBar" style="height: 100%; background: #94a3b8; border-radius: 6px; width: 0%;"></div>
-                </div>
-                <span id="pdfPoorText" style="font-size: 11px; font-weight: bold; color: #334155; width: 70px; text-align: right;">0 (0.0%)</span>
-              </div>
-              <!-- Very Poor -->
-              <div style="display: flex; align-items: center; justify-content: space-between;">
-                <span style="font-size: 11px; width: 120px; color: #475569;">Very Poor (0-24%)</span>
-                <div style="flex: 1; height: 10px; background: #e2e8f0; border-radius: 6px; margin: 0 12px; overflow: hidden;">
-                  <div id="pdfVeryPoorBar" style="height: 100%; background: #b91c1c; border-radius: 6px; width: 0%;"></div>
-                </div>
-                <span id="pdfVeryPoorText" style="font-size: 11px; font-weight: bold; color: #334155; width: 70px; text-align: right;">0 (0.0%)</span>
-              </div>
-            </div>
-            <!-- CHART SCALE -->
-            <div style="display: flex; justify-content: space-between; margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 10px; font-size: 10px; color: #94a3b8;">
-              <span style="width: 120px;"></span>
-              <span style="flex: 1; text-align: left; margin-left: 12px;">0%</span>
-              <span style="flex: 1; text-align: center;">50%</span>
-              <span style="flex: 1; text-align: right; margin-right: 12px;">100%</span>
-              <span style="width: 70px;"></span>
-            </div>
+        <!-- RIGHT: TEST CONFIGURATION -->
+        <div style="flex: 1; background: #ffffff; padding: 14px 16px; border-radius: 6px; border: 1px solid #e2e8f0;">
+          <div style="font-size: 11px; font-weight: 800; color: #008037; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
+            <i class="fas fa-sliders-h" style="color: #008037;"></i>
+            <span>Test Configuration</span>
           </div>
+          
+          <table style="width: 100%; border-collapse: collapse; font-size: 10.5px;">
+            <tr style="border-bottom: 1px solid #f8fafc;">
+              <td style="padding: 4px 0; color: #64748b;"><i class="far fa-list-alt" style="margin-right: 6px; color: #008037;"></i> Total Questions</td>
+              <td id="pdfSummaryQuestions" style="padding: 4px 0; text-align: right; font-weight: 700; color: #0f172a;">0</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f8fafc;">
+              <td style="padding: 4px 0; color: #64748b;"><i class="far fa-edit" style="margin-right: 6px; color: #008037;"></i> Attempted (Avg)</td>
+              <td id="pdfSummaryAttempted" style="padding: 4px 0; text-align: right; font-weight: 700; color: #0f172a;">0.0</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f8fafc;">
+              <td style="padding: 4px 0; color: #64748b;"><i class="far fa-check-square" style="margin-right: 6px; color: #008037;"></i> Unattempted (Avg)</td>
+              <td id="pdfSummaryUnattempted" style="padding: 4px 0; text-align: right; font-weight: 700; color: #0f172a;">0.0</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f8fafc;">
+              <td style="padding: 4px 0; color: #64748b;"><i class="fas fa-medal" style="margin-right: 6px; color: #008037;"></i> Total Marks</td>
+              <td id="pdfSummaryTotalMarks" style="padding: 4px 0; text-align: right; font-weight: 700; color: #0f172a;">0.0</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #f8fafc;">
+              <td style="padding: 4px 0; color: #64748b;"><i class="fas fa-exclamation-triangle" style="margin-right: 6px; color: #008037;"></i> Negative Marking</td>
+              <td id="pdfSummaryNegative" style="padding: 4px 0; text-align: right; font-weight: 700; color: #0f172a;">No</td>
+            </tr>
+            <tr>
+              <td style="padding: 4px 0; color: #64748b;"><i class="far fa-clock" style="margin-right: 6px; color: #008037;"></i> Duration</td>
+              <td id="pdfSummaryTotalTime" style="padding: 4px 0; text-align: right; font-weight: 700; color: #0f172a;">0 mins</td>
+            </tr>
+          </table>
+        </div>
+      </div>
 
-          <!-- RIGHT: TEST SUMMARY -->
-          <div style="flex: 1; background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-            <h3 style="margin: 0 0 15px 0; font-size: 13px; font-weight: bold; color: #008037; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #008037; padding-bottom: 5px;">
-              Test Summary
-            </h3>
-            <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-              <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 6px 0; color: #64748b;"><i class="far fa-list-alt" style="margin-right: 8px; color: #008037;"></i> Total Qs</td>
-                <td id="pdfSummaryQuestions" style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">0</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 6px 0; color: #64748b;"><i class="far fa-edit" style="margin-right: 8px; color: #008037;"></i> Attempted (Avg)</td>
-                <td id="pdfSummaryAttempted" style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">0.0</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 6px 0; color: #64748b;"><i class="far fa-check-square" style="margin-right: 8px; color: #008037;"></i> Unattempted (Avg)</td>
-                <td id="pdfSummaryUnattempted" style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">0.0</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 6px 0; color: #64748b;"><i class="fas fa-medal" style="margin-right: 8px; color: #008037;"></i> Total Marks</td>
-                <td id="pdfSummaryTotalMarks" style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">0.0</td>
-              </tr>
-              <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 6px 0; color: #64748b;"><i class="fas fa-exclamation-triangle" style="margin-right: 8px; color: #008037;"></i> Neg Marking</td>
-                <td id="pdfSummaryNegative" style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">No</td>
-              </tr>
-              <tr>
-                <td style="padding: 6px 0; color: #64748b;"><i class="far fa-clock" style="margin-right: 8px; color: #008037;"></i> Total Time</td>
-                <td id="pdfSummaryTotalTime" style="padding: 6px 0; text-align: right; font-weight: bold; color: #0f172a;">0 mins</td>
-              </tr>
-            </table>
-          </div>
+      <!-- KEY PERFORMANCE INSIGHTS (2x2 GRID) -->
+      <div style="background: #ffffff; padding: 14px 16px; border-radius: 6px; border: 1px solid #e2e8f0; margin-bottom: 14px;">
+        <div style="font-size: 11px; font-weight: 800; color: #008037; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          <i class="fas fa-lightbulb" style="color: #008037;"></i>
+          <span>Key Performance Insights</span>
         </div>
 
-        <!-- KEY INSIGHTS -->
-        <div style="background: white; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.02);">
-          <h3 style="margin: 0 0 15px 0; font-size: 13px; font-weight: bold; color: #008037; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #008037; padding-bottom: 5px;">
-            Key Insights
-          </h3>
-          <div style="display: flex; gap: 15px;">
-            <!-- Insight 1 -->
-            <div style="flex: 1; border-right: 1px solid #f1f5f9; padding-right: 10px; display: flex; gap: 8px;">
-              <div style="color: #008037; font-size: 16px;"><i class="fas fa-sync-alt"></i></div>
-              <div>
-                <div style="font-weight: bold; font-size: 11px; color: #334155;" id="pdfInsightImprovementTitle">Improvement Needed</div>
-                <p id="pdfInsightImprovementDesc" style="margin: 3px 0 0 0; font-size: 10px; color: #64748b; line-height: 1.3;">-</p>
-              </div>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px;">
+          <!-- Insight 1: Improvement -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; display: flex; gap: 8px; align-items: flex-start;">
+            <div style="color: #ea580c; font-size: 14px; margin-top: 1px;"><i class="fas fa-chart-line"></i></div>
+            <div>
+              <div id="pdfInsightImprovementTitle" style="font-weight: 700; font-size: 10px; color: #1e293b;">Improvement Needed</div>
+              <p id="pdfInsightImprovementDesc" style="margin: 2px 0 0 0; font-size: 9.5px; color: #64748b; line-height: 1.3;">-</p>
             </div>
-            <!-- Insight 2 -->
-            <div style="flex: 1; border-right: 1px solid #f1f5f9; padding-right: 10px; display: flex; gap: 8px;">
-              <div style="color: #008037; font-size: 16px;"><i class="far fa-clock"></i></div>
-              <div>
-                <div style="font-weight: bold; font-size: 11px; color: #334155;">Time Management</div>
-                <p id="pdfInsightTimeDesc" style="margin: 3px 0 0 0; font-size: 10px; color: #64748b; line-height: 1.3;">-</p>
-              </div>
+          </div>
+
+          <!-- Insight 2: Time Management -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; display: flex; gap: 8px; align-items: flex-start;">
+            <div style="color: #2563eb; font-size: 14px; margin-top: 1px;"><i class="far fa-clock"></i></div>
+            <div>
+              <div style="font-weight: 700; font-size: 10px; color: #1e293b;">Time Management</div>
+              <p id="pdfInsightTimeDesc" style="margin: 2px 0 0 0; font-size: 9.5px; color: #64748b; line-height: 1.3;">-</p>
             </div>
-            <!-- Insight 3 -->
-            <div style="flex: 1; border-right: 1px solid #f1f5f9; padding-right: 10px; display: flex; gap: 8px;">
-              <div style="color: #008037; font-size: 16px;"><i class="far fa-star"></i></div>
-              <div>
-                <div style="font-weight: bold; font-size: 11px; color: #334155;">Top Performers</div>
-                <p id="pdfInsightTopPerformers" style="margin: 3px 0 0 0; font-size: 10px; color: #64748b; line-height: 1.3;">-</p>
-              </div>
+          </div>
+
+          <!-- Insight 3: Top Performers -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; display: flex; gap: 8px; align-items: flex-start;">
+            <div style="color: #16a34a; font-size: 14px; margin-top: 1px;"><i class="fas fa-award"></i></div>
+            <div>
+              <div style="font-weight: 700; font-size: 10px; color: #1e293b;">Top Performers (≥ 50%)</div>
+              <p id="pdfInsightTopPerformers" style="margin: 2px 0 0 0; font-size: 9.5px; color: #15803d; font-weight: 600; line-height: 1.3;">-</p>
             </div>
-            <!-- Insight 4 -->
-            <div style="flex: 1; display: flex; gap: 8px;">
-              <div style="color: #dc2626; font-size: 16px;"><i class="fas fa-arrow-down"></i></div>
-              <div>
-                <div style="font-weight: bold; font-size: 11px; color: #334155;">Needs Improvement</div>
-                <p id="pdfInsightNeedsImprovement" style="margin: 3px 0 0 0; font-size: 10px; color: #64748b; line-height: 1.3;">-</p>
-              </div>
+          </div>
+
+          <!-- Insight 4: Needs Improvement -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 10px; display: flex; gap: 8px; align-items: flex-start;">
+            <div style="color: #dc2626; font-size: 14px; margin-top: 1px;"><i class="fas fa-exclamation-circle"></i></div>
+            <div>
+              <div style="font-weight: 700; font-size: 10px; color: #1e293b;">Needs Attention (< 50%)</div>
+              <p id="pdfInsightNeedsImprovement" style="margin: 2px 0 0 0; font-size: 9.5px; color: #b91c1c; font-weight: 600; line-height: 1.3;">-</p>
             </div>
           </div>
         </div>
       </div>
 
       <!-- FOOTER FOR PAGE 1 -->
-      <div style="border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #64748b;">
+      <div style="border-top: 1px solid #e2e8f0; padding-top: 8px; display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; color: #64748b;">
         <div style="display: flex; align-items: center; gap: 6px;">
-          <div style="background: #e2e8f0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 11px;">
-            <i class="fas fa-graduation-cap"></i>
-          </div>
-          <span>Report generated by <strong>ATOM LMS</strong></span>
+          <span style="font-weight: 600; color: #008037;">ATOM LMS</span>
+          <span>• Student Performance Report</span>
         </div>
-        <div id="pdfFooterDate1">-</div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span id="pdfFooterDate1">-</span>
+          <span style="font-weight: 700; color: #475569;">Page 1</span>
+        </div>
       </div>
+
     </div>
 
-    <!-- PAGE BREAK FOR HTML2PDF -->
-    <div class="html2pdf__page-break"></div>
+    <!-- PAGE BREAK -->
+    <div class="html2pdf__page-break" style="page-break-before: always; break-before: page; margin-top: 0;"></div>
 
-    <!-- PAGE 2+: STUDENT SUMMARY TABLE (PAGINATED AUTOMATICALLY) -->
-    <div id="pdfPage2" style="padding: 30px; box-sizing: border-box; background: #f8fafc; min-height: 1123px; display: flex; flex-direction: column; justify-content: space-between;">
-      <div>
-        <!-- STUDENT SUMMARY TABLE -->
-        <div style="background: white; border-radius: 8px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 25px; box-shadow: 0 1px 3px rgba(0,0,0,0.02); break-inside: avoid; page-break-inside: avoid;">
-          <h3 style="margin: 0; font-size: 13px; font-weight: bold; color: white; background: #008037; padding: 12px 20px; text-transform: uppercase; letter-spacing: 0.5px;">
-            Student Summary
-          </h3>
-          <table id="pdfResultsTable" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 10px;">
-            <thead>
-              <tr style="background: #006026; color: white; text-transform: uppercase; font-size: 9px;">
-                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">#</th>
-                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Student Name</th>
-                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Marks</th>
-                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">%</th>
-                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Result</th>
-                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Attempted</th>
-                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Correct</th>
-                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Wrong</th>
-                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Unattempted</th>
-                <th style="padding: 10px 10px; border-bottom: 1px solid #e2e8f0;">Time Spent</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Populated via Javascript -->
-            </tbody>
-          </table>
+    <!-- PAGE 2+: STUDENT SUMMARY TABLE (NATURAL FLOW, NO UNWANTED BLANKS) -->
+    <div id="pdfPage2" style="padding: 24px 28px; box-sizing: border-box; background: #ffffff; width: 794px;">
+      
+      <!-- TABLE HEADER STRIP -->
+      <div style="border-bottom: 2px solid #008037; padding-bottom: 8px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <div style="font-size: 13px; font-weight: 800; color: #008037; text-transform: uppercase; letter-spacing: 0.5px;">
+            Student Detailed Results & Activity Log
+          </div>
+          <div style="font-size: 9.5px; color: #64748b; margin-top: 2px;">
+            <span id="pdfTableSubCollege">-</span> • <span id="pdfTableSubTest">-</span>
+          </div>
+        </div>
+        <div style="font-size: 9.5px; color: #64748b; font-weight: 600;">
+          Total Candidates: <span id="pdfTableTotalCount" style="color: #0f172a; font-weight: 700;">0</span>
         </div>
       </div>
 
-      <!-- FOOTER FOR PAGE 2+ -->
-      <div style="border-top: 1px solid #e2e8f0; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 10px; color: #64748b; margin-top: 20px;">
+      <!-- RESULTS TABLE -->
+      <table id="pdfResultsTable" style="width: 100%; border-collapse: collapse; text-align: left; font-size: 8.5px; border: 1px solid #e2e8f0; table-layout: fixed;">
+        <thead>
+          <tr style="background: #008037; color: #ffffff; text-transform: uppercase; font-size: 8px; letter-spacing: 0.3px;">
+            <th style="padding: 6px 4px; text-align: center; width: 3.5%; border: 1px solid #006026;">#</th>
+            <th style="padding: 6px 6px; width: 22%; border: 1px solid #006026;">Student Name</th>
+            <th style="padding: 6px 6px; width: 14%; border: 1px solid #006026;">USN / ID</th>
+            <th style="padding: 6px 4px; text-align: center; width: 10%; border: 1px solid #006026;">Marks</th>
+            <th style="padding: 6px 4px; text-align: center; width: 8%; border: 1px solid #006026;">%</th>
+            <th style="padding: 6px 4px; text-align: center; width: 9%; border: 1px solid #006026;">Result</th>
+            <th style="padding: 6px 4px; text-align: center; width: 9%; border: 1px solid #006026;">Attempted</th>
+            <th style="padding: 6px 4px; text-align: center; width: 8%; border: 1px solid #006026;">Correct</th>
+            <th style="padding: 6px 4px; text-align: center; width: 8%; border: 1px solid #006026;">Wrong</th>
+            <th style="padding: 6px 4px; text-align: center; width: 8.5%; border: 1px solid #006026;">Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Populated via Javascript -->
+        </tbody>
+      </table>
+
+      <!-- TABLE FOOTER -->
+      <div style="border-top: 1px solid #e2e8f0; padding-top: 8px; margin-top: 14px; display: flex; justify-content: space-between; align-items: center; font-size: 9.5px; color: #64748b;">
         <div style="display: flex; align-items: center; gap: 6px;">
-          <div style="background: #e2e8f0; width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #475569; font-size: 11px;">
-            <i class="fas fa-graduation-cap"></i>
-          </div>
-          <span>Report generated by <strong>ATOM LMS</strong></span>
+          <span style="font-weight: 600; color: #008037;">ATOM LMS</span>
+          <span>• Student Performance Report</span>
         </div>
         <div id="pdfFooterDate2">-</div>
       </div>
+
     </div>
 
   </div>

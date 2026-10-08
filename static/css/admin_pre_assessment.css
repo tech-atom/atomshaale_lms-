@@ -248,25 +248,44 @@ tbody tr:hover {
 .code-badge {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: #f1f5f9;
   border: 1px dashed #cbd5e1;
-  padding: 6px 12px;
-  border-radius: 6px;
+  padding: 6px 10px;
+  border-radius: 8px;
 }
 .code-text {
-  font-size: 1rem;
+  font-size: 0.95rem;
   color: #0f172a;
+  letter-spacing: 0.5px;
+  margin-right: 2px;
 }
 .copy-btn {
   background: transparent;
   border: none;
   color: var(--text-grey);
   cursor: pointer;
-  transition: color 0.15s ease;
+  padding: 4px 6px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+  text-decoration: none;
 }
 .copy-btn:hover {
   color: var(--secondary-color);
+  background: rgba(0, 128, 55, 0.1);
+  transform: translateY(-1px);
+}
+.copy-btn.copy-link-btn:hover {
+  color: #2563eb;
+  background: rgba(37, 99, 235, 0.1);
+}
+.copy-btn.open-link-btn:hover {
+  color: #059669;
+  background: rgba(5, 150, 105, 0.1);
 }
 
 .action-buttons {
@@ -314,6 +333,81 @@ tbody tr:hover {
 }
 .modal-sm {
   max-width: 400px;
+}
+.modal-fullscreen {
+  width: 98vw !important;
+  max-width: 98vw !important;
+  height: 96vh !important;
+  max-height: 96vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  border-radius: 16px !important;
+  overflow: hidden !important;
+  background: rgba(255, 255, 255, 0.98) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  border: 1px solid rgba(226, 232, 240, 0.9) !important;
+}
+.modal-fullscreen .modal-header {
+  padding: 14px 24px !important;
+  background: #ffffff !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  flex-shrink: 0 !important;
+}
+.modal-fullscreen .modal-body {
+  padding: 16px 24px !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
+  min-height: 0 !important;
+}
+.modal-fullscreen .monitor-summary {
+  flex-shrink: 0 !important;
+  margin-bottom: 14px !important;
+}
+.modal-fullscreen .monitor-filters {
+  flex-shrink: 0 !important;
+  margin-bottom: 12px !important;
+}
+.modal-fullscreen .table-wrap {
+  flex: 1 !important;
+  min-height: 0 !important;
+  max-height: none !important;
+  overflow-y: auto !important;
+  overflow-x: auto !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  background: white !important;
+  margin-bottom: 0 !important;
+}
+.modal-fullscreen .nested-table {
+  width: 100% !important;
+  min-width: 1200px !important;
+  border-collapse: collapse !important;
+}
+.modal-fullscreen .nested-table thead th {
+  position: sticky !important;
+  top: 0 !important;
+  background: #004d20 !important;
+  color: #ffffff !important;
+  z-index: 20 !important;
+  padding: 12px 14px !important;
+  font-size: 0.8rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.5px !important;
+  text-transform: uppercase !important;
+  border-bottom: none !important;
+}
+.modal-fullscreen .nested-table tbody tr:hover {
+  background-color: #f0fdf4 !important;
+}
+.modal-fullscreen .nested-table tbody td {
+  padding: 12px 14px !important;
+  font-size: 0.85rem !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  white-space: nowrap !important;
 }
 
 .modal-header {

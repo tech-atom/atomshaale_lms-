@@ -220,6 +220,35 @@ button:disabled {
   border-color: #f3b8b8;
 }
 
+/* Anti-cheat: Disable text selection and copying */
+body.exam-active {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+body.exam-active .question-panel,
+body.exam-active .question-block,
+body.exam-active .question-block p,
+body.exam-active .question-block label,
+body.exam-active .palette-panel,
+body.exam-active #examArea {
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  user-select: none !important;
+}
+
+body.exam-active textarea,
+body.exam-active input[type="text"],
+body.exam-active .code-editor {
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+
 #security-warning-center {
   position: fixed;
   left: 50%;

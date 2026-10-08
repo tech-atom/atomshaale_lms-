@@ -248,10 +248,50 @@ class ExamResult(models.Model):
         null=True,
         help_text="Unique token to identify the active device session to prevent multiple logins taking the exam concurrently."
     )
+    device_info = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Human-readable device & OS description, e.g. 'Laptop (Windows 11 • Chrome)' or 'Mobile (Android • Chrome)'"
+    )
+    device_type = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="Desktop/Laptop, Mobile, Tablet, etc."
+    )
+    os_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Operating system e.g. Android, iOS, Windows, macOS, Linux"
+    )
+    browser_name = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True,
+        help_text="Browser e.g. Chrome, Safari, Edge, Firefox"
+    )
+    ip_address = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+        help_text="IP address of candidate"
+    )
+    user_agent = models.TextField(
+        blank=True,
+        null=True,
+        help_text="Full user agent string"
+    )
     selected_question_ids = models.JSONField(
         blank=True,
         null=True,
         help_text="List of question IDs assigned to this student for this attempt"
+    )
+    candidate_custom_data = models.JSONField(
+        default=dict,
+        blank=True,
+        help_text="Custom collected candidate registration data (e.g. CGPA, Gender, GitHub, etc.)"
     )
 
     def save(self, *args, **kwargs):

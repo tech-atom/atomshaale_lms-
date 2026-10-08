@@ -75,6 +75,177 @@
       border: 1px solid rgba(100, 116, 139, 0.3);
     }
 
+    /* Device Badges */
+    .device-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+    }
+    .device-badge.device-laptop {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+    .device-badge.device-mobile {
+      background: #fdf2f8;
+      color: #be185d;
+      border: 1px solid rgba(236, 72, 153, 0.3);
+    }
+    .device-badge.device-tablet {
+      background: #f5f3ff;
+      color: #6d28d9;
+      border: 1px solid rgba(139, 92, 246, 0.3);
+    }
+    .device-badge.device-unknown {
+      background: #f1f5f9;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+
+    /* Schedule and Tab Switch Styles */
+    .schedule-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: #1e293b;
+      line-height: 1.25;
+    }
+    .schedule-times {
+      display: flex;
+      flex-direction: column;
+      text-align: left;
+    }
+    .badge-tab-limit {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      font-size: 0.82rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .badge-no-limit {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      color: #475569;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    .form-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    @media (max-width: 640px) {
+      .form-grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+    .form-hint {
+      font-size: 0.75rem;
+      color: #64748b;
+      margin-top: 4px;
+      margin-bottom: 0;
+    }
+
+    /* Complete Fullscreen Modal Styles */
+    .glass-modal.modal-fullscreen {
+      width: 98vw !important;
+      max-width: 98vw !important;
+      height: 96vh !important;
+      max-height: 96vh !important;
+      display: flex !important;
+      flex-direction: column !important;
+      border-radius: 16px !important;
+      overflow: hidden !important;
+      background: rgba(255, 255, 255, 0.98) !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+      border: 1px solid rgba(226, 232, 240, 0.9) !important;
+      margin: auto !important;
+    }
+    .modal-fullscreen .modal-header {
+      padding: 14px 24px !important;
+      background: #ffffff !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+      flex-shrink: 0 !important;
+    }
+    .modal-fullscreen .modal-body {
+      padding: 16px 24px !important;
+      flex: 1 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      overflow: hidden !important;
+      min-height: 0 !important;
+    }
+    .modal-fullscreen .monitor-summary {
+      flex-shrink: 0 !important;
+      margin-bottom: 14px !important;
+    }
+    .modal-fullscreen .monitor-filters {
+      flex-shrink: 0 !important;
+      margin-bottom: 12px !important;
+    }
+    .modal-fullscreen .table-wrap {
+      flex: 1 !important;
+      min-height: 0 !important;
+      max-height: none !important;
+      overflow-y: auto !important;
+      overflow-x: auto !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 10px !important;
+      background: white !important;
+      margin-bottom: 0 !important;
+    }
+    .modal-fullscreen .nested-table {
+      width: 100% !important;
+      min-width: 1200px !important;
+      border-collapse: collapse !important;
+    }
+    .modal-fullscreen .nested-table thead th {
+      position: sticky !important;
+      top: 0 !important;
+      background: #004d20 !important;
+      color: #ffffff !important;
+      z-index: 20 !important;
+      padding: 12px 14px !important;
+      font-size: 0.8rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.5px !important;
+      text-transform: uppercase !important;
+      border-bottom: none !important;
+    }
+    .modal-fullscreen .nested-table tbody tr:hover {
+      background-color: #f0fdf4 !important;
+    }
+    .modal-fullscreen .nested-table tbody td {
+      padding: 12px 14px !important;
+      font-size: 0.85rem !important;
+      border-bottom: 1px solid #f1f5f9 !important;
+      white-space: nowrap !important;
+    }
+
     /* Slide-out Drawer Styles */
     .detail-modal-backdrop {
       position: fixed;
@@ -361,19 +532,215 @@
       font-size: 0.85rem;
     }
     .badge-success { background: #10b981; color: #ffffff; }
-    .badge-danger { background: #ef4444; color: #ffffff; }
-    .badge-info { background: #3b82f6; color: #ffffff; }
-
-    /* Pulse dot styling for live monitor */
-    @keyframes blink-green {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.3); opacity: 0.3; }
+    /* Wide Horizontal Rectangle Modal */
+    .glass-modal.modal-rectangle {
+      width: min(1080px, 95vw) !important;
+      max-width: 1080px !important;
+      max-height: 92vh !important;
+      display: flex !important;
+      flex-direction: column !important;
+      background: #ffffff !important;
+      border-radius: 16px !important;
+      box-shadow: 0 25px 50px -12px rgba(11, 37, 64, 0.25), 0 0 0 1px rgba(226, 232, 240, 0.8) !important;
+      overflow: hidden !important;
     }
-    .pulse-dot {
-      animation: blink-green 1.5s infinite ease-in-out;
+    .modal-rectangle .modal-header {
+      padding: 14px 22px !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+      background: #ffffff !important;
+      flex-shrink: 0;
     }
-    .flex-col {
+    .modal-rectangle .modal-footer {
+      padding: 12px 22px !important;
+      border-top: 1px solid #e2e8f0 !important;
+      background: #f8fafc !important;
+      flex-shrink: 0;
+    }
+    .modal-body-split {
+      display: grid !important;
+      grid-template-columns: 1fr 1.25fr !important;
+      gap: 20px !important;
+      padding: 18px 22px !important;
+      overflow-y: auto !important;
+      max-height: calc(92vh - 130px) !important;
+      background: #f8fafc;
+    }
+    .modal-split-col {
+      display: flex;
       flex-direction: column;
+      gap: 12px;
+    }
+    @media (max-width: 920px) {
+      .modal-body-split {
+        grid-template-columns: 1fr !important;
+      }
+      .glass-modal.modal-rectangle {
+        max-height: 94vh !important;
+      }
+    }
+
+    /* Registration Customizer Styles */
+    .reg-customizer-wrap {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+    }
+    .reg-customizer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .reg-customizer-title {
+      margin: 0;
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #0b2540;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .std-fields-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+    @media (max-width: 520px) {
+      .std-fields-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    .std-field-card {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      transition: all 0.2s ease;
+    }
+    .std-field-card:hover {
+      border-color: #cbd5e1;
+      background: #ffffff;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+    }
+    .std-field-info {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #1e293b;
+    }
+    .std-field-controls {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .custom-fields-wrapper {
+      margin-top: 12px;
+      border-top: 1px dashed #cbd5e1;
+      padding-top: 10px;
+    }
+    .custom-field-row {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 8px 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+      transition: all 0.2s ease;
+    }
+    .custom-field-row:hover {
+      border-color: #cbd5e1;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .custom-tag-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 600;
+    }
+
+    /* Text Action Buttons */
+    .action-btn-group {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 6px;
+    }
+    .act-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 5px 11px;
+      border-radius: 6px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border: 1px solid transparent;
+      cursor: pointer;
+      text-decoration: none;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .act-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    }
+    .act-btn-monitor {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #a7f3d0;
+    }
+    .act-btn-monitor:hover {
+      background: #10b981;
+      color: #ffffff;
+      border-color: #10b981;
+    }
+    .act-btn-settings {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border-color: #bfdbfe;
+    }
+    .act-btn-settings:hover {
+      background: #2563eb;
+      color: #ffffff;
+      border-color: #2563eb;
+    }
+    .act-btn-status {
+      background: #f8fafc;
+      color: #334155;
+      border-color: #cbd5e1;
+    }
+    .act-btn-status:hover {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .act-btn-delete {
+      background: #fef2f2;
+      color: #b91c1c;
+      border-color: #fecaca;
+    }
+    .act-btn-delete:hover {
+      background: #ef4444;
+      color: #ffffff;
+      border-color: #ef4444;
     }
   </style>
 {% endblock %}
@@ -384,12 +751,12 @@
   <!-- ================= DASHBOARD HEADER ================= -->
   <div class="dashboard-header-block">
     <div class="header-titles">
-      <h1>PRE-Assessment Management</h1>
+      <h1>One time Assessment Management</h1>
       <p class="subtitle-text">Create exams, generate unique access codes, and monitor candidate completions without account registration.</p>
     </div>
     <div class="header-actions">
       <button id="createPreBtn" class="btn btn-primary">
-        <i class="fa-solid fa-plus animate-pulse"></i> Create PRE-Assessment
+        <i class="fa-solid fa-plus animate-pulse"></i> Create Assessment
       </button>
     </div>
   </div>
@@ -402,7 +769,7 @@
       </div>
       <div class="stat-info">
         <h3 id="stat-total-count">0</h3>
-        <p>Total PRE-Assessments</p>
+        <p>Total Assessments</p>
       </div>
     </div>
     <div class="stat-card active-card">
@@ -434,8 +801,10 @@
     <div class="filter-dropdown-wrapper">
       <select id="statusFilter" class="filter-select">
         <option value="all">All Statuses</option>
-        <option value="active">Active Only</option>
-        <option value="inactive">Inactive Only</option>
+        <option value="active">Active (Live Now)</option>
+        <option value="upcoming">Upcoming (Scheduled)</option>
+        <option value="expired">Expired / Closed</option>
+        <option value="inactive">Inactive / Disabled</option>
       </select>
     </div>
   </div>
@@ -447,15 +816,16 @@
         <tr>
           <th>Exam Title</th>
           <th>Access Code</th>
-          <th>Date Created</th>
+          <th>Schedule Window</th>
+          <th>Tab Limit</th>
           <th>Status</th>
           <th>Actions</th>
         </tr>
       </thead>
       <tbody id="preAssessmentTableBody">
         <tr>
-          <td colspan="5" class="text-center py-8 text-gray-500">
-            <i class="fa-solid fa-spinner fa-spin text-2xl mr-2"></i> Loading PRE-Assessments...
+          <td colspan="6" class="text-center py-8 text-gray-500">
+            <i class="fa-solid fa-spinner fa-spin text-2xl mr-2"></i> Loading Assessments...
           </td>
         </tr>
       </tbody>
@@ -464,87 +834,110 @@
 
   <!-- ================= GLASSMORPHISM MODALS ================= -->
   
-  <!-- CREATE PRE-ASSESSMENT MODAL -->
+  <!-- CREATE ASSESSMENT MODAL -->
   <div id="createModal" class="modal-overlay">
-    <div class="glass-modal modal-content">
+    <div class="glass-modal modal-content modal-rectangle">
       <div class="modal-header">
-        <h2>Create PRE-Assessment</h2>
+        <h2 style="display: flex; align-items: center; gap: 8px; margin: 0; font-size: 1.3rem;">
+          <i class="fa-solid fa-file-circle-plus text-green-600"></i> Create Assessment
+        </h2>
         <button class="close-modal-btn">&times;</button>
       </div>
       <form id="createPreForm">
-        <div class="modal-body">
-          <div class="form-group">
-            <label for="examSelect">Select Base Exam <span class="required">*</span></label>
-            <select id="examSelect" class="form-control" required>
-              <option value="" disabled selected>-- Select an Exam --</option>
-              {% for exam in exams %}
-                <option value="{{ exam.id }}">{{ exam.title }} ({{ exam.duration_minutes }} mins, {{ exam.max_marks }} marks)</option>
-              {% empty %}
-                <option value="" disabled>No exams available. Please create an exam first.</option>
-              {% endfor %}
-            </select>
+        <div class="modal-body modal-body-split">
+          <!-- LEFT COLUMN: Exam Configuration & Execution Rules -->
+          <div class="modal-split-col">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label for="examSelect" style="font-weight: 700; font-size: 0.9rem; color: #0b2540;">Select Base Exam <span class="required text-red-500">*</span></label>
+              <select id="examSelect" class="form-control" required style="font-size: 0.9rem;">
+                <option value="" disabled selected>-- Select an Exam --</option>
+                {% for exam in exams %}
+                  <option value="{{ exam.id }}">{{ exam.title }} ({{ exam.duration_minutes }} mins, {{ exam.max_marks }} marks)</option>
+                {% empty %}
+                  <option value="" disabled>No exams available. Please create an exam first.</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="form-grid-2" style="margin-top: 10px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="createStartDatetime" style="font-weight: 600; font-size: 0.86rem; color: #334155;">
+                  <i class="fa-regular fa-calendar text-green-600 mr-1"></i> Start Date & Time
+                </label>
+                <input type="datetime-local" id="createStartDatetime" class="form-control" style="font-size: 0.85rem;">
+                <p class="form-hint">Optional (leave blank for anytime).</p>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="createEndDatetime" style="font-weight: 600; font-size: 0.86rem; color: #334155;">
+                  <i class="fa-regular fa-calendar-xmark text-red-500 mr-1"></i> End Date & Time
+                </label>
+                <input type="datetime-local" id="createEndDatetime" class="form-control" style="font-size: 0.85rem;">
+                <p class="form-hint">Optional (locks after this time).</p>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px; background: #ffffff; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 0;">
+              <label for="createTabSwitches" style="font-weight: 700; font-size: 0.88rem; color: #0b2540; display: block; margin-bottom: 6px;">
+                <i class="fa-solid fa-arrow-right-arrow-left text-blue-600 mr-1"></i> Allowed Tab Switches <span class="required text-red-500">*</span>
+              </label>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="number" id="createTabSwitches" class="form-control" value="3" min="1" max="50" required style="max-width: 90px; font-weight: 700; text-align: center;">
+                <span style="font-size: 0.82rem; color: #64748b;">times before auto-submitting student exam</span>
+              </div>
+              <p class="form-hint" style="margin-top: 4px;">Default is 3. System auto-submits candidate test when limit is reached.</p>
+            </div>
+
+            <p class="info-note" style="margin-top: 10px; background: #eff6ff; border-left: 4px solid #3b82f6; padding: 10px 12px; border-radius: 6px; font-size: 0.82rem; color: #1e40af; line-height: 1.4;">
+              <i class="fa-solid fa-circle-info text-blue-500 mr-1"></i> A unique 6-character access code will be generated upon creation.
+            </p>
           </div>
-          <p class="info-note"><i class="fa-solid fa-info-circle"></i> A unique 6-digit access code will be automatically generated upon creation.</p>
+
+          <!-- RIGHT COLUMN: Registration Form Customizer -->
+          <div class="modal-split-col">
+            <div class="reg-customizer-wrap" id="createRegCustomizer" style="margin-top: 0;">
+              <div class="reg-customizer-header">
+                <div>
+                  <div class="reg-customizer-title">
+                    <i class="fa-solid fa-list-check text-green-600"></i> Student Registration Form Fields
+                  </div>
+                  <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">
+                    Select student data to collect (Name & Email are always mandatory).
+                  </div>
+                </div>
+              </div>
+
+              <!-- Standard Fields Section -->
+              <div style="font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 6px;">Standard Fields</div>
+              <div class="std-fields-grid" id="createStdFieldsGrid">
+                <!-- Dynamically populated via JS -->
+              </div>
+
+              <!-- Custom Fields Section -->
+              <div class="custom-fields-wrapper">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-size: 0.78rem; font-weight: 700; color: #475569;">Custom Student Data</span>
+                  <button type="button" class="btn btn-neutral btn-sm" onclick="addCustomFieldRow('create')" style="padding: 3px 10px; font-size: 0.75rem; font-weight: 700; color: #008037; border-color: #a7f3d0; background: #ecfdf5;">
+                    <i class="fa-solid fa-plus mr-1"></i> Add Custom Field
+                  </button>
+                </div>
+                <div id="createCustomFieldsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; padding-right: 2px;">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
-          <button type="submit" class="btn btn-primary submit-btn">Generate Code</button>
+          <button type="submit" class="btn btn-primary submit-btn">
+            <i class="fa-solid fa-plus mr-1"></i> Generate Code
+          </button>
         </div>
       </form>
     </div>
   </div>
 
-  <!-- VIEW RESULTS MODAL -->
-  <div id="resultsModal" class="modal-overlay">
-    <div class="glass-modal modal-content modal-large">
-      <div class="modal-header">
-        <h2 id="resultsModalTitle">Candidate Submissions</h2>
-        <button class="close-modal-btn">&times;</button>
-      </div>
-      <div class="modal-body">
-        <div class="submissions-meta mb-4 flex justify-between items-center">
-          <span class="text-sm text-gray-600 font-medium" id="submissions-count-text">0 attempts recorded</span>
-          <button id="btnExportCSV" class="btn btn-secondary btn-sm" style="display: none;">
-            <i class="fa-solid fa-file-csv"></i> Export CSV
-          </button>
-        </div>
-        <div class="table-wrap max-h-96 overflow-y-auto">
-          <table class="nested-table">
-            <thead>
-              <tr>
-                <th>Candidate Name</th>
-                <th>Email ID</th>
-                <th>USN</th>
-                <th>College Name</th>
-                <th>Course</th>
-                <th>Year</th>
-                <th>Sem</th>
-                <th>Marks Obtained</th>
-                <th>%</th>
-                <th>Status</th>
-                <th>Attempted</th>
-                <th>Correct</th>
-                <th>Wrong</th>
-                <th>Unattempted</th>
-                <th>Tab Switch</th>
-                <th>Time Spent (Each Question)</th>
-                <th>Submission Mode</th>
-                <th>Section / Topic Analysis</th>
-                <th>Submitted At</th>
-                <th>Report</th>
-              </tr>
-            </thead>
-            <tbody id="submissionsTableBody">
-              <!-- Dynamically populated -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-      <div class="modal-header pt-0">
-         <!-- Empty footer spacer -->
-      </div>
-    </div>
-  </div>
+  <!-- DELETE CONFIRMATION MODAL -->
 
   <!-- STUDENT DETAIL MODAL DRAWER -->
   <div id="detailModalBackdrop" class="detail-modal-backdrop hidden" style="z-index: 10000;"></div>
@@ -571,11 +964,23 @@
           <div><strong>Name:</strong> <span id="detailStudentName">—</span></div>
           <div><strong>USN:</strong> <span id="detailStudentUsn">—</span></div>
           <div><strong>Email:</strong> <span id="detailStudentEmail">—</span></div>
+          <div><strong>Phone:</strong> <span id="detailStudentPhone">—</span></div>
           <div><strong>College:</strong> <span id="detailStudentCollege">—</span></div>
           <div><strong>Course:</strong> <span id="detailStudentCourse">—</span></div>
           <div><strong>Year:</strong> <span id="detailStudentYear">—</span></div>
           <div><strong>Semester:</strong> <span id="detailStudentSemester">—</span></div>
           <div><strong>Section:</strong> <span id="detailStudentSection">—</span></div>
+          <div><strong>Device / OS:</strong> <span id="detailDevice">—</span></div>
+          <div><strong>Browser:</strong> <span id="detailBrowser">—</span></div>
+          <div><strong>IP Address:</strong> <span id="detailIpAddress">—</span></div>
+        </div>
+      </div>
+
+      <!-- Additional Custom Student Data Card -->
+      <div class="drawer-card" id="detailCustomDataCard" style="display: none;">
+        <h3 class="drawer-card-title"><i class="fas fa-id-card-clip text-emerald-600"></i> Additional Collected Registration Data</h3>
+        <div class="drawer-info-grid" id="detailCustomDataGrid">
+          <!-- Populated dynamically via JS -->
         </div>
       </div>
 
@@ -608,65 +1013,66 @@
 
   <!-- PRE-ASSESSMENT LIVE MONITOR MODAL -->
   <div id="preLiveMonitorModal" class="modal-overlay">
-    <div class="glass-modal modal-content modal-large">
+    <div class="glass-modal modal-content modal-fullscreen" id="preLiveMonitorContent">
       <div class="modal-header">
-        <h2 id="preLiveMonitorTitle" style="display: flex; align-items: center; gap: 10px; margin: 0;">
+        <h2 id="preLiveMonitorTitle" style="display: flex; align-items: center; gap: 10px; margin: 0; font-size: 1.25rem;">
           <span class="pulse-dot" style="width: 10px; height: 10px; border-radius: 50%; background: #10b981; display: inline-block;"></span>
           Live PRE-Assessment Monitor: <span id="preLiveMonitorExamTitle" class="font-bold text-gray-800"></span>
         </h2>
-        <button class="close-modal-btn" onclick="closePreLiveMonitor()">&times;</button>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <button id="preLiveRefreshBtnHeader" class="btn btn-secondary btn-sm" onclick="loadPreLiveMonitorData(preLiveActiveId, false); showToast('Live monitor refreshed.');" style="padding: 6px 12px; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px;">
+            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+          </button>
+          <button class="close-modal-btn" onclick="closePreLiveMonitor()" style="font-size: 1.5rem; line-height: 1; padding: 4px 8px; border-radius: 6px; cursor: pointer;">&times;</button>
+        </div>
       </div>
       <div class="modal-body">
         
         <!-- Live Metrics Summary Bar -->
-        <div class="monitor-summary" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 20px; text-align: center; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
-          <div style="padding: 10px; background: white; border-radius: 8px; border: 1px solid #f1f5f9;">
-            <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Total Started</div>
-            <div id="preLiveTotal" style="font-size: 1.6rem; color: #0b2540; font-weight: 800; margin-top: 4px;">0</div>
+        <div class="monitor-summary" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 14px; text-align: center; background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);">
+          <div style="padding: 8px 12px; background: white; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <div style="font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Total Started</div>
+            <div id="preLiveTotal" style="font-size: 1.5rem; color: #0b2540; font-weight: 800; margin-top: 2px;">0</div>
           </div>
-          <div style="padding: 10px; background: white; border-radius: 8px; border: 1px solid #f1f5f9;">
-            <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Active Candidates</div>
-            <div id="preLiveActive" style="font-size: 1.6rem; color: #d97706; font-weight: 800; margin-top: 4px;">0</div>
+          <div style="padding: 8px 12px; background: white; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <div style="font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Active Candidates</div>
+            <div id="preLiveActive" style="font-size: 1.5rem; color: #d97706; font-weight: 800; margin-top: 2px;">0</div>
           </div>
-          <div style="padding: 10px; background: white; border-radius: 8px; border: 1px solid #f1f5f9;">
-            <div style="font-size: 0.85rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Submitted</div>
-            <div id="preLiveSubmitted" style="font-size: 1.6rem; color: #10b981; font-weight: 800; margin-top: 4px;">0</div>
+          <div style="padding: 8px 12px; background: white; border-radius: 8px; border: 1px solid #f1f5f9;">
+            <div style="font-size: 0.8rem; color: #64748b; font-weight: 600; text-transform: uppercase;">Submitted</div>
+            <div id="preLiveSubmitted" style="font-size: 1.5rem; color: #10b981; font-weight: 800; margin-top: 2px;">0</div>
           </div>
         </div>
 
         <!-- Filters Toolbar -->
-        <div class="monitor-filters" style="display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 15px; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 12px; border-radius: 8px;">
-          <div style="display: flex; gap: 10px; flex-wrap: wrap; flex: 1;">
+        <div class="monitor-filters" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; align-items: center; justify-content: space-between; background: #f1f5f9; padding: 10px 14px; border-radius: 8px;">
+          <div style="display: flex; gap: 10px; flex-wrap: wrap; flex: 1; align-items: center;">
             <select id="preLiveCollegeFilter" class="filter-select" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-size: 0.85rem; min-width: 150px; max-width: 250px;">
               <option value="">All Colleges</option>
             </select>
             <select id="preLiveCourseFilter" class="filter-select" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-size: 0.85rem; min-width: 120px; max-width: 200px;">
               <option value="">All Courses</option>
             </select>
-            <input type="search" id="preLiveSearchInput" placeholder="Search by USN / Name..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-size: 0.85rem; min-width: 180px; flex: 1; max-width: 300px;">
+            <input type="search" id="preLiveSearchInput" placeholder="Search by USN / Name..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid #cbd5e1; background: white; font-size: 0.85rem; min-width: 180px; flex: 1; max-width: 320px;">
           </div>
           
           <div style="display: flex; gap: 6px; align-items: center;">
+            <span style="font-size: 0.82rem; color: #64748b; display: inline-flex; align-items: center; gap: 6px; margin-right: 10px;">
+              <i class="fa-solid fa-arrows-rotate fa-spin text-green-600"></i> Auto-refresh: 5s
+            </span>
             <button class="btn btn-neutral btn-sm pre-filter-btn active-toggle" data-filter="all" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 700;">All</button>
             <button class="btn btn-neutral btn-sm pre-filter-btn" data-filter="submitted" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 700;">Submitted</button>
             <button class="btn btn-neutral btn-sm pre-filter-btn" data-filter="active" style="padding: 6px 12px; font-size: 0.8rem; font-weight: 700;">Active</button>
+            <button id="preLiveRefreshBtn" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 6px 12px;">
+              <i class="fa-solid fa-sync"></i> Refresh
+            </button>
           </div>
         </div>
 
-        <!-- Live Refresh Info & Actions -->
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; padding: 0 4px;">
-          <span style="font-size: 0.85rem; color: #64748b; display: flex; align-items: center; gap: 6px;">
-            <i class="fa-solid fa-arrows-rotate fa-spin text-green-600"></i> Auto-refreshing every 5 seconds...
-          </span>
-          <button id="preLiveRefreshBtn" class="btn btn-secondary btn-sm" style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; padding: 6px 12px;">
-            <i class="fa-solid fa-sync"></i> Refresh Now
-          </button>
-        </div>
-
-        <!-- Candidates Table -->
-        <div class="table-wrap max-h-96 overflow-y-auto" style="border: 1px solid #e2e8f0; border-radius: 8px;">
+        <!-- Candidates Table (Full Viewport Height) -->
+        <div class="table-wrap overflow-y-auto">
           <table class="nested-table">
-            <thead style="position: sticky; top: 0; background: #f8fafc; z-index: 10; border-bottom: 2px solid #cbd5e1;">
+            <thead>
               <tr>
                 <th>USN</th>
                 <th>Candidate Name</th>
@@ -674,6 +1080,7 @@
                 <th>College</th>
                 <th>Course</th>
                 <th>Status</th>
+                <th>Device / OS</th>
                 <th>Progress</th>
                 <th>Tab Switch</th>
                 <th>Time Spent</th>
@@ -687,7 +1094,7 @@
         </div>
 
         <!-- Pagination Controls -->
-        <div id="preLivePagination" style="display: flex; align-items: center; justify-content: space-between; margin-top: 15px; padding: 10px 4px 0 4px; border-top: 1px solid #e2e8f0;">
+        <div id="preLivePagination" style="display: flex; align-items: center; justify-content: space-between; margin-top: 12px; padding: 8px 4px 0 4px; border-top: 1px solid #e2e8f0; flex-shrink: 0;">
           <span id="preLivePageInfo" style="font-size: 0.85rem; color: #64748b; font-weight: 600;">Page 1 of 1</span>
           <div style="display: flex; gap: 8px;">
             <button id="preLivePrevBtn" class="btn btn-secondary btn-sm" style="padding: 4px 10px; font-size: 0.75rem; font-weight: 700;" disabled>&larr; Previous</button>
@@ -716,6 +1123,121 @@
     </div>
   </div>
 
+  <!-- EDIT ASSESSMENT SETTINGS MODAL -->
+  <div id="settingsModal" class="modal-overlay">
+    <div class="glass-modal modal-content modal-rectangle">
+      <div class="modal-header">
+        <h2 style="display: flex; align-items: center; gap: 8px; margin: 0; font-size: 1.3rem;">
+          <i class="fa-solid fa-sliders text-blue-600"></i> Assessment Settings
+        </h2>
+        <button class="close-modal-btn">&times;</button>
+      </div>
+      <form id="settingsPreForm">
+        <input type="hidden" id="settingsPreId">
+        <div class="modal-body modal-body-split">
+          <!-- LEFT COLUMN: Exam Info, Schedule & Access Controls -->
+          <div class="modal-split-col">
+            <div style="background: #ffffff; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 0;">
+              <div style="font-size: 0.75rem; color: #64748b; font-weight: 700; text-transform: uppercase;">Selected Assessment</div>
+              <div id="settingsExamTitle" style="font-size: 1.05rem; font-weight: 800; color: #0b2540; margin-top: 2px;">—</div>
+              <div style="font-size: 0.82rem; color: #475569; margin-top: 4px;">Access Code: <span id="settingsExamCode" class="font-mono font-bold text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200">—</span></div>
+            </div>
+
+            <div class="form-grid-2" style="margin-top: 10px;">
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="settingsStartDatetime" style="font-weight: 600; font-size: 0.86rem; color: #334155;">
+                  <i class="fa-regular fa-calendar text-green-600 mr-1"></i> Start Date & Time
+                </label>
+                <input type="datetime-local" id="settingsStartDatetime" class="form-control" style="font-size: 0.85rem;">
+                <p class="form-hint">Leave blank for immediate availability.</p>
+              </div>
+              <div class="form-group" style="margin-bottom: 0;">
+                <label for="settingsEndDatetime" style="font-weight: 600; font-size: 0.86rem; color: #334155;">
+                  <i class="fa-regular fa-calendar-xmark text-red-500 mr-1"></i> End Date & Time
+                </label>
+                <input type="datetime-local" id="settingsEndDatetime" class="form-control" style="font-size: 0.85rem;">
+                <p class="form-hint">Leave blank for no deadline.</p>
+              </div>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px; background: #ffffff; padding: 12px 14px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 0;">
+              <label for="settingsTabSwitches" style="font-weight: 700; font-size: 0.88rem; color: #0b2540; display: block; margin-bottom: 6px;">
+                <i class="fa-solid fa-arrow-right-arrow-left text-blue-600 mr-1"></i> Allowed Tab Switches <span class="required text-red-500">*</span>
+              </label>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <input type="number" id="settingsTabSwitches" class="form-control" value="3" min="1" max="50" required style="max-width: 90px; font-weight: 700; text-align: center;">
+                <span style="font-size: 0.82rem; color: #64748b;">times before auto-submitting student exam</span>
+              </div>
+              <p class="form-hint" style="margin-top: 4px;">Number of tab switches allowed before the exam auto-submits.</p>
+            </div>
+
+            <div id="settingsScheduleBanner" style="margin-top: 10px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 12px;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <i class="fa-solid fa-bolt text-green-600"></i>
+                <span style="font-weight: 700; font-size: 0.84rem; color: #166534;">Automatic Schedule Lifecycle</span>
+              </div>
+              <p id="settingsSchedulePreview" style="font-size: 0.78rem; color: #15803d; margin: 3px 0 0 0; line-height: 1.35;">
+                Assessment will automatically activate at Start Time and automatically deactivate & submit at End Time.
+              </p>
+            </div>
+
+            <div class="form-group" style="margin-top: 10px; display: flex; align-items: center; justify-content: space-between; background: #ffffff; padding: 10px 12px; border-radius: 8px; border: 1px solid #cbd5e1; margin-bottom: 0;">
+              <div>
+                <div style="font-weight: 700; font-size: 0.88rem; color: #0b2540;">Assessment Access Status</div>
+                <div style="font-size: 0.74rem; color: #64748b;">Turn off only to manually disable access</div>
+              </div>
+              <label style="display: inline-flex; align-items: center; gap: 6px; cursor: pointer; user-select: none;">
+                <input type="checkbox" id="settingsIsActive" checked style="width: 18px; height: 18px; accent-color: #10b981; cursor: pointer;">
+                <span id="settingsIsActiveLabel" style="font-weight: 700; font-size: 0.85rem; color: #10b981;">Active</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- RIGHT COLUMN: Registration Form Customizer -->
+          <div class="modal-split-col">
+            <div class="reg-customizer-wrap" id="settingsRegCustomizer" style="margin-top: 0;">
+              <div class="reg-customizer-header">
+                <div>
+                  <div class="reg-customizer-title">
+                    <i class="fa-solid fa-list-check text-blue-600"></i> Student Registration Form Fields
+                  </div>
+                  <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">
+                    Configure student data to collect on registration (Name & Email are always mandatory).
+                  </div>
+                </div>
+              </div>
+
+              <!-- Standard Fields Section -->
+              <div style="font-size: 0.78rem; font-weight: 700; color: #475569; margin-bottom: 6px;">Standard Fields</div>
+              <div class="std-fields-grid" id="settingsStdFieldsGrid">
+                <!-- Dynamically populated via JS -->
+              </div>
+
+              <!-- Custom Fields Section -->
+              <div class="custom-fields-wrapper">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                  <span style="font-size: 0.78rem; font-weight: 700; color: #475569;">Custom Student Data</span>
+                  <button type="button" class="btn btn-neutral btn-sm" onclick="addCustomFieldRow('settings')" style="padding: 3px 10px; font-size: 0.75rem; font-weight: 700; color: #008037; border-color: #a7f3d0; background: #ecfdf5;">
+                    <i class="fa-solid fa-plus mr-1"></i> Add Custom Field
+                  </button>
+                </div>
+                <div id="settingsCustomFieldsList" style="display: flex; flex-direction: column; gap: 8px; max-height: 180px; overflow-y: auto; padding-right: 2px;">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary cancel-btn">Cancel</button>
+          <button type="submit" class="btn btn-primary submit-btn">
+            <i class="fa-solid fa-floppy-disk mr-1"></i> Save Changes
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- TOAST NOTIFICATIONS -->
   <div id="toastNotification" class="toast-popup">
     <span class="toast-message">Success!</span>
@@ -731,7 +1253,8 @@ document.addEventListener('DOMContentLoaded', function() {
     create: "{% url 'pre_assessment_create_api' %}",
     toggle: "/pre-assessment/admin/api/toggle/", // Appended with ID in JS
     delete: "/pre-assessment/admin/api/delete/", // Appended with ID in JS
-    results: "/pre-assessment/admin/api/results/" // Appended with ID in JS
+    results: "/pre-assessment/admin/api/results/", // Appended with ID in JS
+    updateSettings: "/pre-assessment/admin/api/update-settings/" // Appended with ID in JS
   };
 
   let preAssessments = [];
@@ -739,8 +1262,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Modals
   const createModal = document.getElementById('createModal');
-  const resultsModal = document.getElementById('resultsModal');
   const deleteModal = document.getElementById('deleteModal');
+  const settingsModal = document.getElementById('settingsModal');
   const candidateReportModal = document.getElementById('candidateReportModal');
 
   // Load Assessments
@@ -765,49 +1288,102 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const filtered = preAssessments.filter(item => {
       const matchesSearch = item.exam_title.toLowerCase().includes(searchVal) || item.code.toLowerCase().includes(searchVal);
-      const matchesStatus = statusVal === 'all' || 
-                            (statusVal === 'active' && item.is_active) || 
-                            (statusVal === 'inactive' && !item.is_active);
+      const key = item.status_key || (item.is_active ? 'active' : 'inactive');
+      const matchesStatus = statusVal === 'all' || key === statusVal;
       return matchesSearch && matchesStatus;
     });
 
     if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="5" class="text-center py-8 text-gray-500">No PRE-Assessments found matching the criteria.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="6" class="text-center py-8 text-gray-500">No PRE-Assessments found matching the criteria.</td></tr>`;
       return;
     }
 
     tbody.innerHTML = filtered.map(item => {
-      const createdDate = new Date(item.created_at).toLocaleString('en-IN', { hour12: true });
+      let scheduleHtml = '';
+      if (item.start_datetime || item.end_datetime) {
+        scheduleHtml = `
+          <div class="schedule-pill" title="Start: ${escapeHtml(item.start_display)}\nEnd: ${escapeHtml(item.end_display)}">
+            <i class="fa-regular fa-clock text-green-700"></i>
+            <div class="schedule-times">
+              <span class="font-semibold text-gray-800">${escapeHtml(item.start_display)}</span>
+              <span class="text-xs text-gray-500">to ${escapeHtml(item.end_display)}</span>
+            </div>
+          </div>
+        `;
+      } else {
+        scheduleHtml = `<span class="badge-no-limit"><i class="fa-regular fa-calendar-check mr-1 text-gray-400"></i> Anytime</span>`;
+      }
+
+      const tabLimitBadge = `<span class="badge-tab-limit" title="Maximum ${item.allowed_tab_switches} tab switches allowed before auto-submit"><i class="fa-solid fa-arrow-right-arrow-left"></i> ${item.allowed_tab_switches} Switches</span>`;
+
+      // Status badge mapping based on automatic schedule state
+      let statusBadgeHtml = '';
+      const sKey = item.status_key || (item.is_active ? 'active' : 'inactive');
+      if (sKey === 'active') {
+        statusBadgeHtml = `
+          <span class="badge" style="background:#d1fae5; color:#065f46; border:1px solid rgba(16,185,129,0.3); font-weight:700;">
+            <i class="fa-solid fa-circle-check mr-1 text-green-600"></i> Active
+          </span>
+        `;
+      } else if (sKey === 'upcoming') {
+        statusBadgeHtml = `
+          <span class="badge" style="background:#fef3c7; color:#b45309; border:1px solid rgba(245,158,11,0.35); font-weight:700;" title="Will auto-activate on ${escapeHtml(item.start_display)}">
+            <i class="fa-regular fa-clock mr-1 text-amber-600"></i> Upcoming
+          </span>
+        `;
+      } else if (sKey === 'expired') {
+        statusBadgeHtml = `
+          <span class="badge" style="background:#fee2e2; color:#b91c1c; border:1px solid rgba(239,68,68,0.3); font-weight:700;" title="Auto-closed on ${escapeHtml(item.end_display)}">
+            <i class="fa-solid fa-circle-xmark mr-1 text-red-600"></i> Expired
+          </span>
+        `;
+      } else {
+        statusBadgeHtml = `
+          <span class="badge" style="background:#f1f5f9; color:#64748b; border:1px solid #cbd5e1; font-weight:700;">
+            <i class="fa-solid fa-ban mr-1 text-gray-400"></i> Inactive
+          </span>
+        `;
+      }
+
       return `
         <tr data-id="${item.id}">
           <td class="font-semibold text-gray-800">${escapeHtml(item.exam_title)}</td>
           <td>
             <div class="code-badge">
               <span class="code-text font-mono font-bold">${escapeHtml(item.code)}</span>
-              <button class="copy-btn" onclick="copyToClipboard('${item.code}')" title="Copy code">
+              <button class="copy-btn copy-code-btn" onclick="copyToClipboard('${item.code}')" title="Copy Access Code (${item.code})">
                 <i class="fa-regular fa-copy"></i>
               </button>
+              <button class="copy-btn copy-link-btn" onclick="copyDirectLink('${item.code}')" title="Copy Student Registration Link">
+                <i class="fa-solid fa-link"></i>
+              </button>
+              <a href="/pre-assessment/register/${encodeURIComponent(item.code)}/" target="_blank" class="copy-btn open-link-btn" title="Open Registration Page in new tab">
+                <i class="fa-solid fa-arrow-up-right-from-square"></i>
+              </a>
             </div>
           </td>
-          <td>${createdDate}</td>
+          <td>${scheduleHtml}</td>
+          <td>${tabLimitBadge}</td>
           <td>
-            <span class="badge ${item.is_active ? 'badge-success' : 'badge-danger'}">
-              ${item.is_active ? 'Active' : 'Inactive'}
-            </span>
+            ${statusBadgeHtml}
           </td>
           <td>
-            <div class="action-buttons">
-              <button class="btn btn-icon btn-secondary toggle-status-btn" onclick="toggleStatus('${item.id}')" title="${item.is_active ? 'Deactivate' : 'Activate'}">
-                <i class="fa-solid ${item.is_active ? 'fa-toggle-on text-green-600' : 'fa-toggle-off'}"></i>
-              </button>
-              <button class="btn btn-icon btn-primary view-results-btn" onclick="viewResults('${item.id}', '${escapeHtml(item.exam_title)}')" title="View Candidate Submissions">
-                <i class="fa-solid fa-chart-line"></i>
-              </button>
-              <button class="btn btn-icon btn-success live-monitor-btn" onclick="openPreLiveMonitor('${item.id}', '${escapeHtml(item.exam_title)}')" title="Live Monitor" style="background-color: #10b981; color: white;">
+            <div class="action-btn-group">
+              <button class="act-btn act-btn-monitor" onclick="openPreLiveMonitor('${item.id}', '${escapeHtml(item.exam_title)}')" title="Open Live Candidate Monitor">
                 <i class="fa-solid fa-desktop"></i>
+                <span>Monitor</span>
               </button>
-              <button class="btn btn-icon btn-danger delete-btn" onclick="confirmDelete('${item.id}')" title="Delete PRE-Assessment">
+              <button class="act-btn act-btn-settings" onclick="openSettingsModal('${item.id}')" title="Configure Schedule & Tab Switch Limits">
+                <i class="fa-solid fa-sliders"></i>
+                <span>Settings</span>
+              </button>
+              <button class="act-btn act-btn-status" onclick="toggleStatus('${item.id}')" title="${item.is_active ? 'Pause / Deactivate' : 'Activate Assessment'}">
+                <i class="fa-solid ${item.is_active ? 'fa-pause text-amber-600' : 'fa-play text-emerald-600'}"></i>
+                <span>${item.is_active ? 'Pause' : 'Activate'}</span>
+              </button>
+              <button class="act-btn act-btn-delete" onclick="confirmDelete('${item.id}')" title="Delete PRE-Assessment">
                 <i class="fa-regular fa-trash-can"></i>
+                <span>Delete</span>
               </button>
             </div>
           </td>
@@ -819,7 +1395,8 @@ document.addEventListener('DOMContentLoaded', function() {
   // Update Metrics
   function updateMetrics() {
     document.getElementById('stat-total-count').textContent = preAssessments.length;
-    document.getElementById('stat-active-count').textContent = preAssessments.filter(item => item.is_active).length;
+    const activeCount = preAssessments.filter(item => (item.status_key ? item.status_key === 'active' : item.is_active)).length;
+    document.getElementById('stat-active-count').textContent = activeCount;
     
     const submissionsCount = preAssessments.reduce((acc, curr) => acc + (curr.submissions_count || 0), 0);
     document.getElementById('stat-submissions-count').textContent = submissionsCount;
@@ -827,12 +1404,44 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Copy code utility
   window.copyToClipboard = function(code) {
-    navigator.clipboard.writeText(code).then(() => {
-      showToast(`Code "${code}" copied to clipboard!`);
-    }).catch(err => {
-      console.error('Could not copy text: ', err);
-    });
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(code).then(() => {
+        showToast(`Access Code "${code}" copied to clipboard!`);
+      }).catch(() => {
+        fallbackCopy(code, `Access Code "${code}" copied to clipboard!`);
+      });
+    } else {
+      fallbackCopy(code, `Access Code "${code}" copied to clipboard!`);
+    }
   };
+
+  // Copy direct registration link utility
+  window.copyDirectLink = function(code) {
+    const registerUrl = `${window.location.origin}/pre-assessment/register/${code}/`;
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(registerUrl).then(() => {
+        showToast(`Registration link copied to clipboard!`);
+      }).catch(() => {
+        fallbackCopy(registerUrl, `Registration link copied to clipboard!`);
+      });
+    } else {
+      fallbackCopy(registerUrl, `Registration link copied to clipboard!`);
+    }
+  };
+
+  function fallbackCopy(text, successMsg) {
+    const tempInput = document.createElement('input');
+    tempInput.value = text;
+    document.body.appendChild(tempInput);
+    tempInput.select();
+    try {
+      document.execCommand('copy');
+      showToast(successMsg || 'Copied to clipboard!');
+    } catch (e) {
+      prompt('Copy this:', text);
+    }
+    document.body.removeChild(tempInput);
+  }
 
   // Toggle Status API
   window.toggleStatus = async function(id) {
@@ -856,129 +1465,35 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   };
 
-  // View Results API
-  window.viewResults = async function(id, title) {
-    const tbody = document.getElementById('submissionsTableBody');
-    tbody.innerHTML = `<tr><td colspan="20" class="text-center py-6 text-gray-500"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Loading candidate submissions...</td></tr>`;
-    document.getElementById('resultsModalTitle').textContent = `Submissions: ${title}`;
+  // Device Badge Renderer Helper
+  function renderDeviceBadge(deviceType, osName, browserName, ipAddress) {
+    const typeLower = String(deviceType || '').toLowerCase();
+    const osLower = String(osName || '').toLowerCase();
     
-    // Clear and set export download reference
-    const exportBtn = document.getElementById('btnExportCSV');
-    exportBtn.style.display = 'none';
- 
-    openModal(resultsModal);
- 
-    try {
-      const response = await fetch(`${urls.results}${id}/`);
-      const data = await response.json();
-      const results = data.data || [];
-      
-      document.getElementById('submissions-count-text').textContent = `${results.length} attempts recorded`;
- 
-      if (results.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="20" class="text-center py-6 text-gray-400">No submissions received yet for this PRE-Assessment.</td></tr>`;
-        return;
-      }
- 
-      // Configure export CSV action
-      exportBtn.style.display = 'inline-flex';
-      exportBtn.onclick = function() {
-        exportResultsCSV(title, results);
-      };
- 
-      tbody.innerHTML = results.map(r => {
-        const subDate = new Date(r.submitted_at).toLocaleString('en-IN', { hour12: true });
-        
-        // Status badge
-        const statusVal = r.status || "";
-        const statusClass = statusVal.toLowerCase();
-        
-        // Submission Mode badge
-        let modeBadgeClass = "mode-default";
-        const mode = r.submission_mode || "";
-        if (mode === "Limit Exceeded Submit" || mode.toLowerCase().includes("auto")) {
-          modeBadgeClass = "mode-limit-exceeded";
-        } else if (mode === "Self Submitted" || mode === "Submitted") {
-          modeBadgeClass = "mode-self-submitted";
-        } else if (mode === "Active" || mode === "In Progress") {
-          modeBadgeClass = "mode-active";
-        } else if (mode === "Suspicious") {
-          modeBadgeClass = "mode-suspicious";
-        }
-
-        return `
-          <tr>
-            <td class="font-medium text-gray-800">${escapeHtml(r.candidate_name)}</td>
-            <td>${escapeHtml(r.candidate_email)}</td>
-            <td>${escapeHtml(r.candidate_usn || '-')}</td>
-            <td>${escapeHtml(r.candidate_college || '-')}</td>
-            <td>${escapeHtml(r.candidate_course || '-')}</td>
-            <td>${r.candidate_year || '-'}</td>
-            <td>${r.candidate_sem || '-'}</td>
-            <td class="font-bold text-green-700">${r.marks_obtained} / ${r.total_marks}</td>
-            <td class="font-bold">${r.percentage}%</td>
-            <td>
-              <span class="table-status-badge ${statusClass}">
-                ${escapeHtml(statusVal)}
-              </span>
-            </td>
-            <td>${r.attempted}</td>
-            <td class="text-green-600 font-bold">${r.correct}</td>
-            <td class="text-red-600 font-bold">${r.wrong}</td>
-            <td>${r.unattempted}</td>
-            <td class="${r.tab_switch_count > 0 ? 'text-red-600 font-bold' : ''}">${r.tab_switch_count}</td>
-            <td class="font-mono text-xs" style="max-width: 150px; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(r.time_spent_each_question)}">${escapeHtml(r.time_spent_each_question)}</td>
-            <td>
-              <span class="submission-badge ${modeBadgeClass}">
-                ${escapeHtml(mode)}
-              </span>
-            </td>
-            <td class="font-medium text-xs" style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;" title="${escapeHtml(r.topic_analysis)}">${escapeHtml(r.topic_analysis)}</td>
-            <td>${subDate}</td>
-            <td>
-              <button class="btn btn-icon btn-primary view-report-btn" onclick="viewDetailedReport('${r.id}')" title="View Detailed Report">
-                <i class="fa-solid fa-eye"></i>
-              </button>
-            </td>
-          </tr>
-        `;
-      }).join('');
-    } catch (e) {
-      console.error(e);
-      tbody.innerHTML = `<tr><td colspan="20" class="text-center py-6 text-red-500">Failed to load results.</td></tr>`;
+    let icon = "fa-solid fa-laptop";
+    let badgeClass = "device-laptop";
+    
+    if (typeLower.includes("mobile") || osLower.includes("android") || osLower.includes("iphone") || osLower.includes("ios")) {
+      icon = osLower.includes("android") ? "fa-brands fa-android" : ((osLower.includes("ios") || osLower.includes("iphone") || osLower.includes("apple")) ? "fa-brands fa-apple" : "fa-solid fa-mobile-screen-button");
+      badgeClass = "device-mobile";
+    } else if (typeLower.includes("tablet") || osLower.includes("ipad")) {
+      icon = "fa-solid fa-tablet-screen-button";
+      badgeClass = "device-tablet";
+    } else if (osLower.includes("windows")) {
+      icon = "fa-brands fa-windows";
+      badgeClass = "device-laptop";
+    } else if (osLower.includes("mac") || osLower.includes("apple")) {
+      icon = "fa-brands fa-apple";
+      badgeClass = "device-laptop";
+    } else if (osLower.includes("linux")) {
+      icon = "fa-brands fa-linux";
+      badgeClass = "device-laptop";
     }
-  };
 
-  // CSV Exporter
-  function exportResultsCSV(examTitle, results) {
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "Candidate Name,Email,USN,College Name,Course,Year,Semester,Marks Obtained,Total Marks,Time Taken,Submitted At,Status\n";
-    
-    results.forEach(r => {
-      const row = [
-        `"${r.candidate_name.replace(/"/g, '""')}"`,
-        `"${r.candidate_email.replace(/"/g, '""')}"`,
-        `"${(r.candidate_usn || '').replace(/"/g, '""')}"`,
-        `"${(r.candidate_college || '').replace(/"/g, '""')}"`,
-        `"${(r.candidate_course || '').replace(/"/g, '""')}"`,
-        r.candidate_year || '',
-        r.candidate_sem || '',
-        r.marks_obtained,
-        r.total_marks,
-        `"${(r.time_taken || '').replace(/"/g, '""')}"`,
-        `"${new Date(r.submitted_at).toLocaleString('en-IN')}"`,
-        r.status
-      ].join(",");
-      csvContent += row + "\n";
-    });
+    const label = osName && osName !== "Unknown OS" ? `${osName} • ${browserName || ''}`.replace(/\s*•\s*$/, '') : (deviceType || "Laptop / Desktop");
+    const tooltip = `Device: ${deviceType || 'Laptop / Desktop'}\nOS: ${osName || 'Unknown'}\nBrowser: ${browserName || 'Unknown'}\nIP: ${ipAddress || '-'}`;
 
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `PRE_Assessment_${examTitle.replace(/\s+/g, '_')}_Results.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    return `<span class="device-badge ${badgeClass}" title="${escapeHtml(tooltip)}"><i class="${icon}"></i> <span>${escapeHtml(label)}</span></span>`;
   }
 
   // Slide-out Drawer Actions
@@ -1054,11 +1569,37 @@ document.addEventListener('DOMContentLoaded', function() {
       document.getElementById("detailStudentName").textContent = data.student.name || "—";
       document.getElementById("detailStudentUsn").textContent = data.student.usn || "—";
       document.getElementById("detailStudentEmail").textContent = data.student.email || "—";
+      document.getElementById("detailStudentPhone").textContent = data.student.phone || "—";
       document.getElementById("detailStudentCollege").textContent = data.student.college || "—";
       document.getElementById("detailStudentCourse").textContent = data.student.course || "—";
       document.getElementById("detailStudentYear").textContent = data.student.year || "—";
       document.getElementById("detailStudentSemester").textContent = data.student.semester || "—";
       document.getElementById("detailStudentSection").textContent = data.student.section || "—";
+      document.getElementById("detailDevice").textContent = data.device_info || `${data.device_type || '—'} (${data.os_name || '—'})`;
+      document.getElementById("detailBrowser").textContent = data.browser_name || "—";
+      document.getElementById("detailIpAddress").textContent = data.ip_address || "—";
+
+      // Render custom registration data if present
+      const customData = data.student.custom_data || {};
+      const customCard = document.getElementById("detailCustomDataCard");
+      const customGrid = document.getElementById("detailCustomDataGrid");
+      if (customCard && customGrid) {
+        const entries = Object.entries(customData);
+        if (entries.length > 0) {
+          customCard.style.display = "block";
+          customGrid.innerHTML = entries.map(([k, v]) => {
+            const rawVal = v !== null && v !== undefined ? String(v).trim() : "—";
+            let displayVal = escapeHtml(rawVal);
+            if (rawVal.startsWith("http://") || rawVal.startsWith("https://")) {
+              displayVal = `<a href="${escapeHtml(rawVal)}" target="_blank" rel="noopener noreferrer" style="color: #0284c7; text-decoration: underline; word-break: break-all;">${escapeHtml(rawVal)} <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i></a>`;
+            }
+            return `<div><strong>${escapeHtml(k)}:</strong> <span>${displayVal}</span></div>`;
+          }).join('');
+        } else {
+          customCard.style.display = "none";
+          customGrid.innerHTML = "";
+        }
+      }
 
       document.getElementById("detailMarksObtained").textContent = `${data.marks_obtained} / ${data.total_marks}`;
       document.getElementById("detailPercentage").textContent = `${data.percentage}%`;
@@ -1371,6 +1912,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 ${escapeHtml(r.status || 'Active')}
               </span>
             </td>
+            <td>${renderDeviceBadge(r.device_type, r.os_name, r.browser_name, r.ip_address)}</td>
             <td>${progressDisplay}</td>
             <td class="${r.tab_switch_count > 0 ? 'text-red-600 font-bold' : ''}">${r.tab_switch_count ?? 0}</td>
             <td>${timeSpentHtml}</td>
@@ -1463,11 +2005,345 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
+  function updateSchedulePreview() {
+    const startVal = document.getElementById('settingsStartDatetime').value;
+    const endVal = document.getElementById('settingsEndDatetime').value;
+    const preview = document.getElementById('settingsSchedulePreview');
+    const activeCb = document.getElementById('settingsIsActive');
+    
+    if (!preview) return;
+
+    if (startVal && endVal) {
+      const s = new Date(startVal);
+      const e = new Date(endVal);
+      const sStr = s.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' on ' + s.toLocaleDateString();
+      const eStr = e.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' on ' + e.toLocaleDateString();
+      preview.innerHTML = `<strong>Auto-Lifecycle:</strong> Will automatically activate at <strong>${sStr}</strong> and automatically deactivate & submit at <strong>${eStr}</strong>.`;
+      if (activeCb && !activeCb.checked) {
+        activeCb.checked = true;
+        updateActiveLabel(true);
+      }
+    } else if (startVal) {
+      const s = new Date(startVal);
+      const sStr = s.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' on ' + s.toLocaleDateString();
+      preview.innerHTML = `<strong>Auto-Activation:</strong> Will automatically activate at <strong>${sStr}</strong> with no end deadline.`;
+      if (activeCb && !activeCb.checked) {
+        activeCb.checked = true;
+        updateActiveLabel(true);
+      }
+    } else if (endVal) {
+      const e = new Date(endVal);
+      const eStr = e.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' on ' + e.toLocaleDateString();
+      preview.innerHTML = `<strong>Auto-Deactivation:</strong> Immediately available now and will automatically close & submit at <strong>${eStr}</strong>.`;
+    } else {
+      preview.innerHTML = `Immediate anytime access without scheduled deadline.`;
+    }
+  }
+
+  const startDtInput = document.getElementById('settingsStartDatetime');
+  const endDtInput = document.getElementById('settingsEndDatetime');
+  if (startDtInput) startDtInput.addEventListener('input', updateSchedulePreview);
+  if (endDtInput) endDtInput.addEventListener('input', updateSchedulePreview);
+
+  // ─── Registration Form Customizer Logic ───
+  const STANDARD_FIELD_DEFS = [
+    { key: 'usn', label: 'USN / Reg Number', defaultEnabled: true, defaultRequired: true },
+    { key: 'phone', label: 'Phone Number', defaultEnabled: true, defaultRequired: false },
+    { key: 'college', label: 'College Name', defaultEnabled: true, defaultRequired: true },
+    { key: 'course', label: 'Course / Dept', defaultEnabled: true, defaultRequired: true },
+    { key: 'year', label: 'Year of Study', defaultEnabled: true, defaultRequired: true },
+    { key: 'sem', label: 'Semester', defaultEnabled: true, defaultRequired: true },
+    { key: 'gender', label: 'Gender', defaultEnabled: false, defaultRequired: false },
+    { key: 'cgpa', label: 'CGPA / Percentage', defaultEnabled: false, defaultRequired: false },
+    { key: 'dob', label: 'Date of Birth', defaultEnabled: false, defaultRequired: false },
+    { key: 'city', label: 'City / Location', defaultEnabled: false, defaultRequired: false }
+  ];
+
+  window.renderRegistrationBuilder = function(prefix, config = null) {
+    const stdGrid = document.getElementById(`${prefix}StdFieldsGrid`);
+    const customList = document.getElementById(`${prefix}CustomFieldsList`);
+    if (!stdGrid || !customList) return;
+
+    stdGrid.innerHTML = '';
+    customList.innerHTML = '';
+
+    const stdConfig = (config && config.standard_fields) ? config.standard_fields : {};
+    const customFields = (config && config.custom_fields && Array.isArray(config.custom_fields)) ? config.custom_fields : [];
+
+    // Render standard fields
+    STANDARD_FIELD_DEFS.forEach(field => {
+      const cfg = stdConfig[field.key] || {};
+      const isEnabled = cfg.enabled !== undefined ? !!cfg.enabled : field.defaultEnabled;
+      const isRequired = cfg.required !== undefined ? !!cfg.required : field.defaultRequired;
+      const labelText = cfg.label || field.label;
+
+      const card = document.createElement('div');
+      card.className = `std-field-card ${isEnabled ? 'border-emerald-400 bg-emerald-50/30' : ''}`;
+      card.dataset.fieldKey = field.key;
+      card.innerHTML = `
+        <div class="std-field-info">
+          <label style="display: flex; align-items: center; gap: 7px; cursor: pointer; user-select: none; margin: 0;">
+            <input type="checkbox" class="std-enable-cb" ${isEnabled ? 'checked' : ''} onchange="toggleStdField(this)" style="accent-color: #008037; width: 16px; height: 16px; cursor: pointer;">
+            <span style="font-weight: 600; color: #1e293b; font-size: 0.84rem;">${escapeHtml(labelText)}</span>
+          </label>
+        </div>
+        <div class="std-field-controls">
+          <label style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #64748b; cursor: pointer; user-select: none; margin: 0;">
+            <input type="checkbox" class="std-require-cb" ${isRequired ? 'checked' : ''} ${!isEnabled ? 'disabled' : ''} style="accent-color: #008037; width: 14px; height: 14px; cursor: pointer;">
+            <span>Required</span>
+          </label>
+        </div>
+      `;
+      stdGrid.appendChild(card);
+    });
+
+    // Render custom fields
+    if (customFields.length > 0) {
+      customFields.forEach(cf => {
+        addCustomFieldRow(prefix, cf);
+      });
+    }
+  };
+
+  window.toggleStdField = function(cb) {
+    const parent = cb.closest('.std-field-card');
+    if (!parent) return;
+    const reqCb = parent.querySelector('.std-require-cb');
+    if (cb.checked) {
+      parent.classList.add('border-emerald-400', 'bg-emerald-50/30');
+      if (reqCb) reqCb.disabled = false;
+    } else {
+      parent.classList.remove('border-emerald-400', 'bg-emerald-50/30');
+      if (reqCb) {
+        reqCb.checked = false;
+        reqCb.disabled = true;
+      }
+    }
+  };
+
+  window.addCustomFieldRow = function(prefix, fieldData = null) {
+    const customList = document.getElementById(`${prefix}CustomFieldsList`);
+    if (!customList) return;
+
+    const rowId = 'cf_' + Math.random().toString(36).substring(2, 9);
+    const label = fieldData ? (fieldData.label || '') : '';
+    const type = fieldData ? (fieldData.type || 'text') : 'text';
+    const isRequired = fieldData ? !!fieldData.required : false;
+    const options = fieldData && Array.isArray(fieldData.options) ? fieldData.options.join(', ') : '';
+
+    const row = document.createElement('div');
+    row.className = 'custom-field-row';
+    row.id = rowId;
+    row.style.cssText = "display: flex; flex-wrap: wrap; gap: 8px; align-items: center; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px;";
+    row.innerHTML = `
+      <div style="flex: 2; min-width: 140px;">
+        <input type="text" class="form-control cf-label" placeholder="Field Label (e.g. GitHub Profile)" value="${escapeHtml(label)}" required style="font-size: 0.82rem; padding: 6px 10px;">
+      </div>
+      <div style="flex: 1.2; min-width: 110px;">
+        <select class="form-control cf-type" onchange="handleCustomTypeChange(this)" style="font-size: 0.82rem; padding: 6px 8px;">
+          <option value="text" ${type === 'text' ? 'selected' : ''}>Text</option>
+          <option value="url" ${type === 'url' ? 'selected' : ''}>URL / Link</option>
+          <option value="number" ${type === 'number' ? 'selected' : ''}>Number</option>
+          <option value="tel" ${type === 'tel' ? 'selected' : ''}>Phone / Tel</option>
+          <option value="email" ${type === 'email' ? 'selected' : ''}>Email</option>
+          <option value="textarea" ${type === 'textarea' ? 'selected' : ''}>Paragraph</option>
+          <option value="select" ${type === 'select' ? 'selected' : ''}>Dropdown</option>
+        </select>
+      </div>
+      <div class="cf-options-wrap" style="flex: 2; min-width: 140px; display: ${type === 'select' ? 'block' : 'none'};">
+        <input type="text" class="form-control cf-options" placeholder="Options comma separated (e.g. Option A, Option B)" value="${escapeHtml(options)}" style="font-size: 0.82rem; padding: 6px 10px;">
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-left: auto;">
+        <label style="display: flex; align-items: center; gap: 4px; font-size: 0.75rem; color: #475569; cursor: pointer; user-select: none; margin: 0; white-space: nowrap;">
+          <input type="checkbox" class="cf-required" ${isRequired ? 'checked' : ''} style="accent-color: #008037; width: 14px; height: 14px; cursor: pointer;">
+          <span>Required</span>
+        </label>
+        <button type="button" class="btn btn-neutral btn-sm" onclick="removeCustomFieldRow(this)" style="padding: 4px 8px; color: #ef4444; border-color: #fecaca; background: #fef2f2;" title="Delete Field">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      </div>
+    `;
+    customList.appendChild(row);
+  };
+
+  window.handleCustomTypeChange = function(selectEl) {
+    const row = selectEl.closest('.custom-field-row');
+    if (!row) return;
+    const optWrap = row.querySelector('.cf-options-wrap');
+    if (optWrap) {
+      optWrap.style.display = selectEl.value === 'select' ? 'block' : 'none';
+    }
+  };
+
+  window.removeCustomFieldRow = function(btn) {
+    const row = btn.closest('.custom-field-row');
+    if (row) row.remove();
+  };
+
+  window.getRegistrationConfigFromUI = function(prefix) {
+    const stdGrid = document.getElementById(`${prefix}StdFieldsGrid`);
+    const customList = document.getElementById(`${prefix}CustomFieldsList`);
+    const config = {
+      standard_fields: {},
+      custom_fields: []
+    };
+
+    if (stdGrid) {
+      const items = stdGrid.querySelectorAll('.std-field-card');
+      items.forEach(item => {
+        const key = item.dataset.fieldKey;
+        const enableCb = item.querySelector('.std-enable-cb');
+        const reqCb = item.querySelector('.std-require-cb');
+        const labelEl = item.querySelector('.std-field-info span');
+        if (key) {
+          config.standard_fields[key] = {
+            enabled: enableCb ? enableCb.checked : false,
+            required: reqCb ? (enableCb.checked && reqCb.checked) : false,
+            label: labelEl ? labelEl.textContent.trim() : key
+          };
+        }
+      });
+    }
+
+    if (customList) {
+      const rows = customList.querySelectorAll('.custom-field-row');
+      rows.forEach(row => {
+        const labelInput = row.querySelector('.cf-label');
+        const typeSelect = row.querySelector('.cf-type');
+        const reqCb = row.querySelector('.cf-required');
+        const optInput = row.querySelector('.cf-options');
+        
+        const label = labelInput ? labelInput.value.trim() : '';
+        if (label) {
+          const type = typeSelect ? typeSelect.value : 'text';
+          const required = reqCb ? reqCb.checked : false;
+          let options = [];
+          if (type === 'select' && optInput && optInput.value.trim()) {
+            options = optInput.value.split(',').map(s => s.trim()).filter(Boolean);
+          }
+          const fieldId = 'custom_' + label.toLowerCase().replace(/[^a-z0-9]/g, '_').substring(0, 24) + '_' + Math.random().toString(36).substring(2, 6);
+          config.custom_fields.push({
+            id: fieldId,
+            label: label,
+            type: type,
+            required: required,
+            placeholder: `Enter ${label}`,
+            options: options
+          });
+        }
+      });
+    }
+
+    return config;
+  };
+
+  // Open Settings Modal
+  window.openSettingsModal = function(id) {
+    const item = preAssessments.find(p => p.id === id);
+    if (!item) return;
+
+    document.getElementById('settingsPreId').value = item.id;
+    document.getElementById('settingsExamTitle').textContent = item.exam_title;
+    document.getElementById('settingsExamCode').textContent = item.code;
+    document.getElementById('settingsStartDatetime').value = item.start_datetime || '';
+    document.getElementById('settingsEndDatetime').value = item.end_datetime || '';
+    document.getElementById('settingsTabSwitches').value = item.allowed_tab_switches || 3;
+    
+    const activeCb = document.getElementById('settingsIsActive');
+    // If it has a schedule or is_active, ensure checked
+    activeCb.checked = item.start_datetime || item.end_datetime ? true : !!item.is_active;
+    updateActiveLabel(activeCb.checked);
+    updateSchedulePreview();
+
+    // Populate registration form customizer in settings modal
+    renderRegistrationBuilder('settings', item.registration_fields);
+
+    openModal(settingsModal);
+  };
+
+  const settingsActiveCb = document.getElementById('settingsIsActive');
+  if (settingsActiveCb) {
+    settingsActiveCb.addEventListener('change', function() {
+      updateActiveLabel(this.checked);
+    });
+  }
+
+  function updateActiveLabel(isActive) {
+    const label = document.getElementById('settingsIsActiveLabel');
+    if (label) {
+      label.textContent = isActive ? 'Active' : 'Inactive';
+      label.style.color = isActive ? '#10b981' : '#ef4444';
+    }
+  }
+
+  // Settings form submission
+  document.getElementById('settingsPreForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('settingsPreId').value;
+    if (!id) return;
+
+    const startDatetime = document.getElementById('settingsStartDatetime').value;
+    const endDatetime = document.getElementById('settingsEndDatetime').value;
+    const allowedTabSwitches = document.getElementById('settingsTabSwitches').value;
+    const isActive = document.getElementById('settingsIsActive').checked;
+    const registrationFields = getRegistrationConfigFromUI('settings');
+
+    if (startDatetime && endDatetime && new Date(startDatetime) >= new Date(endDatetime)) {
+      showToast('End date & time must be after start date & time.', false);
+      return;
+    }
+
+    const submitBtn = this.querySelector('.submit-btn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Saving...`;
+
+    try {
+      const response = await fetch(`${urls.updateSettings}${id}/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+          start_datetime: startDatetime || null,
+          end_datetime: endDatetime || null,
+          allowed_tab_switches: allowedTabSwitches,
+          is_active: isActive,
+          registration_fields: registrationFields
+        })
+      });
+      const data = await response.json();
+      if (response.ok) {
+        showToast(data.message || 'Settings saved successfully!');
+        closeModal(settingsModal);
+        loadPreAssessments();
+      } else {
+        showToast(data.error || 'Failed to update settings', false);
+      }
+    } catch (err) {
+      console.error(err);
+      showToast('An error occurred', false);
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = '<i class="fa-solid fa-floppy-disk mr-1"></i> Save Changes';
+    }
+  });
+
   // Create pre-assessment form submission
   document.getElementById('createPreForm').addEventListener('submit', async function(e) {
     e.preventDefault();
     const examId = document.getElementById('examSelect').value;
     if (!examId) return;
+
+    const startDatetime = document.getElementById('createStartDatetime').value;
+    const endDatetime = document.getElementById('createEndDatetime').value;
+    const allowedTabSwitches = document.getElementById('createTabSwitches').value;
+    const registrationFields = getRegistrationConfigFromUI('create');
+
+    if (startDatetime && endDatetime && new Date(startDatetime) >= new Date(endDatetime)) {
+      showToast('End date & time must be after start date & time.', false);
+      return;
+    }
 
     const submitBtn = this.querySelector('.submit-btn');
     submitBtn.disabled = true;
@@ -1480,13 +2356,22 @@ document.addEventListener('DOMContentLoaded', function() {
           'Content-Type': 'application/json',
           'X-CSRFToken': getCsrfToken()
         },
-        body: JSON.stringify({ exam_id: examId })
+        body: JSON.stringify({
+          exam_id: examId,
+          start_datetime: startDatetime || null,
+          end_datetime: endDatetime || null,
+          allowed_tab_switches: allowedTabSwitches,
+          registration_fields: registrationFields
+        })
       });
       const data = await response.json();
       if (response.ok) {
         showToast(`PRE-Assessment created successfully! Code: ${data.code}`);
         closeModal(createModal);
         document.getElementById('examSelect').selectedIndex = 0;
+        document.getElementById('createStartDatetime').value = '';
+        document.getElementById('createEndDatetime').value = '';
+        document.getElementById('createTabSwitches').value = '3';
         loadPreAssessments();
       } else {
         showToast(data.error || 'Failed to create PRE-Assessment', false);
@@ -1496,12 +2381,15 @@ document.addEventListener('DOMContentLoaded', function() {
       showToast('An error occurred', false);
     } finally {
       submitBtn.disabled = false;
-      submitBtn.innerHTML = 'Generate Code';
+      submitBtn.innerHTML = '<i class="fa-solid fa-plus mr-1"></i> Generate Code';
     }
   });
 
   // Open modal button
-  document.getElementById('createPreBtn').addEventListener('click', () => openModal(createModal));
+  document.getElementById('createPreBtn').addEventListener('click', () => {
+    renderRegistrationBuilder('create');
+    openModal(createModal);
+  });
 
   // Search input change
   document.getElementById('searchInput').addEventListener('input', renderTable);

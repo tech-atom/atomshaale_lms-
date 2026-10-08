@@ -9,6 +9,7 @@ urlpatterns = [
     path('admin/api/toggle/<uuid:pk>/', views.admin_toggle_api, name='pre_assessment_toggle_api'),
     path('admin/api/delete/<uuid:pk>/', views.admin_delete_api, name='pre_assessment_delete_api'),
     path('admin/api/results/<uuid:pk>/', views.admin_results_api, name='pre_assessment_results_api'),
+    path('admin/api/update-settings/<uuid:pk>/', views.admin_update_settings_api, name='pre_assessment_update_settings_api'),
     path('admin/api/allow-retake/<int:result_id>/', views.admin_allow_retake_api, name='pre_assessment_allow_retake_api'),
     path('admin/api/remove-attempt/<int:result_id>/', views.admin_remove_attempt_api, name='pre_assessment_remove_attempt_api'),
 

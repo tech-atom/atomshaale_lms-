@@ -1,385 +1,454 @@
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Assessment Registration - Atom </title>
-  
-  <!-- Fonts & Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
-  
-  <style nonce="{{ request.csp_nonce }}">
-    :root {
-      --primary-color: #004d20;
-      --secondary-color: #008037;
-      --pill-bg: #e6f6ec;
-      --pill-text: #00702e;
-      --text-dark: #1e293b;
-      --text-grey: #64748b;
-      --font-family: 'Century Gothic';
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: var(--font-family);
-      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
-      color: var(--text-dark);
-      min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      position: relative;
-      overflow-x: hidden;
-      padding: 20px;
-    }
-
-    /* Decorative circles */
-    .bg-circle {
-      position: absolute;
-      border-radius: 50%;
-      z-index: 1;
-      pointer-events: none;
-      filter: blur(40px);
-    }
-    .circle-1 {
-      top: -10%;
-      left: -10%;
-      width: 40vw;
-      height: 40vw;
-      background: rgba(0, 128, 55, 0.15);
-    }
-    .circle-2 {
-      bottom: -10%;
-      right: -10%;
-      width: 35vw;
-      height: 35vw;
-      background: rgba(0, 77, 32, 0.15);
-    }
-
-    .register-card {
-      background: rgba(255, 255, 255, 0.85);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
-      border-radius: 24px;
-      padding: 40px;
-      width: 100%;
-      max-width: 500px;
-      box-shadow: 0 20px 40px rgba(0, 77, 32, 0.08);
-      z-index: 5;
-      position: relative;
-      animation: fadeInUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    @keyframes fadeInUp {
-      from {
-        opacity: 0;
-        transform: translateY(20px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
-
-    .logo-container {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-    .logo-container img {
-      max-height: 80px;
-      width: auto;
-      object-fit: contain;
-    }
-
-    .card-header {
-      text-align: center;
-      margin-bottom: 28px;
-    }
-    .card-header h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      color: var(--primary-color);
-      margin-bottom: 8px;
-    }
-    .card-header p {
-      font-size: 0.9rem;
-      color: var(--text-grey);
-    }
-
-    .exam-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--pill-bg);
-      color: var(--pill-text);
-      padding: 6px 14px;
-      border-radius: 20px;
-      font-size: 0.8rem;
-      font-weight: 700;
-      margin-bottom: 20px;
-      align-self: center;
-      letter-spacing: 0.5px;
-    }
-
-    .error-msg {
-      background: #fee2e2;
-      border-left: 4px solid #ef4444;
-      color: #b91c1c;
-      padding: 12px 16px;
-      border-radius: 8px;
-      font-size: 0.85rem;
-      margin-bottom: 20px;
-      font-weight: 500;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .form-group {
-      margin-bottom: 20px;
-      position: relative;
-    }
-    .form-group label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-dark);
-      margin-bottom: 6px;
-    }
-    .input-wrapper {
-      position: relative;
-    }
-    .input-icon {
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-grey);
-      font-size: 0.95rem;
-    }
-    .form-control {
-      width: 100%;
-      padding: 12px 14px 12px 38px;
-      font-size: 0.9rem;
-      font-family: inherit;
-      border: 1.5px solid #cbd5e1;
-      border-radius: 12px;
-      background: white;
-      color: var(--text-dark);
-      transition: all 0.2s ease;
-      outline: none;
-    }
-    .form-control:focus {
-      border-color: var(--secondary-color);
-      box-shadow: 0 0 0 3px rgba(0, 128, 55, 0.15);
-    }
-
-    .btn-submit {
-      width: 100%;
-      padding: 14px;
-      background: var(--primary-color);
-      color: white;
-      border: none;
-      border-radius: 12px;
-      font-size: 0.95rem;
-      font-family: inherit;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-shadow: 0 8px 16px rgba(0, 77, 32, 0.15);
-      transition: all 0.2s ease;
-      margin-top: 10px;
-    }
-    .btn-submit:hover {
-      background: #003314;
-      transform: translateY(-1px);
-      box-shadow: 0 10px 20px rgba(0, 77, 32, 0.25);
-    }
-    .btn-submit:active {
-      transform: translateY(0);
-    }
-
-    .footer-note {
-      text-align: center;
-      font-size: 0.75rem;
-      color: var(--text-grey);
-      margin-top: 24px;
-    }
-    .footer-note a {
-      color: var(--primary-color);
-      text-decoration: none;
-      font-weight: 600;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assessment Registration - ATOM</title>
+    <link rel="stylesheet" href="{% static 'css/register.css' %}?v=2.8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+    <style nonce="{{ request.csp_nonce }}">
+        .assessment-badge-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #ffffff;
+            border: 1.5px solid rgba(0, 128, 55, 0.2);
+            padding: 8px 18px;
+            border-radius: 50px;
+            box-shadow: 0 4px 12px rgba(0, 128, 55, 0.06);
+            margin-top: 18px;
+        }
+        .assessment-code-tag {
+            background: #e6f6ec;
+            color: #00702e;
+            font-family: monospace;
+            font-size: 0.85rem;
+            font-weight: 800;
+            padding: 2px 8px;
+            border-radius: 6px;
+            border: 1px solid #bbf7d0;
+            letter-spacing: 0.5px;
+        }
+        .form-grid-full {
+            grid-column: span 2;
+        }
+        @media (max-width: 600px) {
+            .form-grid-full {
+                grid-column: span 1;
+            }
+        }
+    </style>
 </head>
+
 <body>
+    <!-- Background Effects & Waves -->
+    <div class="background-elements">
+        <!-- Dotted Grid (Top-Left) -->
+        <div class="dotted-grid top-left"></div>
+        
+        <!-- Full-width continuous curvy layered vector waves at bottom -->
+        <svg class="background-wave bottom-waves" viewBox="0 0 1440 250" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+            <!-- Light green layer -->
+            <path d="M-100 250 L-100 80 C 250 -40 600 210 1000 130 C 1200 90 1350 150 1540 80 L 1540 250 Z" fill="rgba(0, 128, 55, 0.06)"/>
+            <!-- Medium green layer -->
+            <path d="M-100 250 L-100 120 C 200 40 500 230 900 160 C 1150 110 1300 190 1540 120 L 1540 250 Z" fill="rgba(0, 128, 55, 0.15)"/>
+            <!-- Active brand green layer -->
+            <path d="M-100 250 L-100 160 C 180 80 450 240 800 190 C 1050 160 1250 220 1540 160 L 1540 250 Z" fill="#008037"/>
+            <!-- Dark green layer -->
+            <path d="M-100 250 L-100 200 C 150 130 400 250 700 210 C 950 190 1200 240 1540 200 L 1540 250 Z" fill="#005c25"/>
+        </svg>
 
-  <div class="bg-circle circle-1"></div>
-  <div class="bg-circle circle-2"></div>
+        <!-- Top-right organic blob curve -->
+        <svg class="background-wave top-right-blob" viewBox="0 0 500 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 500,0 C 350,150 250,50 100,0 Z" fill="rgba(0, 128, 55, 0.03)"/>
+            <path d="M 500,0 C 400,100 320,30 200,0 Z" fill="rgba(0, 128, 55, 0.015)"/>
+        </svg>
 
-  <div class="register-card">
-    <div class="logo-container">
-      <img src="{% static 'images/atomshaalelogo.png' %}" alt="Atom Shaale Logo">
+        <!-- Right-center organic blob curve (behind card) -->
+        <svg class="background-wave right-blob" viewBox="0 0 400 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 400,100 C 200,250 200,550 400,700 Z" fill="rgba(0, 128, 55, 0.03)"/>
+            <path d="M 400,200 C 280,300 280,500 400,600 Z" fill="rgba(0, 128, 55, 0.015)"/>
+        </svg>
     </div>
-    
-    <div class="card-header">
-      <h2>Assessment </h2>
-      <p>Please enter your details to register and begin the assessment.</p>
+
+    <!-- Main Registration Container -->
+    <div class="register-container">
+        <!-- Left: Branding Section -->
+        <div class="branding-section">
+            <div class="logo-container">
+                <img src="{% static 'images/atomshaalelogo.png' %}" alt="Atom Shaale Logo" class="logo">
+            </div>
+
+            <div class="branding-hero">
+                <h1 class="hero-main-title">
+                    Start Your <br>
+                    <span class="hero-green-text">
+                        Learning Journey
+                    </span> <br>
+                    Today!
+                </h1>
+
+                <div class="assessment-badge-pill">
+                    <i class="fa-regular fa-file-lines" style="color: #008037; font-size: 1.1rem;"></i>
+                    <span style="font-weight: 800; color: #0b2540; font-size: 0.95rem;">{{ pre_exam.exam.title }}</span>
+                    <span class="assessment-code-tag">{{ pre_exam.code }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Form Section -->
+        <div class="form-section">
+            <div class="form-card">
+                
+                <!-- Error Message Alert -->
+                {% if error %}
+                <div class="messages-container">
+                    <div class="message-alert alert-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <span>{{ error }}</span>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Form -->
+                <form method="post" action="{% url 'pre_assessment_register' pre_exam.code %}" id="registerForm" class="register-form">
+                    {% csrf_token %}
+                    <input type="hidden" name="device_hints" id="deviceHintsInput">
+
+                    <!-- Section 1: Candidate Basic Information -->
+                    <div class="form-grid">
+                        <!-- Full Name (Always Mandatory) -->
+                        <div class="form-group">
+                            <label for="name">Full Name <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-user input-icon"></i>
+                                <input type="text" id="name" name="name" placeholder="Enter your full name" required autocomplete="name">
+                            </div>
+                        </div>
+
+                        <!-- Email Address (Always Mandatory) -->
+                        <div class="form-group">
+                            <label for="email">Email Address <span class="required">*</span></label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-envelope input-icon"></i>
+                                <input type="email" id="email" name="email" placeholder="Enter your email address" required autocomplete="email">
+                            </div>
+                        </div>
+
+                        <!-- Phone / Mobile Number -->
+                        {% if reg_config.standard_fields.phone.enabled %}
+                        <div class="form-group">
+                            <label for="phone">{{ reg_config.standard_fields.phone.label|default:"Mobile Number" }} {% if reg_config.standard_fields.phone.required %}<span class="required">*</span>{% endif %}</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-phone input-icon"></i>
+                                <input type="tel" id="phone" name="phone" placeholder="+91 XXXXX XXXXX" {% if reg_config.standard_fields.phone.required %}required{% endif %} autocomplete="tel">
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Gender -->
+                        {% if reg_config.standard_fields.gender.enabled %}
+                        <div class="form-group">
+                            <label for="gender">{{ reg_config.standard_fields.gender.label|default:"Gender" }} {% if reg_config.standard_fields.gender.required %}<span class="required">*</span>{% endif %}</label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-venus-mars input-icon"></i>
+                                <select id="gender" name="gender" {% if reg_config.standard_fields.gender.required %}required{% endif %}>
+                                    <option value="" disabled selected>Select Gender</option>
+                                    <option value="Male">Male</option>
+                                    <option value="Female">Female</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Academic Details Divider (if any academic fields are enabled) -->
+                    {% if reg_config.standard_fields.usn.enabled or reg_config.standard_fields.college.enabled or reg_config.standard_fields.course.enabled or reg_config.standard_fields.year.enabled or reg_config.standard_fields.sem.enabled or reg_config.standard_fields.cgpa.enabled or reg_config.standard_fields.dob.enabled or reg_config.standard_fields.city.enabled or reg_config is None %}
+                    <div class="academic-divider">
+                        <div class="academic-divider-line"></div>
+                        <div class="academic-badge">
+                            <i class="fas fa-graduation-cap"></i>
+                            <span>Academic Details</span>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <!-- USN / Enrollment Number -->
+                        {% if reg_config.standard_fields.usn.enabled or reg_config is None %}
+                        <div class="form-group">
+                            <label for="usn">{{ reg_config.standard_fields.usn.label|default:"USN / Enrollment Number" }} {% if reg_config.standard_fields.usn.required or reg_config is None %}<span class="required">*</span>{% endif %}</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-id-card input-icon"></i>
+                                <input type="text" id="usn" name="usn" placeholder="e.g., 1BM18CS001" {% if reg_config.standard_fields.usn.required or reg_config is None %}required{% endif %} autocomplete="off">
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- College -->
+                        {% if reg_config.standard_fields.college.enabled or reg_config is None %}
+                        <div class="form-group">
+                            <label for="college">{{ reg_config.standard_fields.college.label|default:"College" }} {% if reg_config.standard_fields.college.required or reg_config is None %}<span class="required">*</span>{% endif %}</label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-building input-icon"></i>
+                                <select id="college" name="college" {% if reg_config.standard_fields.college.required or reg_config is None %}required{% endif %}>
+                                    <option value="" disabled selected>---------</option>
+                                    {% for c in colleges %}
+                                        <option value="{{ c.id }}">{{ c.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Course -->
+                        {% if reg_config.standard_fields.course.enabled or reg_config is None %}
+                        <div class="form-group">
+                            <label for="course">{{ reg_config.standard_fields.course.label|default:"Course" }} {% if reg_config.standard_fields.course.required or reg_config is None %}<span class="required">*</span>{% endif %}</label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-book input-icon"></i>
+                                <select id="course" name="course" {% if reg_config.standard_fields.course.required or reg_config is None %}required{% endif %} {% if reg_config.standard_fields.college.enabled or reg_config is None %}disabled{% endif %}>
+                                    <option value="" disabled selected>{% if reg_config.standard_fields.college.enabled or reg_config is None %}--Select College First--{% else %}Select Course{% endif %}</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Semester -->
+                        {% if reg_config.standard_fields.sem.enabled or reg_config is None %}
+                        <div class="form-group">
+                            <label for="sem">{{ reg_config.standard_fields.sem.label|default:"Semester" }} {% if reg_config.standard_fields.sem.required or reg_config is None %}<span class="required">*</span>{% endif %}</label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-calendar input-icon"></i>
+                                <select id="sem" name="sem" {% if reg_config.standard_fields.sem.required or reg_config is None %}required{% endif %}>
+                                    <option value="" disabled selected>Select Semester</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                    <option value="5">5</option>
+                                    <option value="6">6</option>
+                                    <option value="7">7</option>
+                                    <option value="8">8</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Year -->
+                        {% if reg_config.standard_fields.year.enabled or reg_config is None %}
+                        <div class="form-group">
+                            <label for="year">{{ reg_config.standard_fields.year.label|default:"Year" }} {% if reg_config.standard_fields.year.required or reg_config is None %}<span class="required">*</span>{% endif %}</label>
+                            <div class="input-wrapper select-wrapper">
+                                <i class="fas fa-calendar input-icon"></i>
+                                <select id="year" name="year" {% if reg_config.standard_fields.year.required or reg_config is None %}required{% endif %}>
+                                    <option value="" disabled selected>Select Year</option>
+                                    <option value="1">1</option>
+                                    <option value="2">2</option>
+                                    <option value="3">3</option>
+                                    <option value="4">4</option>
+                                </select>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- CGPA / Percentage -->
+                        {% if reg_config.standard_fields.cgpa.enabled %}
+                        <div class="form-group">
+                            <label for="cgpa">{{ reg_config.standard_fields.cgpa.label|default:"CGPA / %" }} {% if reg_config.standard_fields.cgpa.required %}<span class="required">*</span>{% endif %}</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-chart-line input-icon"></i>
+                                <input type="text" id="cgpa" name="cgpa" placeholder="e.g., 8.5 or 85%" {% if reg_config.standard_fields.cgpa.required %}required{% endif %}>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- Date of Birth -->
+                        {% if reg_config.standard_fields.dob.enabled %}
+                        <div class="form-group">
+                            <label for="dob">{{ reg_config.standard_fields.dob.label|default:"Date of Birth" }} {% if reg_config.standard_fields.dob.required %}<span class="required">*</span>{% endif %}</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-calendar-days input-icon"></i>
+                                <input type="date" id="dob" name="dob" {% if reg_config.standard_fields.dob.required %}required{% endif %}>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <!-- City / Location -->
+                        {% if reg_config.standard_fields.city.enabled %}
+                        <div class="form-group">
+                            <label for="city">{{ reg_config.standard_fields.city.label|default:"City / Location" }} {% if reg_config.standard_fields.city.required %}<span class="required">*</span>{% endif %}</label>
+                            <div class="input-wrapper">
+                                <i class="fas fa-location-dot input-icon"></i>
+                                <input type="text" id="city" name="city" placeholder="e.g., Bangalore" {% if reg_config.standard_fields.city.required %}required{% endif %}>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Custom Fields (if configured) -->
+                    {% if reg_config.custom_fields %}
+                    <div class="academic-divider" style="margin-top: 14px;">
+                        <div class="academic-divider-line"></div>
+                        <div class="academic-badge" style="background: #0284c7;">
+                            <i class="fas fa-id-card-clip"></i>
+                            <span>Additional Details</span>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        {% for cf in reg_config.custom_fields %}
+                        <div class="form-group {% if cf.type == 'textarea' %}form-grid-full{% endif %}">
+                            <label for="custom_{{ cf.id }}">{{ cf.label }} {% if cf.required %}<span class="required">*</span>{% endif %}</label>
+                            <div class="input-wrapper {% if cf.type == 'select' %}select-wrapper{% endif %}">
+                                {% if cf.type == 'select' %}
+                                    <i class="fas fa-list-check input-icon"></i>
+                                    <select id="custom_{{ cf.id }}" name="custom_{{ cf.id }}" {% if cf.required %}required{% endif %}>
+                                        <option value="" disabled selected>{{ cf.placeholder|default:"Select an option" }}</option>
+                                        {% for opt in cf.options %}
+                                            <option value="{{ opt }}">{{ opt }}</option>
+                                        {% endfor %}
+                                    </select>
+                                {% elif cf.type == 'textarea' %}
+                                    <textarea id="custom_{{ cf.id }}" name="custom_{{ cf.id }}" style="width: 100%; min-height: 70px; padding: 8px 12px; border-radius: 8px; border: 1.5px solid #d1d5db; outline: none; font-size: 0.86rem; resize: vertical;" placeholder="{{ cf.placeholder|default:'Enter details...' }}" {% if cf.required %}required{% endif %}></textarea>
+                                {% elif cf.type == 'url' %}
+                                    <i class="fas fa-link input-icon"></i>
+                                    <input type="url" id="custom_{{ cf.id }}" name="custom_{{ cf.id }}" placeholder="{{ cf.placeholder|default:'https://...' }}" {% if cf.required %}required{% endif %}>
+                                {% elif cf.type == 'number' %}
+                                    <i class="fas fa-hashtag input-icon"></i>
+                                    <input type="number" id="custom_{{ cf.id }}" name="custom_{{ cf.id }}" placeholder="{{ cf.placeholder }}" {% if cf.required %}required{% endif %}>
+                                {% elif cf.type == 'email' %}
+                                    <i class="fas fa-envelope input-icon"></i>
+                                    <input type="email" id="custom_{{ cf.id }}" name="custom_{{ cf.id }}" placeholder="{{ cf.placeholder }}" {% if cf.required %}required{% endif %}>
+                                {% elif cf.type == 'tel' %}
+                                    <i class="fas fa-phone input-icon"></i>
+                                    <input type="tel" id="custom_{{ cf.id }}" name="custom_{{ cf.id }}" placeholder="{{ cf.placeholder }}" {% if cf.required %}required{% endif %}>
+                                {% else %}
+                                    <i class="fas fa-pen-to-square input-icon"></i>
+                                    <input type="text" id="custom_{{ cf.id }}" name="custom_{{ cf.id }}" placeholder="{{ cf.placeholder }}" {% if cf.required %}required{% endif %}>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="submit-button" style="margin-top: 14px;">
+                        <span>START ASSESSMENT</span> <i class="fas fa-arrow-right"></i>
+                    </button>
+                </form>
+
+                <!-- Anti-cheat Footer Note -->
+                <div style="margin-top: 16px; text-align: center; font-size: 0.76rem; color: #64748b; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                    <i class="fas fa-shield-halved text-green-700" style="color: #008037;"></i>
+                    <span>Proctored Assessment Session • Tab switches and activity are monitored</span>
+                </div>
+
+            </div>
+        </div>
     </div>
 
-    <center>
-      <div class="exam-badge">
-        <i class="fa-regular fa-file-lines"></i> {{ pre_exam.exam.title }}
-      </div>
-    </center>
-
-    {% if error %}
-      <div class="error-msg">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-        <span>{{ error }}</span>
-      </div>
-    {% endif %}
-
-    <form method="post" action="{% url 'pre_assessment_register' pre_exam.code %}">
-      {% csrf_token %}
-      
-      <div class="form-group">
-        <label for="name">Full Name <span style="color: #ef4444;">*</span></label>
-        <div class="input-wrapper">
-          <i class="fa-regular fa-user input-icon"></i>
-          <input type="text" id="name" name="name" class="form-control" placeholder="Enter your full name" required autocomplete="name">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="email">Email Address <span style="color: #ef4444;">*</span></label>
-        <div class="input-wrapper">
-          <i class="fa-regular fa-envelope input-icon"></i>
-          <input type="email" id="email" name="email" class="form-control" placeholder="Enter your email address" required autocomplete="email">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="usn">USN / Register Number <span style="color: #ef4444;">*</span></label>
-        <div class="input-wrapper">
-          <i class="fa-regular fa-id-card input-icon"></i>
-          <input type="text" id="usn" name="usn" class="form-control" placeholder="Enter your USN" required autocomplete="off">
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="college">College Name <span style="color: #ef4444;">*</span></label>
-        <div class="input-wrapper">
-          <i class="fa-solid fa-building-columns input-icon"></i>
-          <select id="college" name="college" class="form-control" style="padding-left: 38px;" required>
-            <option value="" disabled selected>Select College</option>
-            {% for c in colleges %}
-              <option value="{{ c.id }}">{{ c.name }}</option>
-            {% endfor %}
-          </select>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label for="course">Course / Department <span style="color: #ef4444;">*</span></label>
-        <div class="input-wrapper">
-          <i class="fa-solid fa-graduation-cap input-icon"></i>
-          <select id="course" name="course" class="form-control" style="padding-left: 38px;" required disabled>
-            <option value="" disabled selected>--Select College First--</option>
-          </select>
-        </div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-        <div class="form-group">
-          <label for="year">Year <span style="color: #ef4444;">*</span></label>
-          <div class="input-wrapper">
-            <i class="fa-regular fa-calendar input-icon"></i>
-            <select id="year" name="year" class="form-control" style="padding-left: 38px;" required>
-              <option value="" disabled selected>Select Year</option>
-              <option value="1">1st Year</option>
-              <option value="2">2nd Year</option>
-              <option value="3">3rd Year</option>
-              <option value="4">4th Year</option>
-              <option value="5">5th Year</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="sem">Semester <span style="color: #ef4444;">*</span></label>
-          <div class="input-wrapper">
-            <i class="fa-solid fa-book-open input-icon"></i>
-            <select id="sem" name="sem" class="form-control" style="padding-left: 38px;" required>
-              <option value="" disabled selected>Select Sem</option>
-              <option value="1">1st Sem</option>
-              <option value="2">2nd Sem</option>
-              <option value="3">3rd Sem</option>
-              <option value="4">4th Sem</option>
-              <option value="5">5th Sem</option>
-              <option value="6">6th Sem</option>
-              <option value="7">7th Sem</option>
-              <option value="8">8th Sem</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <button type="submit" class="btn-submit">
-        <span>Proceed to Exam</span>
-        <i class="fa-solid fa-arrow-right"></i>
-      </button>
-    </form>
-
-    <div class="footer-note">
-      Powered by <a href="/">ATOM </a>
-    </div>
-  </div>
-
-  <script nonce="{{ request.csp_nonce }}">
-    document.addEventListener("DOMContentLoaded", () => {
-      const collegeSelect = document.getElementById("college");
-      const courseSelect = document.getElementById("course");
-
-      if (collegeSelect && courseSelect) {
-        collegeSelect.addEventListener("change", async () => {
-          const collegeId = collegeSelect.value;
-          if (!collegeId) {
-            courseSelect.disabled = true;
-            courseSelect.innerHTML = '<option value="" disabled selected>--Select College First--</option>';
-            return;
+    <!-- Scripts -->
+    <script nonce="{{ request.csp_nonce }}">
+      function getWebGLInfo() {
+        try {
+          const canvas = document.createElement('canvas');
+          const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+          if (gl) {
+            const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+            if (debugInfo) {
+              return {
+                vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || '',
+                renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || ''
+              };
+            }
           }
-
-          courseSelect.disabled = true;
-          courseSelect.innerHTML = '<option value="" disabled selected>Loading courses...</option>';
-
-          try {
-            const res = await fetch(`/college/courses/api/list/?college_id=${collegeId}`);
-            const courses = await res.json();
-
-            courseSelect.innerHTML = '<option value="" disabled selected>Select Course</option>';
-            courses.forEach(c => {
-              courseSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
-            });
-            courseSelect.disabled = false;
-          } catch (err) {
-            console.error("Error loading courses:", err);
-            courseSelect.innerHTML = '<option value="" disabled selected>Error loading courses</option>';
-          }
-        });
+        } catch (e) {}
+        return { vendor: '', renderer: '' };
       }
-    });
-  </script>
 
+      function collectDeviceHints() {
+        const webgl = getWebGLInfo();
+        const touchPoints = navigator.maxTouchPoints || (navigator.msMaxTouchPoints || 0);
+        const hasTouch = touchPoints > 0 || ('ontouchstart' in window) || (window.DocumentTouch && document instanceof DocumentTouch);
+        const width = window.screen ? (window.screen.width || 0) : 0;
+        const height = window.screen ? (window.screen.height || 0) : 0;
+        const pixelRatio = window.devicePixelRatio || 1;
+        
+        let uaDataPlatform = '';
+        let uaDataMobile = false;
+        if (navigator.userAgentData) {
+          uaDataPlatform = navigator.userAgentData.platform || '';
+          uaDataMobile = !!navigator.userAgentData.mobile;
+        }
+
+        return {
+          is_mobile: /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || hasTouch,
+          screen_width: width,
+          screen_height: height,
+          screen: `${width}x${height}`,
+          pixel_ratio: pixelRatio,
+          touch_points: touchPoints,
+          has_touch: !!hasTouch,
+          webgl_vendor: webgl.vendor || '',
+          webgl_renderer: webgl.renderer || '',
+          platform: navigator.platform || '',
+          ua_data_platform: uaDataPlatform,
+          ua_data_mobile: uaDataMobile,
+          user_agent: navigator.userAgent || ''
+        };
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const hintsInput = document.getElementById("deviceHintsInput");
+        if (hintsInput) {
+          hintsInput.value = JSON.stringify(collectDeviceHints());
+        }
+
+        const regForm = document.getElementById("registerForm");
+        if (regForm) {
+          regForm.addEventListener("submit", () => {
+            if (hintsInput) {
+              hintsInput.value = JSON.stringify(collectDeviceHints());
+            }
+          });
+        }
+
+        const collegeSelect = document.getElementById("college");
+        const courseSelect = document.getElementById("course");
+
+        if (collegeSelect && courseSelect) {
+          collegeSelect.addEventListener("change", async () => {
+            const collegeId = collegeSelect.value;
+            if (!collegeId) {
+              courseSelect.disabled = true;
+              courseSelect.innerHTML = '<option value="" disabled selected>--Select College First--</option>';
+              return;
+            }
+
+            courseSelect.disabled = true;
+            courseSelect.innerHTML = '<option value="" disabled selected>Loading courses...</option>';
+
+            try {
+              const res = await fetch(`/college/courses/api/list/?college_id=${collegeId}`);
+              const courses = await res.json();
+
+              courseSelect.innerHTML = '<option value="" disabled selected>Select Course</option>';
+              courses.forEach(c => {
+                courseSelect.innerHTML += `<option value="${c.id}">${c.name}</option>`;
+              });
+              courseSelect.disabled = false;
+            } catch (err) {
+              console.error("Error loading courses:", err);
+              courseSelect.innerHTML = '<option value="" disabled selected>Error loading courses</option>';
+            }
+          });
+        }
+      });
+    </script>
 </body>
 </html>

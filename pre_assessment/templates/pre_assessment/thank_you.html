@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Assessment Submitted - Atom </title>
+  <title>Assessment Submitted - ATOM</title>
   
   <!-- Fonts & Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous" />
@@ -13,7 +13,7 @@
     :root {
       --primary-color: #004d20;
       --secondary-color: #008037;
-      --font-family: 'Century Gothic';
+      --font-family: 'Century Gothic', sans-serif;
     }   
 
     * {
@@ -24,7 +24,7 @@
 
     body {
       font-family: var(--font-family);
-      background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+      background: linear-gradient(135deg, #f0fdf4 0%, #e8f7ee 50%, #dcfce7 100%);
       color: #1e293b;
       min-height: 100vh;
       display: flex;
@@ -34,18 +34,18 @@
     }
 
     .success-card {
-      background: rgba(255, 255, 255, 0.85);
+      background: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(16px);
       -webkit-backdrop-filter: blur(16px);
-      border: 1px solid rgba(255, 255, 255, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.8);
       border-radius: 24px;
-      padding: 50px 40px;
+      padding: 48px 36px;
       width: 100%;
-      max-width: 500px;
-      box-shadow: 0 20px 40px rgba(0, 77, 32, 0.08);
+      max-width: 540px;
+      box-shadow: 0 20px 45px rgba(0, 77, 32, 0.08), 0 4px 12px rgba(0, 0, 0, 0.03);
       text-align: center;
       z-index: 5;
-      animation: zoomIn 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: zoomIn 0.45s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
     @keyframes zoomIn {
@@ -59,19 +59,27 @@
       }
     }
 
-    .success-icon-wrapper {
-      width: 80px;
-      height: 80px;
-      background: #dcfce7;
-      color: var(--secondary-color);
+    .icon-wrapper {
+      width: 84px;
+      height: 84px;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.5rem;
-      margin: 0 auto 24px auto;
-      box-shadow: 0 8px 20px rgba(0, 128, 55, 0.15);
-      animation: pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.2s both;
+      font-size: 2.6rem;
+      margin: 0 auto 22px auto;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+      animation: pop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+    }
+
+    .icon-wrapper.success {
+      background: #dcfce7;
+      color: #008037;
+    }
+
+    .icon-wrapper.warning {
+      background: #fef3c7;
+      color: #d97706;
     }
 
     @keyframes pop {
@@ -86,23 +94,60 @@
     }
 
     h1 {
-      font-size: 1.8rem;
-      font-weight: 700;
-      color: var(--primary-color);
+      font-size: 1.75rem;
+      font-weight: 800;
+      color: #0f172a;
       margin-bottom: 12px;
+      line-height: 1.25;
     }
 
-    p {
-      color: #64748b;
+    .sub-message {
+      color: #475569;
       font-size: 0.95rem;
       line-height: 1.6;
+      margin-bottom: 22px;
+    }
+
+    .notice-banner {
+      border-radius: 14px;
+      padding: 16px 18px;
       margin-bottom: 24px;
+      text-align: left;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+
+    .notice-banner.warning {
+      background: #fffbeb;
+      border: 1.5px solid #fde68a;
+    }
+
+    .notice-banner.warning i {
+      color: #d97706;
+      font-size: 1.35rem;
+      margin-top: 2px;
+      flex-shrink: 0;
+    }
+
+    .notice-banner.warning .notice-title {
+      font-weight: 800;
+      color: #92400e;
+      font-size: 0.95rem;
+      margin-bottom: 3px;
+    }
+
+    .notice-banner.warning .notice-desc {
+      color: #78350f;
+      font-size: 0.88rem;
+      line-height: 1.5;
     }
 
     .countdown-box {
-      background: #f1f5f9;
-      padding: 10px 16px;
-      border-radius: 12px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 10px 18px;
+      border-radius: 50px;
       display: inline-flex;
       align-items: center;
       gap: 8px;
@@ -113,7 +158,7 @@
     }
     
     .countdown-number {
-      color: var(--secondary-color);
+      color: #008037;
       font-weight: 800;
     }
 
@@ -121,20 +166,20 @@
       display: inline-flex;
       align-items: center;
       gap: 8px;
-      padding: 12px 28px;
-      background: var(--primary-color);
+      padding: 12px 32px;
+      background: #008037;
       color: white;
       text-decoration: none;
-      border-radius: 12px;
+      border-radius: 50px;
       font-weight: 700;
       font-size: 0.95rem;
-      box-shadow: 0 8px 16px rgba(0, 77, 32, 0.15);
+      box-shadow: 0 8px 18px rgba(0, 128, 55, 0.2);
       transition: all 0.2s ease;
     }
     .btn-home:hover {
-      background: #003314;
+      background: #005c25;
       transform: translateY(-1px);
-      box-shadow: 0 10px 20px rgba(0, 77, 32, 0.25);
+      box-shadow: 0 12px 24px rgba(0, 128, 55, 0.3);
     }
     .btn-home:active {
       transform: translateY(0);
@@ -144,29 +189,55 @@
 <body>
 
   <div class="success-card">
-    <div class="success-icon-wrapper">
-      <i class="fa-solid fa-circle-check"></i>
-    </div>
-    
-    <h1>Assessment Submitted!</h1>
-    <p>Thank you for completing <strong>{{ pre_exam.exam.title }}</strong>. Your responses have been recorded successfully.</p>
+    {% if tab_exceeded %}
+      <!-- Tab Switch Exceeded State -->
+      <div class="icon-wrapper warning">
+        <i class="fa-solid fa-shield-halved"></i>
+      </div>
+      
+      <h1>Assessment Submitted</h1>
+      
+      <div class="notice-banner warning">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <div>
+          <div class="notice-title">Tab Switch Limit Exceeded</div>
+          <div class="notice-desc">
+            Your assessment has been automatically submitted because your allowed tab switch limit has been exceeded. All your answers submitted up to that moment have been safely recorded.
+          </div>
+        </div>
+      </div>
+
+      <p class="sub-message">
+        Thank you for attending <strong>{{ pre_exam.exam.title|default:"the assessment" }}</strong>.
+      </p>
+    {% else %}
+      <!-- Standard Successful Submission State -->
+      <div class="icon-wrapper success">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+      
+      <h1>Thank You, Assessment Submitted!</h1>
+      <p class="sub-message">
+        Thank you for completing <strong>{{ pre_exam.exam.title|default:"the assessment" }}</strong>. Your responses have been recorded successfully.
+      </p>
+    {% endif %}
     
     <div class="countdown-box">
       <i class="fa-regular fa-clock"></i>
-      <span>Redirecting to homepage in <span id="countdown" class="countdown-number">5</span> seconds...</span>
+      <span>Redirecting to homepage in <span id="countdown" class="countdown-number">10</span> seconds...</span>
     </div>
     
     <div>
       <a href="/" class="btn-home">
         <i class="fa-solid fa-house"></i>
-        <span>Return Immediately</span>
+        <span>Return to Home</span>
       </a>
     </div>
   </div>
 
   <script nonce="{{ request.csp_nonce }}">
     document.addEventListener('DOMContentLoaded', function() {
-      let seconds = 5;
+      let seconds = 10;
       const display = document.getElementById('countdown');
       
       const interval = setInterval(function() {

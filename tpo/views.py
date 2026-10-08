@@ -878,6 +878,11 @@ def get_student_performance_detail_api(request, student_id):
             "pct_val": pct,
             "status": "Passed" if pct >= 50 else "Failed",
             "date": r.submitted_at.strftime("%d %b %Y, %I:%M %p"),
+            "device_info": r.device_info or "-",
+            "device_type": r.device_type or "-",
+            "os_name": r.os_name or "-",
+            "browser_name": r.browser_name or "-",
+            "ip_address": r.ip_address or "-",
         })
 
     # Practice Tests
@@ -2049,9 +2054,11 @@ def tpo_exam_monitor_list(request):
     """Get list of exams assigned to this TPO for monitoring"""
     try:
         from exam.models import ScheduledExam
+        from exam.views import check_and_update_scheduled_exams
         from django.utils import timezone
         from django.views.decorators.http import require_GET
         
+        check_and_update_scheduled_exams()
         tpo_profile = TpoProfile.objects.get(user=request.user)
         
         # Get exams where this TPO is assigned for monitoring in their college

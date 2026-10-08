@@ -549,11 +549,20 @@ function getSubmissionStatusMeta(status) {
         `;
       }
 
+      const devType = student.device_type || '-';
+      const devOS = student.os_name || '-';
+      const devBrowser = student.browser_name || '-';
+      const devIP = student.ip_address || '-';
+      const devLabel = devOS && devOS !== '-' && devOS !== 'Unknown OS' ? `${devOS} • ${devBrowser}`.replace(/\s*•\s*Unknown Browser$/, '').replace(/\s*•\s*-$/, '') : devType;
+      const devTooltip = `Device: ${devType}\nOS: ${devOS}\nBrowser: ${devBrowser}\nIP: ${devIP}`;
+      const deviceHtml = `<span style="font-size: 0.8rem; background: #f1f5f9; padding: 2px 8px; border-radius: 4px; border: 1px solid #e2e8f0; display: inline-block; white-space: nowrap;" title="${devTooltip}">${devLabel}</span>`;
+
       return `
         <tr class="student-row ${rowClass}" data-section="${student.section || ''}" data-course="${student.course || ''}">
           <td>${student.usn}</td>
           <td>${student.name || '-'}</td>
           <td><span class="${statusMeta.className}">${statusMeta.label}</span></td>
+          <td>${deviceHtml}</td>
           <td>${progressDisplay}</td>
           <td class="${student.tab_limit_crossed ? 'risk-alert' : ''}">${tabSwitchCount}</td>
           <td>${timeSpentDisplay}</td>
@@ -625,6 +634,7 @@ function getSubmissionStatusMeta(status) {
               <th>USN</th>
               <th>Name</th>
               <th>Status</th>
+              <th>Device / OS</th>
               <th>Current Question</th>
               <th>Tab Switch</th>
               <th>Time Spent</th>

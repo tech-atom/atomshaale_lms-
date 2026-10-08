@@ -337,12 +337,21 @@
   }
 
   function autoSubmitExam(reason) {
-    showSecurityNotice(`WARNING TO STUDENT: Exam is being auto-submitted due to ${reason}.`, "error", 1400);
-    const form = document.getElementById("exam-form");
-    const submitBtn = form?.querySelector("button[type='submit']");
-    if (submitBtn) {
-      setTimeout(() => submitBtn.click(), 900);
-    }
+    if (!examInProgress) return;
+    window._autoSubmitReason = "tab_switch_exceeded";
+    showSecurityNotice(`WARNING: Tab switch limit exceeded. Auto-submitting exam...`, "error", 4000);
+    cleanupSecurity();
+
+    setTimeout(() => {
+      const form = document.getElementById("exam-form");
+      if (form) {
+        if (form.requestSubmit) {
+          form.requestSubmit();
+        } else {
+          form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+        }
+      }
+    }, 1000);
   }
 
   function showSecurityNotice(message, tone = "warn", duration = 2200) {
@@ -373,29 +382,30 @@
     if (!tabSwitchCounterEl) return;
     tabSwitchCounterEl.hidden = false;
     const remaining = Math.max(allowedTabSwitches - securityViolationCount, 0);
-    tabSwitchCounterEl.textContent = `Tab Switches: ${securityViolationCount}/${allowedTabSwitches} (Remaining: ${remaining})`;
+    tabSwitchCounterEl.innerHTML = `Tab Switches: <strong style="color: ${securityViolationCount > 0 ? '#dc2626' : '#008037'}">${securityViolationCount}/${allowedTabSwitches}</strong> (Remaining: ${remaining})`;
     tabSwitchCounterEl.classList.toggle("danger", securityViolationCount > 0);
   }
 
   function registerSecurityViolation(reason) {
+    if (!examInProgress) return;
     const now = Date.now();
-    // Browsers can trigger both visibility and fullscreen events together.
+    // Browsers can trigger both visibility and blur events together.
     if (now - lastViolationAt < 1200) return;
     lastViolationAt = now;
 
     securityViolationCount++;
     updateSecurityCounter();
     if (securityViolationCount >= allowedTabSwitches) {
-      autoSubmitExam(`${reason} limit reached`);
+      autoSubmitExam(`${reason} limit reached (${securityViolationCount}/${allowedTabSwitches})`);
       return;
     }
 
     const remaining = Math.max(allowedTabSwitches - securityViolationCount, 0);
-    const isTabSwitch = reason === "tab switch";
+    const isTabSwitch = reason.includes("tab") || reason.includes("window") || reason.includes("blur");
     const message = isTabSwitch
-      ? `WARNING TO STUDENT: You switched tabs. Remaining attempts: ${remaining}`
-      : `WARNING TO STUDENT: Security violation (${reason}). Remaining attempts: ${remaining}`;
-    showSecurityNotice(message, isTabSwitch ? "error" : "warn");
+      ? `WARNING: You switched tabs / windows (${securityViolationCount}/${allowedTabSwitches}). Remaining warnings: ${remaining}`
+      : `WARNING: Security violation (${reason}) (${securityViolationCount}/${allowedTabSwitches}). Remaining warnings: ${remaining}`;
+    showSecurityNotice(message, isTabSwitch ? "error" : "warn", 3500);
   }
 
   async function sendLiveUpdate(statusOverride = null) {
@@ -448,7 +458,8 @@
           question_time_map: questionTimeMap,
           status: payloadStatus,
           temp_answers: answers,
-          device_token: deviceToken
+          device_token: deviceToken,
+          device_hints: getClientDeviceHints()
         })
       });
       if (response.status === 403) {
@@ -504,21 +515,146 @@
   }
 
   function visibilityHandler() {
+    if (!examInProgress) return;
     if (document.visibilityState === "hidden") {
-      // Mobile browsers can briefly report hidden during fullscreen/transitions.
-      if (Date.now() - examStartedAt < 6000) return;
+      // Allow brief 1.5s grace period immediately upon clicking start for initial full-screen transition
+      if (Date.now() - examStartedAt < 1500) return;
       liveTabSwitchCount += 1;
       sendLiveUpdate();
       registerSecurityViolation("tab switch");
     }
   }
 
+  function windowBlurHandler() {
+    if (!examInProgress) return;
+    if (Date.now() - examStartedAt < 1500) return;
+    const now = Date.now();
+    if (now - lastViolationAt < 1200) return;
+    liveTabSwitchCount += 1;
+    sendLiveUpdate();
+    registerSecurityViolation("window blur / tab switch");
+  }
+
+  function preventCopyHandler(e) {
+    if (!examInProgress) return;
+    e.preventDefault();
+    e.stopPropagation();
+    showSecurityNotice("Copying is disabled during the assessment.", "error", 2500);
+    return false;
+  }
+
+  function preventPasteHandler(e) {
+    if (!examInProgress) return;
+    e.preventDefault();
+    e.stopPropagation();
+    showSecurityNotice("Pasting is disabled during the assessment. Please type your answers.", "error", 3000);
+    return false;
+  }
+
+  function preventCutHandler(e) {
+    if (!examInProgress) return;
+    e.preventDefault();
+    e.stopPropagation();
+    showSecurityNotice("Cutting content is disabled during the assessment.", "error", 2500);
+    return false;
+  }
+
+  function preventContextMenuHandler(e) {
+    if (!examInProgress) return;
+    e.preventDefault();
+    e.stopPropagation();
+    showSecurityNotice("Right click is disabled during the assessment.", "error", 2500);
+    return false;
+  }
+
+  function preventDragDropHandler(e) {
+    if (!examInProgress) return;
+    e.preventDefault();
+    e.stopPropagation();
+    return false;
+  }
+
+  function preventSelectStartHandler(e) {
+    if (!examInProgress) return;
+    const target = e.target;
+    // Allow cursor/selection inside code editor textarea for typing/editing
+    if (target && (target.tagName === "TEXTAREA" || (target.tagName === "INPUT" && target.type === "text"))) {
+      return true;
+    }
+    e.preventDefault();
+    return false;
+  }
+
+  function keydownSecurityHandler(e) {
+    if (!examInProgress) return;
+    const key = (e.key || "").toLowerCase();
+    const ctrlOrCmd = e.ctrlKey || e.metaKey;
+
+    // Block Copy (Ctrl+C), Paste (Ctrl+V), Cut (Ctrl+X), Select All (Ctrl+A), Print (Ctrl+P), Save (Ctrl+S), Source (Ctrl+U)
+    if (ctrlOrCmd && ['c', 'v', 'x', 'a', 'p', 's', 'u'].includes(key)) {
+      e.preventDefault();
+      e.stopPropagation();
+      const actionMap = { 'c': 'Copying', 'v': 'Pasting', 'x': 'Cutting', 'a': 'Select all', 'p': 'Printing', 's': 'Saving', 'u': 'Viewing source' };
+      showSecurityNotice(`${actionMap[key] || 'Shortcut'} is disabled during the assessment.`, "error", 2500);
+      return false;
+    }
+
+    // Block Shift+Insert (Paste) and Ctrl+Insert (Copy)
+    if ((e.shiftKey && key === "insert") || (ctrlOrCmd && key === "insert")) {
+      e.preventDefault();
+      e.stopPropagation();
+      showSecurityNotice("Clipboard shortcuts are disabled.", "error", 2500);
+      return false;
+    }
+
+    // Block DevTools shortcuts (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C)
+    if (key === "f12" || (ctrlOrCmd && e.shiftKey && ['i', 'j', 'c'].includes(key))) {
+      e.preventDefault();
+      e.stopPropagation();
+      showSecurityNotice("Developer tools are disabled during the assessment.", "error", 2500);
+      return false;
+    }
+
+    // Block browser refresh (F5, Ctrl+R)
+    if (key === "f5" || (ctrlOrCmd && key === 'r')) {
+      e.preventDefault();
+      e.stopPropagation();
+      showSecurityNotice("Page refresh is disabled during the exam.", "warn", 2500);
+      return false;
+    }
+
+    // Block browser Back navigation keyboard shortcuts (Alt+LeftArrow, Backspace outside input)
+    if (e.altKey && (key === "arrowleft" || key === "left")) {
+      e.preventDefault();
+      e.stopPropagation();
+      showSecurityNotice("Back navigation is disabled during the exam.", "warn", 2500);
+      return false;
+    }
+
+    if (key === "backspace") {
+      const target = e.target;
+      const isInput = target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable);
+      if (!isInput) {
+        e.preventDefault();
+        e.stopPropagation();
+        return false;
+      }
+    }
+  }
+
+  function beforeUnloadHandler(e) {
+    if (examInProgress) {
+      e.preventDefault();
+      e.returnValue = "Your exam session is in progress. Leaving this page will submit your test.";
+      return e.returnValue;
+    }
+  }
+
   function fullscreenChangeHandler() {
-    if (!enforceFullscreen) return;
+    if (!enforceFullscreen || !examInProgress) return;
     const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement ||
       document.mozFullScreenElement || document.msFullscreenElement);
     if (!isFullscreen) {
-      // Ignore fullscreen exits that are side effects of tab hiding.
       if (document.visibilityState === "hidden") return;
       registerSecurityViolation("fullscreen exit");
       if (securityViolationCount < allowedTabSwitches) {
@@ -528,9 +664,25 @@
   }
 
   function cleanupSecurity() {
-    document.onkeydown = null;
-    document.oncontextmenu = null;
+    window.removeEventListener("keydown", keydownSecurityHandler, true);
+    document.removeEventListener("keydown", keydownSecurityHandler, true);
+    window.removeEventListener("copy", preventCopyHandler, true);
+    document.removeEventListener("copy", preventCopyHandler, true);
+    window.removeEventListener("paste", preventPasteHandler, true);
+    document.removeEventListener("paste", preventPasteHandler, true);
+    window.removeEventListener("cut", preventCutHandler, true);
+    document.removeEventListener("cut", preventCutHandler, true);
+    window.removeEventListener("contextmenu", preventContextMenuHandler, true);
+    document.removeEventListener("contextmenu", preventContextMenuHandler, true);
+    window.removeEventListener("drop", preventDragDropHandler, true);
+    document.removeEventListener("drop", preventDragDropHandler, true);
+    window.removeEventListener("dragstart", preventDragDropHandler, true);
+    document.removeEventListener("dragstart", preventDragDropHandler, true);
+    window.removeEventListener("selectstart", preventSelectStartHandler, true);
+    document.removeEventListener("selectstart", preventSelectStartHandler, true);
     document.removeEventListener("visibilitychange", visibilityHandler);
+    window.removeEventListener("blur", windowBlurHandler);
+    window.removeEventListener("beforeunload", beforeUnloadHandler);
     document.removeEventListener("fullscreenchange", fullscreenChangeHandler);
     document.removeEventListener("webkitfullscreenchange", fullscreenChangeHandler);
     document.removeEventListener("mozfullscreenchange", fullscreenChangeHandler);
@@ -541,8 +693,69 @@
     if (liveUpdateInterval) clearInterval(liveUpdateInterval);
   }
 
+  function getWebGLInfo() {
+    try {
+      const canvas = document.createElement('canvas');
+      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+      if (gl) {
+        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+        if (debugInfo) {
+          return {
+            vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || '',
+            renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || ''
+          };
+        }
+      }
+    } catch (e) {}
+    return { vendor: '', renderer: '' };
+  }
+
   function isMobileDevice() {
-    return /Mobi|Android|iPhone|iPad/i.test(navigator.userAgent);
+    if (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) return true;
+    const touchPoints = navigator.maxTouchPoints || (navigator.msMaxTouchPoints || 0);
+    const hasTouch = touchPoints > 0 || ('ontouchstart' in window);
+    const isMacPlatform = /Macintosh|MacIntel/i.test(navigator.platform || '') || /Macintosh|Mac OS X/i.test(navigator.userAgent || '');
+    if (isMacPlatform && touchPoints > 0) return true;
+    const webgl = getWebGLInfo();
+    const renderer = (webgl.renderer || '').toLowerCase();
+    const vendor = (webgl.vendor || '').toLowerCase();
+    const isMobileGpu = /adreno|mali|immortalis|xclipse|powervr/i.test(renderer) || /qualcomm|arm|imagination|mediatek/i.test(vendor);
+    if (isMobileGpu) return true;
+    const minDim = Math.min(window.screen.width || 0, window.screen.height || 0);
+    if (hasTouch && minDim > 0 && minDim <= 550) return true;
+    return false;
+  }
+
+  function getClientDeviceHints() {
+    const webgl = getWebGLInfo();
+    const touchPoints = navigator.maxTouchPoints || (navigator.msMaxTouchPoints || 0);
+    const hasTouch = touchPoints > 0 || ('ontouchstart' in window) || (window.DocumentTouch && document instanceof DocumentTouch);
+    const width = window.screen ? (window.screen.width || 0) : 0;
+    const height = window.screen ? (window.screen.height || 0) : 0;
+    const pixelRatio = window.devicePixelRatio || 1;
+    
+    let uaDataPlatform = '';
+    let uaDataMobile = false;
+    if (navigator.userAgentData) {
+      uaDataPlatform = navigator.userAgentData.platform || '';
+      uaDataMobile = !!navigator.userAgentData.mobile;
+    }
+
+    return {
+      is_mobile: isMobileDevice(),
+      screen_width: width,
+      screen_height: height,
+      screen: `${width}x${height}`,
+      pixel_ratio: pixelRatio,
+      touch_points: touchPoints,
+      has_touch: !!hasTouch,
+      webgl_vendor: webgl.vendor || '',
+      webgl_renderer: webgl.renderer || '',
+      platform: navigator.platform || '',
+      ua_data_platform: uaDataPlatform,
+      ua_data_mobile: uaDataMobile,
+      user_agent: navigator.userAgent || ''
+    };
   }
 
   function supportsFullscreen() {
@@ -595,7 +808,9 @@
     history.pushState(null, null, location.href);
     window.onpopstate = function () {
       history.pushState(null, null, location.href);
-      alert('WARNING Back navigation is disabled during the exam.');
+      if (examInProgress) {
+        showSecurityNotice("Back navigation is disabled during the assessment.", "warn", 3000);
+      }
     };
 
     if (isMobileDevice()) {
@@ -1110,25 +1325,30 @@
         }
       }, 1000);
 
+      // Anti-cheat Event Listeners
+      window.addEventListener("keydown", keydownSecurityHandler, true);
+      document.addEventListener("keydown", keydownSecurityHandler, true);
+      window.addEventListener("copy", preventCopyHandler, true);
+      document.addEventListener("copy", preventCopyHandler, true);
+      window.addEventListener("paste", preventPasteHandler, true);
+      document.addEventListener("paste", preventPasteHandler, true);
+      window.addEventListener("cut", preventCutHandler, true);
+      document.addEventListener("cut", preventCutHandler, true);
+      window.addEventListener("contextmenu", preventContextMenuHandler, true);
+      document.addEventListener("contextmenu", preventContextMenuHandler, true);
+      window.addEventListener("drop", preventDragDropHandler, true);
+      document.addEventListener("drop", preventDragDropHandler, true);
+      window.addEventListener("dragstart", preventDragDropHandler, true);
+      document.addEventListener("dragstart", preventDragDropHandler, true);
+      window.addEventListener("selectstart", preventSelectStartHandler, true);
+      document.addEventListener("selectstart", preventSelectStartHandler, true);
+      window.addEventListener("beforeunload", beforeUnloadHandler);
       document.addEventListener("visibilitychange", visibilityHandler);
+      window.addEventListener("blur", windowBlurHandler);
       document.addEventListener("fullscreenchange", fullscreenChangeHandler);
       document.addEventListener("webkitfullscreenchange", fullscreenChangeHandler);
       document.addEventListener("mozfullscreenchange", fullscreenChangeHandler);
       document.addEventListener("msfullscreenchange", fullscreenChangeHandler);
-
-      document.onkeydown = function (e) {
-        const key = e.key.toLowerCase();
-        if ((e.ctrlKey && ['c', 'v', 'u', 'i', 'j', 's'].includes(key)) || e.key === "F12" || e.key === "Escape") {
-          e.preventDefault();
-          return false;
-        }
-        if (e.ctrlKey && e.shiftKey && ['i', 'j', 'c'].includes(key)) {
-          e.preventDefault();
-          return false;
-        }
-      };
-
-      document.addEventListener('contextmenu', event => event.preventDefault());
     });
 
     form.addEventListener("submit", function (e) {
@@ -1162,13 +1382,22 @@
         }
       });
 
+      const submissionReason = window._autoSubmitReason || (securityViolationCount >= allowedTabSwitches ? "tab_switch_exceeded" : "normal");
+
       fetch(URLS.submit_exam.replace(PLACEHOLDER_UUID, scheduledExamId), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "X-CSRFToken": getCsrfToken()
         },
-        body: JSON.stringify({ answers, question_time_map: questionTimeMap, device_token: deviceToken }),
+        body: JSON.stringify({
+          answers,
+          question_time_map: questionTimeMap,
+          device_token: deviceToken,
+          device_hints: getClientDeviceHints(),
+          tab_switch_count: liveTabSwitchCount || securityViolationCount,
+          reason: submissionReason
+        }),
         credentials: "include"
       })
         .then(async (res) => {
@@ -1206,11 +1435,18 @@
           if (sidebar) sidebar.style.display = "block";
 
           // Use replace to prevent back navigation
-          if (data.result_id) {
+          if (data.redirect_url) {
+            window.location.replace(data.redirect_url);
+          } else if (URLS.get_performance) {
+            let targetUrl = URLS.get_performance;
+            if (data.result_id && !targetUrl.includes("thank-you")) {
+              targetUrl += (targetUrl.includes("?") ? "&" : "?") + `result_id=${data.result_id}`;
+            }
+            window.location.replace(targetUrl);
+          } else if (data.result_id) {
             window.location.replace(`/exam/result/?result_id=${data.result_id}`);
           } else {
-            // Fallback to performance page
-            window.location.replace(URLS.get_performance);
+            window.location.replace("/");
           }
         })
         .catch(err => {

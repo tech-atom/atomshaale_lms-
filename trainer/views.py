@@ -647,6 +647,8 @@ def trainer_exam_monitor_list(request):
     """Get list of exams assigned to this trainer for monitoring"""
     try:
         from exam.models import ScheduledExam
+        from exam.views import check_and_update_scheduled_exams
+        check_and_update_scheduled_exams()
         trainer_profile = TrainerProfile.objects.get(user=request.user)
         
         # Get exams where this trainer is assigned for monitoring

@@ -750,6 +750,50 @@ document.addEventListener("DOMContentLoaded", () => {
           needsImprovementList.innerHTML = `<div class="performer-item empty-state">None (All passed)</div>`;
         }
 
+        function renderPerfDeviceBadge(deviceType, osName, browserName, ipAddress) {
+          const typeLower = String(deviceType || '').toLowerCase();
+          const osLower = String(osName || '').toLowerCase();
+          
+          let icon = "fas fa-laptop";
+          let badgeClass = "device-laptop";
+          let label = "Laptop / Desktop";
+          
+          if (typeLower.includes("mobile") || osLower.includes("android") || osLower.includes("iphone") || osLower.includes("ios")) {
+            icon = osLower.includes("android") ? "fab fa-android" : ((osLower.includes("ios") || osLower.includes("iphone") || osLower.includes("apple")) ? "fab fa-apple" : "fas fa-mobile-alt");
+            badgeClass = "device-mobile";
+            label = osName && osName !== "Unknown OS" && osName !== "-" ? `📱 ${osName}` : "📱 Mobile";
+          } else if (typeLower.includes("tablet") || osLower.includes("ipad")) {
+            icon = "fas fa-tablet-alt";
+            badgeClass = "device-tablet";
+            label = osName && osName !== "Unknown OS" && osName !== "-" ? `📟 ${osName}` : "📟 Tablet";
+          } else if (osLower.includes("windows")) {
+            icon = "fab fa-windows";
+            badgeClass = "device-laptop";
+            label = `💻 ${osName || 'Windows'}`;
+          } else if (osLower.includes("mac") || osLower.includes("apple")) {
+            icon = "fab fa-apple";
+            badgeClass = "device-laptop";
+            label = `💻 ${osName || 'macOS'}`;
+          } else if (osLower.includes("linux")) {
+            icon = "fab fa-linux";
+            badgeClass = "device-laptop";
+            label = `💻 ${osName || 'Linux'}`;
+          } else {
+            // Standard / default fallback for past results
+            icon = "fas fa-laptop";
+            badgeClass = "device-laptop";
+            label = "💻 Laptop / Desktop";
+          }
+
+          if (browserName && browserName !== "Unknown Browser" && browserName !== "-") {
+            label += ` • ${browserName}`;
+          }
+
+          const tooltip = `Device: ${deviceType && deviceType !== '-' ? deviceType : 'Laptop / Desktop (Default)'}\nOS: ${osName && osName !== '-' ? osName : 'Desktop / OS'}\nBrowser: ${browserName && browserName !== '-' ? browserName : 'Browser'}\nIP: ${ipAddress && ipAddress !== '-' ? ipAddress : '-'}`;
+
+          return `<span class="device-badge ${badgeClass}" title="${tooltip}"><i class="${icon}" style="margin-right: 4px;"></i><span>${label}</span></span>`;
+        }
+
         // Populate results table
         const tbody = document.querySelector("#resultsTable tbody");
         tbody.innerHTML = "";
@@ -780,12 +824,15 @@ document.addEventListener("DOMContentLoaded", () => {
             { val: r.time_spent_each_question, type: 'text' },
             { val: r.submission_mode, type: 'submission_mode' },
             { val: r.topic_analysis, type: 'text' },
+            { val: r.device_info || r.device_type, os: r.os_name, browser: r.browser_name, ip: r.ip_address, type: 'device' },
             { val: r.submitted_at, type: 'text' }
           ].forEach(item => {
             const td = document.createElement("td");
             if (item.type === 'status') {
               const statusClass = (item.val || "").toLowerCase();
               td.innerHTML = `<span class="table-status-badge ${statusClass}">${item.val}</span>`;
+            } else if (item.type === 'device') {
+              td.innerHTML = renderPerfDeviceBadge(item.val, item.os, item.browser, item.ip);
             } else if (item.type === 'submission_mode') {
               let badgeClass = "mode-default";
               const mode = item.val || "";
@@ -912,6 +959,15 @@ document.addEventListener("DOMContentLoaded", () => {
         document.getElementById("detailStudentYear").textContent = data.student.year;
         document.getElementById("detailStudentSemester").textContent = data.student.semester;
         document.getElementById("detailStudentSection").textContent = data.student.section;
+        if (document.getElementById("detailDevice")) {
+          document.getElementById("detailDevice").textContent = data.device_info || `${data.device_type || '—'} (${data.os_name || '—'})`;
+        }
+        if (document.getElementById("detailBrowser")) {
+          document.getElementById("detailBrowser").textContent = data.browser_name || "—";
+        }
+        if (document.getElementById("detailIpAddress")) {
+          document.getElementById("detailIpAddress").textContent = data.ip_address || "—";
+        }
 
         document.getElementById("detailMarksObtained").textContent = data.marks_obtained;
         const totalMarksEl = document.getElementById("detailTotalMarks");
@@ -930,7 +986,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const switchesGroup = document.getElementById("detailTabSwitchesGroup");
         const modeGroup = document.getElementById("detailSubmissionModeGroup");
-        if (testType === "exam") {
+        if (testType === "exam" || testType === "pre_assessment") {
           switchesGroup.style.display = "block";
           modeGroup.style.display = "block";
           document.getElementById("detailTabSwitches").textContent = data.tab_switch_count ?? "0";
@@ -961,7 +1017,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (q.parsed_code) {
             answerHtml = `
               <div class="code-editor-header">
-                <span><i class="fas fa-code"></i> ${q.parsed_code.language}</span>
+                <span><i class="fas fa-code"></i> ${escapeHtml(q.parsed_code.language || "code")}</span>
               </div>
               <pre class="code-preview"><code>${escapeHtml(q.parsed_code.code)}</code></pre>
             `;
@@ -974,11 +1030,33 @@ document.addEventListener("DOMContentLoaded", () => {
             const passed = q.passed || 0;
             const total = q.total || 0;
             const badgeColor = q.correct ? "badge-success" : "badge-danger";
+            
+            let testCaseDetailsHtml = "";
+            if (Array.isArray(q.test_results) && q.test_results.length > 0) {
+              testCaseDetailsHtml = `
+                <div class="test-case-breakdown-box" style="margin-top: 10px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px;">
+                  <div style="font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 6px;"><i class="fas fa-vial"></i> Test Case Executions:</div>
+                  <div style="display: flex; flex-direction: column; gap: 5px;">
+                    ${q.test_results.map((tc, tcIdx) => {
+                      const tcPassed = tc.status === "pass" || tc.passed === true;
+                      return `
+                        <div style="display: flex; align-items: center; justify-content: space-between; font-size: 11px; padding: 4px 8px; background: ${tcPassed ? '#ecfdf5' : '#fef2f2'}; border-radius: 4px; border: 1px solid ${tcPassed ? '#a7f3d0' : '#fecaca'};">
+                          <span style="color: #334155;"><strong>Test Case #${tcIdx + 1}:</strong> ${escapeHtml(tc.status || (tcPassed ? 'Passed' : 'Failed'))}</span>
+                          <span class="badge ${tcPassed ? 'badge-success' : 'badge-danger'}" style="font-size: 10px; padding: 2px 6px;">${tcPassed ? 'PASSED' : 'FAILED'}</span>
+                        </div>
+                      `;
+                    }).join("")}
+                  </div>
+                </div>
+              `;
+            }
+
             verdictHtml = `
               <div class="code-metrics">
-                <strong>Verdict:</strong> <span class="badge ${badgeColor}">${escapeHtml(q.verdict)}</span>
+                <strong>Verdict:</strong> <span class="badge ${badgeColor}">${escapeHtml(q.verdict || "Completed")}</span>
                 <strong>Test Cases:</strong> <span class="badge badge-info">${passed} / ${total} Passed</span>
               </div>
+              ${testCaseDetailsHtml}
             `;
           }
 
@@ -1074,15 +1152,24 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const element = document.getElementById('pdfReportContainer');
+      if (!element) {
+        toast("PDF container not found", "error");
+        return;
+      }
+
       toast("Generating PDF report, please wait...", "info");
+
+      const collegeName = selects.college?.options[selects.college.selectedIndex]?.text || "Report";
+      const cleanCollegeName = collegeName.replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = `${type.value}_${cleanCollegeName}_performance_report.pdf`;
 
       const opt = {
         margin:       0,
-        filename:     `${type.value}_student_performance_report.pdf`,
+        filename:     filename,
         image:        { type: 'jpeg', quality: 0.98 },
-        html2canvas:  { scale: 2, useCORS: true, logging: false },
+        html2canvas:  { scale: 2, useCORS: true, logging: false, scrollY: 0 },
         jsPDF:        { unit: 'px', format: [794, 1123], orientation: 'portrait', hotfixes: ['px_scaling'] },
-        pagebreak:    { mode: ['css', 'legacy'] }
+        pagebreak:    { mode: ['css', 'legacy'], avoid: ['tr', '.pdf-avoid-break'] }
       };
 
       // Generate the PDF
@@ -1101,10 +1188,61 @@ document.addEventListener("DOMContentLoaded", () => {
     const summary = data.summary || {};
     const meta = summary.test_metadata || {};
     
-    // Header
-    const typeLabel = selects.type.value === "exam" ? "Exam" : "Practice Test";
-    document.getElementById("pdfExamType").textContent = typeLabel;
+    // College & Test Names
+    const collegeText = selects.college?.options[selects.college.selectedIndex]?.text || "All Colleges";
+    const testText = selects.test?.options[selects.test.selectedIndex]?.text || "All Tests";
     
+    // Type label
+    let typeLabel = "Exam";
+    if (selects.type.value === "practice") typeLabel = "Practice Test";
+    else if (selects.type.value === "pre_assessment") typeLabel = "Pre-Assessment Drive";
+
+    const isPre = selects.type.value === "pre_assessment";
+
+    // Header updates
+    const elCollegeHeader = document.getElementById("pdfCollegeHeader");
+    if (elCollegeHeader) elCollegeHeader.textContent = collegeText;
+
+    const elExamTypeBadge = document.getElementById("pdfExamTypeBadge");
+    if (elExamTypeBadge) elExamTypeBadge.textContent = `${typeLabel.toUpperCase()} REPORT`;
+
+    const elTestTitleName = document.getElementById("pdfTestTitleName");
+    if (elTestTitleName) elTestTitleName.textContent = testText;
+
+    const elTableSubCollege = document.getElementById("pdfTableSubCollege");
+    if (elTableSubCollege) elTableSubCollege.textContent = collegeText;
+
+    const elTableSubTest = document.getElementById("pdfTableSubTest");
+    if (elTableSubTest) elTableSubTest.textContent = testText;
+
+    const elTableTotalCount = document.getElementById("pdfTableTotalCount");
+    if (elTableTotalCount) elTableTotalCount.textContent = results.length;
+
+    // Filter Chips
+    const selectedCourses = courseMultiselect ? courseMultiselect.getValues() : [];
+    const selectedSections = sectionMultiselect ? sectionMultiselect.getValues() : [];
+    const selectedYears = yearMultiselect ? yearMultiselect.getValues() : [];
+    const selectedSemesters = semesterMultiselect ? semesterMultiselect.getValues() : [];
+
+    const elChipCollege = document.getElementById("pdfChipCollege");
+    if (elChipCollege) elChipCollege.textContent = collegeText;
+
+    const elChipCourse = document.getElementById("pdfChipCourse");
+    if (elChipCourse) elChipCourse.textContent = selectedCourses.length ? selectedCourses.join(", ") : "All Courses";
+
+    const elChipBatch = document.getElementById("pdfChipBatch");
+    if (elChipBatch) {
+      if (isPre) {
+        elChipBatch.textContent = selectedYears.length ? `Year: ${selectedYears.join(", ")}` : "All Batches";
+      } else {
+        const batchParts = [];
+        if (selectedYears.length) batchParts.push(`Yr: ${selectedYears.join(",")}`);
+        if (selectedSemesters.length) batchParts.push(`Sem: ${selectedSemesters.join(",")}`);
+        if (selectedSections.length) batchParts.push(`Sec: ${selectedSections.join(",")}`);
+        elChipBatch.textContent = batchParts.length ? batchParts.join(" | ") : "All Sections";
+      }
+    }
+
     const formattedDate = new Date().toLocaleString('en-US', {
       day: 'numeric',
       month: 'short',
@@ -1113,7 +1251,9 @@ document.addEventListener("DOMContentLoaded", () => {
       minute: '2-digit',
       hour12: true
     }).replace(',', '');
-    document.getElementById("pdfGeneratedDate").textContent = formattedDate;
+
+    const elGenDate = document.getElementById("pdfGeneratedDate");
+    if (elGenDate) elGenDate.textContent = formattedDate;
 
     // Metrics
     const percentages = results.map(r => r.percentage);
@@ -1127,14 +1267,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const passPct = totalCount ? ((passCount / totalCount) * 100).toFixed(1) : 0;
     const failPct = totalCount ? ((failCount / totalCount) * 100).toFixed(1) : 0;
 
-    document.getElementById("pdfTotalStudents").textContent = totalCount;
-    document.getElementById("pdfPassedVal").textContent = passCount;
-    document.getElementById("pdfPassedPct").textContent = `${passPct}%`;
-    document.getElementById("pdfFailedVal").textContent = failCount;
-    document.getElementById("pdfFailedPct").textContent = `${failPct}%`;
-    document.getElementById("pdfAvgScore").textContent = `${avg}%`;
-    document.getElementById("pdfHighestScore").textContent = `${best}%`;
-    document.getElementById("pdfLowestScore").textContent = `${worst}%`;
+    const elHeaderPassRate = document.getElementById("pdfHeaderPassRate");
+    if (elHeaderPassRate) elHeaderPassRate.textContent = `${passPct}%`;
+
+    const elTotalStudents = document.getElementById("pdfTotalStudents");
+    if (elTotalStudents) elTotalStudents.textContent = totalCount;
+
+    const elPassedVal = document.getElementById("pdfPassedVal");
+    if (elPassedVal) elPassedVal.textContent = passCount;
+
+    const elPassedPct = document.getElementById("pdfPassedPct");
+    if (elPassedPct) elPassedPct.textContent = `(${passPct}%)`;
+
+    const elFailedVal = document.getElementById("pdfFailedVal");
+    if (elFailedVal) elFailedVal.textContent = failCount;
+
+    const elFailedPct = document.getElementById("pdfFailedPct");
+    if (elFailedPct) elFailedPct.textContent = `(${failPct}%)`;
+
+    const elAvgScore = document.getElementById("pdfAvgScore");
+    if (elAvgScore) elAvgScore.textContent = `${avg}%`;
+
+    const elHighestScore = document.getElementById("pdfHighestScore");
+    if (elHighestScore) elHighestScore.textContent = `${best}%`;
+
+    const elLowestScore = document.getElementById("pdfLowestScore");
+    if (elLowestScore) elLowestScore.textContent = `${worst}%`;
 
     // Distribution
     const excellentCount = results.filter(r => r.percentage >= 90).length;
@@ -1149,80 +1307,120 @@ document.addEventListener("DOMContentLoaded", () => {
     const poorPct = totalCount ? ((poorCount / totalCount) * 100).toFixed(1) : 0;
     const veryPoorPct = totalCount ? ((veryPoorCount / totalCount) * 100).toFixed(1) : 0;
 
-    document.getElementById("pdfExcellentBar").style.width = `${excellentPct}%`;
-    document.getElementById("pdfExcellentText").textContent = `${excellentCount} (${excellentPct}%)`;
-    document.getElementById("pdfGoodBar").style.width = `${goodPct}%`;
-    document.getElementById("pdfGoodText").textContent = `${goodCount} (${goodPct}%)`;
-    document.getElementById("pdfAverageBar").style.width = `${averagePct}%`;
-    document.getElementById("pdfAverageText").textContent = `${averageCount} (${averagePct}%)`;
-    document.getElementById("pdfPoorBar").style.width = `${poorPct}%`;
-    document.getElementById("pdfPoorText").textContent = `${poorCount} (${poorPct}%)`;
-    document.getElementById("pdfVeryPoorBar").style.width = `${veryPoorPct}%`;
-    document.getElementById("pdfVeryPoorText").textContent = `${veryPoorCount} (${veryPoorPct}%)`;
+    const elExcBar = document.getElementById("pdfExcellentBar");
+    if (elExcBar) elExcBar.style.width = `${excellentPct}%`;
+    const elExcText = document.getElementById("pdfExcellentText");
+    if (elExcText) elExcText.textContent = `${excellentCount} (${excellentPct}%)`;
+
+    const elGoodBar = document.getElementById("pdfGoodBar");
+    if (elGoodBar) elGoodBar.style.width = `${goodPct}%`;
+    const elGoodText = document.getElementById("pdfGoodText");
+    if (elGoodText) elGoodText.textContent = `${goodCount} (${goodPct}%)`;
+
+    const elAvgBar = document.getElementById("pdfAverageBar");
+    if (elAvgBar) elAvgBar.style.width = `${averagePct}%`;
+    const elAvgText = document.getElementById("pdfAverageText");
+    if (elAvgText) elAvgText.textContent = `${averageCount} (${averagePct}%)`;
+
+    const elPoorBar = document.getElementById("pdfPoorBar");
+    if (elPoorBar) elPoorBar.style.width = `${poorPct}%`;
+    const elPoorText = document.getElementById("pdfPoorText");
+    if (elPoorText) elPoorText.textContent = `${poorCount} (${poorPct}%)`;
+
+    const elVpBar = document.getElementById("pdfVeryPoorBar");
+    if (elVpBar) elVpBar.style.width = `${veryPoorPct}%`;
+    const elVpText = document.getElementById("pdfVeryPoorText");
+    if (elVpText) elVpText.textContent = `${veryPoorCount} (${veryPoorPct}%)`;
 
     // Test Summary
     const avgAttempted = totalCount ? (results.reduce((sum, r) => sum + (parseInt(r.attempted) || 0), 0) / totalCount).toFixed(1) : 0;
     const avgUnattempted = totalCount ? (results.reduce((sum, r) => sum + (parseInt(r.unattempted) || 0), 0) / totalCount).toFixed(1) : 0;
 
-    document.getElementById("pdfSummaryQuestions").textContent = meta.total_questions || 0;
-    document.getElementById("pdfSummaryAttempted").textContent = avgAttempted;
-    document.getElementById("pdfSummaryUnattempted").textContent = avgUnattempted;
-    document.getElementById("pdfSummaryTotalMarks").textContent = meta.max_marks || 0;
-    document.getElementById("pdfSummaryNegative").textContent = meta.negative_marking || "No";
-    document.getElementById("pdfSummaryTotalTime").textContent = `${meta.duration || 0} mins`;
+    const elSumQuestions = document.getElementById("pdfSummaryQuestions");
+    if (elSumQuestions) elSumQuestions.textContent = meta.total_questions || 0;
+
+    const elSumAttempted = document.getElementById("pdfSummaryAttempted");
+    if (elSumAttempted) elSumAttempted.textContent = avgAttempted;
+
+    const elSumUnattempted = document.getElementById("pdfSummaryUnattempted");
+    if (elSumUnattempted) elSumUnattempted.textContent = avgUnattempted;
+
+    const elSumTotalMarks = document.getElementById("pdfSummaryTotalMarks");
+    if (elSumTotalMarks) elSumTotalMarks.textContent = meta.max_marks || 0;
+
+    const elSumNegative = document.getElementById("pdfSummaryNegative");
+    if (elSumNegative) elSumNegative.textContent = meta.negative_marking || "No";
+
+    const elSumTotalTime = document.getElementById("pdfSummaryTotalTime");
+    if (elSumTotalTime) elSumTotalTime.textContent = `${meta.duration || 0} mins`;
 
     // Key Insights
     const below50Pct = totalCount ? Math.round((results.filter(r => r.percentage < 50).length / totalCount) * 100) : 0;
-    document.getElementById("pdfInsightImprovementTitle").textContent = `${below50Pct}% students need improvement`;
-    if (below50Pct === 100) {
-      document.getElementById("pdfInsightImprovementDesc").textContent = "All students scored below 50%. Additional support recommended.";
-    } else if (below50Pct > 0) {
-      document.getElementById("pdfInsightImprovementDesc").textContent = `${below50Pct}% of students scored below 50%. Focus reviews recommended.`;
-    } else {
-      document.getElementById("pdfInsightImprovementDesc").textContent = "Great job! All students scored above 50%.";
+    const elInsightTitle = document.getElementById("pdfInsightImprovementTitle");
+    if (elInsightTitle) elInsightTitle.textContent = `${below50Pct}% students need improvement`;
+
+    const elInsightDesc = document.getElementById("pdfInsightImprovementDesc");
+    if (elInsightDesc) {
+      if (below50Pct === 100) {
+        elInsightDesc.textContent = "All students scored below 50%. Remedial support recommended.";
+      } else if (below50Pct > 0) {
+        elInsightDesc.textContent = `${below50Pct}% of candidates scored below passing mark. Focus reviews recommended.`;
+      } else {
+        elInsightDesc.textContent = "Outstanding! 100% of candidates achieved qualifying marks.";
+      }
     }
-    document.getElementById("pdfInsightTimeDesc").textContent = `Average time taken is ${summary.avg_time_taken_formatted || "00:00"} minutes.`;
+
+    const elInsightTime = document.getElementById("pdfInsightTimeDesc");
+    if (elInsightTime) elInsightTime.textContent = `Average time taken across candidates is ${summary.avg_time_taken_formatted || "00:00"} mins.`;
 
     const topSorted = [...results].sort((a, b) => b.percentage - a.percentage).filter(r => r.percentage >= 50);
     const topText = topSorted.slice(0, 3).map(r => `${r.student_name} (${r.percentage}%)`).join(", ");
-    document.getElementById("pdfInsightTopPerformers").textContent = topText || "No top performers (≥ 50%)";
+    const elInsightTop = document.getElementById("pdfInsightTopPerformers");
+    if (elInsightTop) elInsightTop.textContent = topText || "No top performers (≥ 50%)";
 
     const poorSorted = [...results].sort((a, b) => a.percentage - b.percentage).filter(r => r.percentage < 50);
     const poorText = poorSorted.slice(0, 3).map(r => `${r.student_name} (${r.percentage}%)`).join(", ");
-    document.getElementById("pdfInsightNeedsImprovement").textContent = poorText || "None (All passed)";
+    const elInsightPoor = document.getElementById("pdfInsightNeedsImprovement");
+    if (elInsightPoor) elInsightPoor.textContent = poorText || "None (All candidates passed)";
 
-    // Table
+    // Table Population
     const tbody = document.querySelector("#pdfResultsTable tbody");
-    tbody.innerHTML = "";
-    results.forEach((r, idx) => {
-      const tr = document.createElement("tr");
-      tr.style.borderBottom = "1px solid #e2e8f0";
-      tr.style.pageBreakInside = "avoid";
-      tr.style.breakInside = "avoid";
-      if (idx % 2 === 1) {
-        tr.style.background = "#f8fafc";
-      }
+    if (tbody) {
+      tbody.innerHTML = "";
+      results.forEach((r, idx) => {
+        const tr = document.createElement("tr");
+        tr.style.borderBottom = "1px solid #e2e8f0";
+        tr.style.pageBreakInside = "avoid";
+        tr.style.breakInside = "avoid";
+        if (idx % 2 === 1) {
+          tr.style.background = "#f8fafc";
+        }
 
-      const resultBadge = r.status.toLowerCase().includes("pass")
-        ? `<span style="display: inline-block; padding: 2px 8px; border-radius: 4px; border: 1px solid #16a34a; color: #16a34a; font-weight: bold; background: #f0fdf4;">Pass</span>`
-        : `<span style="display: inline-block; padding: 2px 8px; border-radius: 4px; border: 1px solid #dc2626; color: #dc2626; font-weight: bold; background: #fef2f2;">Fail</span>`;
+        const isPass = (r.status || "").toLowerCase().includes("pass");
+        const resultBadge = isPass
+          ? `<span style="display: inline-block; padding: 1.5px 6px; border-radius: 3px; border: 1px solid #16a34a; color: #16a34a; font-weight: 700; font-size: 8px; background: #f0fdf4;">PASS</span>`
+          : `<span style="display: inline-block; padding: 1.5px 6px; border-radius: 3px; border: 1px solid #dc2626; color: #dc2626; font-weight: 700; font-size: 8px; background: #fef2f2;">FAIL</span>`;
 
-      tr.innerHTML = `
-        <td style="padding: 10px 10px;">${idx + 1}</td>
-        <td style="padding: 10px 10px; font-weight: bold; color: #334155;">${escapeHtml(r.student_name)}</td>
-        <td style="padding: 10px 10px;">${r.marks_obtained} / ${r.total_marks}</td>
-        <td style="padding: 10px 10px; font-weight: bold;">${r.percentage}%</td>
-        <td style="padding: 10px 10px;">${resultBadge}</td>
-        <td style="padding: 10px 10px;">${r.attempted}</td>
-        <td style="padding: 10px 10px; color: #16a34a; font-weight: bold;">${r.correct}</td>
-        <td style="padding: 10px 10px; color: #dc2626; font-weight: bold;">${r.wrong}</td>
-        <td style="padding: 10px 10px;">${r.unattempted}</td>
-        <td style="padding: 10px 10px;">${r.time_taken || "-"}</td>
-      `;
-      tbody.appendChild(tr);
-    });
+        tr.innerHTML = `
+          <td style="padding: 5px 4px; text-align: center; color: #64748b; font-weight: 600;">${idx + 1}</td>
+          <td style="padding: 5px 6px; font-weight: 700; color: #1e293b; word-break: break-word;">${escapeHtml(r.student_name || "Student")}</td>
+          <td style="padding: 5px 6px; color: #475569; word-break: break-all;">${escapeHtml(r.usn || "-")}</td>
+          <td style="padding: 5px 4px; text-align: center; color: #334155;">${r.marks_obtained} / ${r.total_marks}</td>
+          <td style="padding: 5px 4px; text-align: center; font-weight: 800; color: ${isPass ? '#16a34a' : '#dc2626'};">${r.percentage}%</td>
+          <td style="padding: 5px 4px; text-align: center;">${resultBadge}</td>
+          <td style="padding: 5px 4px; text-align: center; color: #334155;">${r.attempted}</td>
+          <td style="padding: 5px 4px; text-align: center; color: #16a34a; font-weight: 700;">${r.correct}</td>
+          <td style="padding: 5px 4px; text-align: center; color: #dc2626; font-weight: 700;">${r.wrong}</td>
+          <td style="padding: 5px 4px; text-align: center; color: #64748b;">${r.time_taken || "-"}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
 
-    document.getElementById("pdfFooterDate1").textContent = formattedDate;
-    document.getElementById("pdfFooterDate2").textContent = formattedDate;
+    const elFooterDate1 = document.getElementById("pdfFooterDate1");
+    if (elFooterDate1) elFooterDate1.textContent = formattedDate;
+
+    const elFooterDate2 = document.getElementById("pdfFooterDate2");
+    if (elFooterDate2) elFooterDate2.textContent = formattedDate;
   }
 });

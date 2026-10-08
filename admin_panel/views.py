@@ -585,6 +585,7 @@ def admin_perf_results(request):
             results_payload.append({
                 "result_id": r.id,
                 "student_id": r.student_id,
+                "usn": getattr(r.student, "usn", "") or "N/A",
                 "student_name": _student_name(r.student),
                 "college": getattr(getattr(r.student, "college", None), "name", ""),
                 "course": getattr(getattr(r.student, "course", None), "name", ""),
@@ -691,6 +692,7 @@ def admin_perf_results(request):
             results_payload.append({
                 "result_id": r.id,
                 "student_id": r.student_id,
+                "usn": getattr(r.student, "usn", "") or "N/A",
                 "student_name": _student_name(r.student),
                 "college": getattr(getattr(r.student, "college", None), "name", ""),
                 "course": getattr(getattr(r.student, "course", None), "name", ""),
@@ -710,12 +712,28 @@ def admin_perf_results(request):
                 "topic_list": topic_list,
                 "time_taken": str(r.time_taken) if r.time_taken else "",
                 "submitted_at": localtime(r.submitted_at).strftime("%Y-%m-%d %H:%M"),
+                "device_info": getattr(r, "device_info", "") or "-",
+                "device_type": getattr(r, "device_type", "") or "-",
+                "os_name": getattr(r, "os_name", "") or "-",
+                "browser_name": getattr(r, "browser_name", "") or "-",
+                "ip_address": getattr(r, "ip_address", "") or "-",
             })
 
     elif ttype == "pre_assessment":
         # 1. Translate college and course UUID/IDs to text values for guest match
         college_name = College.objects.filter(id=college_id).values_list("name", flat=True).first() or ""
         course_names = list(Course.objects.filter(id__in=course_ids).values_list("name", flat=True))
+
+        # Auto-evaluate and submit any pending in-progress attempts
+        unsubmitted = ExamResult.objects.filter(
+            pre_assessment__isnull=False
+        ).exclude(submission_status__in=['submitted', 'accidental_submit', 'retaken'])
+        for un_res in unsubmitted:
+            try:
+                from pre_assessment.views import evaluate_and_finalize_pre_assessment_result
+                evaluate_and_finalize_pre_assessment_result(un_res)
+            except Exception:
+                pass
 
         qs = ExamResult.objects.filter(pre_assessment__isnull=False)
 
@@ -790,10 +808,14 @@ def admin_perf_results(request):
             results_payload.append({
                 "result_id": r.id,
                 "student_id": None,
+                "usn": getattr(r, "candidate_usn", "") or "N/A",
                 "student_name": r.candidate_name or "Guest",
+                "email": getattr(r, "candidate_email", "") or "-",
+                "phone": getattr(r, "candidate_phone", "") or "-",
                 "college": r.candidate_college or "-",
                 "course": r.candidate_course or "-",
                 "title": f"{test.title} ({pe_obj.code})",
+                "custom_data": getattr(r, "candidate_custom_data", {}) or {},
                 "marks_obtained": r.marks_obtained,
                 "total_marks": r.total_marks,
                 "percentage": round(percentage, 2),
@@ -809,6 +831,11 @@ def admin_perf_results(request):
                 "topic_list": topic_list,
                 "time_taken": str(r.time_taken) if r.time_taken else "",
                 "submitted_at": localtime(r.submitted_at).strftime("%Y-%m-%d %H:%M"),
+                "device_info": getattr(r, "device_info", "") or "-",
+                "device_type": getattr(r, "device_type", "") or "-",
+                "os_name": getattr(r, "os_name", "") or "-",
+                "browser_name": getattr(r, "browser_name", "") or "-",
+                "ip_address": getattr(r, "ip_address", "") or "-",
             })
 
         test_ids = list(set([pe.exam_id for pe in pre_exams.values()]))
@@ -967,88 +994,211 @@ def admin_perf_result_detail(request):
 
     try:
         if ttype in ("exam", "pre_assessment"):
-            result = get_object_or_404(ExamResult.objects.select_related("student", "exam"), id=result_id)
-            test_title = result.exam_title or (result.exam.title if result.exam else "N/A")
-            passing_marks = float(result.exam.passing_marks) if (result.exam and result.exam.passing_marks) else 0.0
+            result = get_object_or_404(ExamResult.objects.select_related("student", "exam", "pre_assessment", "pre_assessment__exam"), id=result_id)
+            exam_obj = result.exam or (result.pre_assessment.exam if result.pre_assessment else None)
+            test_title = result.exam_title or (exam_obj.title if exam_obj else "N/A")
+            passing_marks = float(exam_obj.passing_marks) if (exam_obj and exam_obj.passing_marks) else 0.0
             
             # Fetch exam questions to map the text
-            exam_questions = ExamQuestion.objects.filter(exam=result.exam) if result.exam else []
+            exam_questions = list(ExamQuestion.objects.filter(exam=exam_obj)) if exam_obj else []
             question_map = {str(q.id): q for q in exam_questions}
             
-            breakdown_data = []
+            breakdown_map = {}
             for item in (result.question_wise_breakdown or []):
-                q_id = item.get("question_id")
-                q_obj = question_map.get(str(q_id))
-                
-                ans_str = item.get("student_answer") or item.get("answer") or ""
-                parsed_code = None
-                if ans_str:
-                    try:
-                        import json
-                        parsed = json.loads(ans_str)
-                        if isinstance(parsed, dict) and "code" in parsed:
-                            parsed_code = {
-                                "code": parsed.get("code", ""),
-                                "language": parsed.get("language", "python")
-                            }
-                    except Exception:
-                        pass
-                
-                breakdown_data.append({
-                    "question_id": q_id,
-                    "question_text": q_obj.question_text if q_obj else "Question text not available",
-                    "type": item.get("type") or (q_obj.type if q_obj else "N/A"),
-                    "student_answer": ans_str,
-                    "parsed_code": parsed_code,
-                    "correct_answer": item.get("correct_answer") or (q_obj.correct_answer if q_obj else "N/A"),
-                    "correct": item.get("correct", False),
-                    "marks_awarded": item.get("marks_awarded", 0),
-                    "verdict": item.get("verdict") or ("Accepted" if item.get("correct") else "Wrong Answer"),
-                    "passed": item.get("passed", 0),
-                    "total": item.get("total", 0),
-                })
-                
+                if isinstance(item, dict):
+                    q_id = str(item.get("question_id") or "")
+                    if q_id:
+                        breakdown_map[q_id] = item
+
+            breakdown_data = []
+            seen_ids = set()
+
+            # Iterate through exam_questions in natural exam order
+            for q in exam_questions:
+                q_id = str(q.id)
+                seen_ids.add(q_id)
+                item = breakdown_map.get(q_id)
+
+                if item is not None:
+                    ans_str = item.get("student_answer") or item.get("answer") or ""
+                    parsed_code = None
+                    if ans_str:
+                        try:
+                            import json
+                            parsed = json.loads(ans_str)
+                            if isinstance(parsed, dict) and "code" in parsed:
+                                parsed_code = {
+                                    "code": parsed.get("code", ""),
+                                    "language": parsed.get("language", "python")
+                                }
+                        except Exception:
+                            pass
+
+                    breakdown_data.append({
+                        "question_id": q_id,
+                        "question_text": q.question_text if q else "Question text not available",
+                        "type": item.get("type") or (q.type if q else "N/A"),
+                        "student_answer": ans_str,
+                        "parsed_code": parsed_code,
+                        "correct_answer": item.get("correct_answer") or (q.correct_answer if q else "N/A"),
+                        "correct": item.get("correct", False),
+                        "marks_awarded": item.get("marks_awarded", 0),
+                        "verdict": item.get("verdict") or ("Accepted" if item.get("correct") else "Wrong Answer"),
+                        "passed": item.get("passed", 0),
+                        "total": item.get("total", 0),
+                        "test_results": item.get("test_results") or [],
+                    })
+                else:
+                    # Fallback for historical results where only some questions were captured in breakdown JSON
+                    breakdown_data.append({
+                        "question_id": q_id,
+                        "question_text": q.question_text,
+                        "type": q.type,
+                        "student_answer": "— (Recorded in final score)" if (result.attempted_questions or 0) > 0 else "— (Unanswered)",
+                        "parsed_code": None,
+                        "correct_answer": q.correct_answer if q.type in ["MCQ", "TF"] else "—",
+                        "correct": False,
+                        "marks_awarded": 0,
+                        "verdict": "Completed",
+                        "passed": 0,
+                        "total": 0,
+                        "test_results": [],
+                    })
+
+            # Append any leftover breakdown items (e.g. dynamic questions)
+            for item in (result.question_wise_breakdown or []):
+                if isinstance(item, dict):
+                    q_id = str(item.get("question_id") or "")
+                    if q_id and q_id not in seen_ids:
+                        q_obj = question_map.get(q_id)
+                        ans_str = item.get("student_answer") or item.get("answer") or ""
+                        parsed_code = None
+                        if ans_str:
+                            try:
+                                import json
+                                parsed = json.loads(ans_str)
+                                if isinstance(parsed, dict) and "code" in parsed:
+                                    parsed_code = {
+                                        "code": parsed.get("code", ""),
+                                        "language": parsed.get("language", "python")
+                                    }
+                            except Exception:
+                                pass
+
+                        breakdown_data.append({
+                            "question_id": q_id,
+                            "question_text": q_obj.question_text if q_obj else "Question text not available",
+                            "type": item.get("type") or (q_obj.type if q_obj else "N/A"),
+                            "student_answer": ans_str,
+                            "parsed_code": parsed_code,
+                            "correct_answer": item.get("correct_answer") or (q_obj.correct_answer if q_obj else "N/A"),
+                            "correct": item.get("correct", False),
+                            "marks_awarded": item.get("marks_awarded", 0),
+                            "verdict": item.get("verdict") or ("Accepted" if item.get("correct") else "Wrong Answer"),
+                            "passed": item.get("passed", 0),
+                            "total": item.get("total", 0),
+                            "test_results": item.get("test_results") or [],
+                        })
+
         elif ttype == "practice":
             result = get_object_or_404(PracticeResult.objects.select_related("student", "practice_test"), id=result_id)
             test_title = result.practice_title or (result.practice_test.title if result.practice_test else "N/A")
             passing_marks = float(result.practice_test.passing_marks) if (result.practice_test and result.practice_test.passing_marks) else 0.0
             
             # Fetch practice questions
-            practice_questions = PracticeQuestion.objects.filter(practice_test=result.practice_test) if result.practice_test else []
+            practice_questions = list(PracticeQuestion.objects.filter(practice_test=result.practice_test)) if result.practice_test else []
             question_map = {str(q.id): q for q in practice_questions}
             
-            breakdown_data = []
+            breakdown_map = {}
             for item in (result.question_wise_breakdown or []):
-                q_id = item.get("question_id")
-                q_obj = question_map.get(str(q_id))
-                
-                ans_str = item.get("student_answer") or item.get("answer") or ""
-                parsed_code = None
-                if ans_str:
-                    try:
-                        import json
-                        parsed = json.loads(ans_str)
-                        if isinstance(parsed, dict) and "code" in parsed:
-                            parsed_code = {
-                                "code": parsed.get("code", ""),
-                                "language": parsed.get("language", "python")
-                            }
-                    except Exception:
-                        pass
-                
-                breakdown_data.append({
-                    "question_id": q_id,
-                    "question_text": q_obj.question_text if q_obj else "Question text not available",
-                    "type": item.get("type") or (q_obj.type if q_obj else "N/A"),
-                    "student_answer": ans_str,
-                    "parsed_code": parsed_code,
-                    "correct_answer": item.get("correct_answer") or (q_obj.correct_answer if q_obj else "N/A"),
-                    "correct": item.get("correct", False),
-                    "marks_awarded": item.get("marks_awarded", 0),
-                    "verdict": item.get("verdict") or ("Accepted" if item.get("correct") else "Wrong Answer"),
-                    "passed": item.get("passed", 0),
-                    "total": item.get("total", 0),
-                })
+                if isinstance(item, dict):
+                    q_id = str(item.get("question_id") or "")
+                    if q_id:
+                        breakdown_map[q_id] = item
+
+            breakdown_data = []
+            seen_ids = set()
+
+            for q in practice_questions:
+                q_id = str(q.id)
+                seen_ids.add(q_id)
+                item = breakdown_map.get(q_id)
+
+                if item is not None:
+                    ans_str = item.get("student_answer") or item.get("answer") or ""
+                    parsed_code = None
+                    if ans_str:
+                        try:
+                            import json
+                            parsed = json.loads(ans_str)
+                            if isinstance(parsed, dict) and "code" in parsed:
+                                parsed_code = {
+                                    "code": parsed.get("code", ""),
+                                    "language": parsed.get("language", "python")
+                                }
+                        except Exception:
+                            pass
+
+                    breakdown_data.append({
+                        "question_id": q_id,
+                        "question_text": q.question_text if q else "Question text not available",
+                        "type": item.get("type") or (q.type if q else "N/A"),
+                        "student_answer": ans_str,
+                        "parsed_code": parsed_code,
+                        "correct_answer": item.get("correct_answer") or (q.correct_answer if q else "N/A"),
+                        "correct": item.get("correct", False),
+                        "marks_awarded": item.get("marks_awarded", 0),
+                        "verdict": item.get("verdict") or ("Accepted" if item.get("correct") else "Wrong Answer"),
+                        "passed": item.get("passed", 0),
+                        "total": item.get("total", 0),
+                    })
+                else:
+                    breakdown_data.append({
+                        "question_id": q_id,
+                        "question_text": q.question_text,
+                        "type": q.type,
+                        "student_answer": "— (Unanswered)",
+                        "parsed_code": None,
+                        "correct_answer": q.correct_answer if q.type in ["MCQ", "TF"] else "—",
+                        "correct": False,
+                        "marks_awarded": 0,
+                        "verdict": "Completed",
+                        "passed": 0,
+                        "total": 0,
+                    })
+
+            for item in (result.question_wise_breakdown or []):
+                if isinstance(item, dict):
+                    q_id = str(item.get("question_id") or "")
+                    if q_id and q_id not in seen_ids:
+                        q_obj = question_map.get(q_id)
+                        ans_str = item.get("student_answer") or item.get("answer") or ""
+                        parsed_code = None
+                        if ans_str:
+                            try:
+                                import json
+                                parsed = json.loads(ans_str)
+                                if isinstance(parsed, dict) and "code" in parsed:
+                                    parsed_code = {
+                                        "code": parsed.get("code", ""),
+                                        "language": parsed.get("language", "python")
+                                    }
+                            except Exception:
+                                pass
+
+                        breakdown_data.append({
+                            "question_id": q_id,
+                            "question_text": q_obj.question_text if q_obj else "Question text not available",
+                            "type": item.get("type") or (q_obj.type if q_obj else "N/A"),
+                            "student_answer": ans_str,
+                            "parsed_code": parsed_code,
+                            "correct_answer": item.get("correct_answer") or (q_obj.correct_answer if q_obj else "N/A"),
+                            "correct": item.get("correct", False),
+                            "marks_awarded": item.get("marks_awarded", 0),
+                            "verdict": item.get("verdict") or ("Accepted" if item.get("correct") else "Wrong Answer"),
+                            "passed": item.get("passed", 0),
+                            "total": item.get("total", 0),
+                        })
         else:
             return JsonResponse({"error": "Invalid test type"}, status=400)
 
@@ -1059,22 +1209,26 @@ def admin_perf_result_detail(request):
                 "name": _student_name(student),
                 "usn": student.usn or "N/A",
                 "email": student.user.email if (student.user and student.user.email) else "N/A",
+                "phone": getattr(student, "phone", "N/A") or "N/A",
                 "college": student.college.name if student.college else "N/A",
                 "course": student.course.name if student.course else "N/A",
                 "semester": student.semester,
                 "year": student.year,
                 "section": student.section.name if student.section else "N/A",
+                "custom_data": {},
             }
         else:
             student_data = {
                 "name": getattr(result, "candidate_name", "N/A") or "N/A",
                 "usn": getattr(result, "candidate_usn", "N/A") or "N/A",
                 "email": getattr(result, "candidate_email", "N/A") or "N/A",
+                "phone": getattr(result, "candidate_phone", "N/A") or "N/A",
                 "college": getattr(result, "candidate_college", "N/A") or "N/A",
                 "course": getattr(result, "candidate_course", "N/A") or "N/A",
                 "semester": getattr(result, "candidate_sem", "N/A") or "N/A",
                 "year": getattr(result, "candidate_year", "N/A") or "N/A",
                 "section": "N/A",
+                "custom_data": getattr(result, "candidate_custom_data", {}) or {},
             }
 
         # Format time taken
@@ -1106,6 +1260,11 @@ def admin_perf_result_detail(request):
             response_data.update({
                 "tab_switch_count": getattr(result, "tab_switch_count", 0),
                 "submission_mode": _submission_mode_for_exam(result),
+                "device_info": getattr(result, "device_info", "") or "-",
+                "device_type": getattr(result, "device_type", "") or "-",
+                "os_name": getattr(result, "os_name", "") or "-",
+                "browser_name": getattr(result, "browser_name", "") or "-",
+                "ip_address": getattr(result, "ip_address", "") or "-",
             })
 
         return JsonResponse(response_data)
@@ -1121,7 +1280,7 @@ def admin_perf_result_detail(request):
 @user_passes_test(is_admin)
 def admin_perf_download(request):
     """
-    Download Excel report for student performance with enriched monitoring columns.
+    Download Excel report for student performance with enriched monitoring columns and custom collected student data.
     """
     from django.http import HttpResponse
     from django.test.client import RequestFactory
@@ -1196,14 +1355,36 @@ def admin_perf_download(request):
 
     start_row += 2
 
+    # Discover custom collected student data columns
+    custom_keys = []
+    has_email = any(bool(r.get("email") and r.get("email") != "-") for r in results)
+    has_phone = any(bool(r.get("phone") and r.get("phone") != "-") for r in results)
+
+    for r in results:
+        cdata = r.get("custom_data") or {}
+        if isinstance(cdata, dict):
+            for k in cdata.keys():
+                k_clean = str(k).strip()
+                if k_clean and k_clean not in custom_keys:
+                    custom_keys.append(k_clean)
+
     # ---------- TABLE HEADER ----------
     headers = [
-        "USN", "Student Name", "College", "Course", "Test Title",
+        "USN", "Student Name", "College", "Course", "Test Title"
+    ]
+    if has_email:
+        headers.append("Email")
+    if has_phone:
+        headers.append("Phone")
+    for ck in custom_keys:
+        headers.append(ck)
+
+    headers.extend([
         "Marks Obtained", "Total Marks", "Percentage", "Status",
         "Attempted", "Correct", "Wrong", "Unattempted", "Tab Switch",
         "Time Spent (Each Question)", "Submission Mode", "Section/Topic Analysis",
-        "Time Taken", "Submitted At"
-    ]
+        "Time Taken", "Submitted At", "Device / OS", "Browser", "IP Address"
+    ])
     ws.append(headers)
 
     header_font = Font(bold=True, color="FFFFFF", size=11)
@@ -1221,21 +1402,45 @@ def admin_perf_download(request):
 
     # ---------- TABLE DATA ----------
     for r in results:
-        try:
-            student_profile = StudentProfile.objects.filter(id=r["student_id"]).first()
-            usn = student_profile.usn if student_profile else "N/A"
-        except Exception:
-            usn = "N/A"
+        usn = r.get("usn")
+        if not usn or usn == "N/A":
+            if r.get("student_id"):
+                try:
+                    student_profile = StudentProfile.objects.filter(id=r["student_id"]).first()
+                    usn = student_profile.usn if student_profile else "N/A"
+                except Exception:
+                    usn = "N/A"
+            elif r.get("result_id"):
+                try:
+                    exam_res = ExamResult.objects.filter(id=r["result_id"]).first()
+                    if exam_res:
+                        usn = exam_res.candidate_usn or (exam_res.student.usn if exam_res.student else "N/A")
+                    else:
+                        usn = "N/A"
+                except Exception:
+                    usn = "N/A"
+            else:
+                usn = "N/A"
 
         attempted = int(r.get("attempted", 0) or 0)
         unattempted = int(r.get("unattempted", 0) or 0)
 
-        ws.append([
+        row = [
             usn,
             r["student_name"],
             r["college"],
             r["course"],
             r["title"],
+        ]
+        if has_email:
+            row.append(r.get("email") or "-")
+        if has_phone:
+            row.append(r.get("phone") or "-")
+        for ck in custom_keys:
+            cdata = r.get("custom_data") or {}
+            row.append(cdata.get(ck, "-") if isinstance(cdata, dict) else "-")
+
+        row.extend([
             r["marks_obtained"],
             r["total_marks"],
             r["percentage"],
@@ -1250,7 +1455,11 @@ def admin_perf_download(request):
             r.get("topic_analysis", "-"),
             r["time_taken"],
             r["submitted_at"],
+            r.get("device_info", "-"),
+            r.get("browser_name", "-"),
+            r.get("ip_address", "-"),
         ])
+        ws.append(row)
 
     # ---------- AUTO-FIT COLUMNS ----------
     for i, column_cells in enumerate(ws.columns, start=1):

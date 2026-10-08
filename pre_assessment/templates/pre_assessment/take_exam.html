@@ -154,6 +154,71 @@
       display: block;
     }
 
+    /* Table styling & column alignment */
+    .desktop-exam-table-view table {
+      width: 100% !important;
+      border-collapse: separate !important;
+      border-spacing: 0 !important;
+      table-layout: fixed !important;
+    }
+
+    .desktop-exam-table-view th {
+      background: #008037 !important;
+      color: #ffffff !important;
+      font-size: 0.82rem !important;
+      font-weight: 700 !important;
+      letter-spacing: 0.05em !important;
+      text-transform: uppercase !important;
+      padding: 14px 12px !important;
+      text-align: center !important;
+      border: none !important;
+    }
+
+    .desktop-exam-table-view th:first-child {
+      border-top-left-radius: 8px;
+      border-bottom-left-radius: 8px;
+    }
+
+    .desktop-exam-table-view th:nth-child(9) {
+      border-top-right-radius: 8px;
+      border-bottom-right-radius: 8px;
+    }
+
+    .desktop-exam-table-view td {
+      padding: 16px 12px !important;
+      text-align: center !important;
+      vertical-align: middle !important;
+      font-size: 0.95rem !important;
+      color: #1e293b !important;
+      border-bottom: 1px solid #e2e8f0 !important;
+    }
+
+    /* Precise widths for the 5 visible columns */
+    .desktop-exam-table-view th:nth-child(1),
+    .desktop-exam-table-view td:nth-child(1) {
+      width: 28% !important;
+    }
+
+    .desktop-exam-table-view th:nth-child(2),
+    .desktop-exam-table-view td:nth-child(2) {
+      width: 18% !important;
+    }
+
+    .desktop-exam-table-view th:nth-child(3),
+    .desktop-exam-table-view td:nth-child(3) {
+      width: 18% !important;
+    }
+
+    .desktop-exam-table-view th:nth-child(4),
+    .desktop-exam-table-view td:nth-child(4) {
+      width: 18% !important;
+    }
+
+    .desktop-exam-table-view th:nth-child(9),
+    .desktop-exam-table-view td:nth-child(9) {
+      width: 18% !important;
+    }
+
     /* Hide the dates/times columns rendered by the shared exam.js script */
     .desktop-exam-table-view th:nth-child(5),
     .desktop-exam-table-view th:nth-child(6),
@@ -165,6 +230,30 @@
     .desktop-exam-table-view td:nth-child(8) {
       display: none !important;
     }
+
+    .desktop-exam-table-view .take-exam-btn {
+      margin: 0 !important;
+      padding: 8px 24px !important;
+      font-size: 0.9rem !important;
+      font-weight: 700 !important;
+      border-radius: 50px !important;
+      background: #008037 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 12px rgba(0, 128, 55, 0.2) !important;
+      transition: all 0.2s ease !important;
+      cursor: pointer !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border: none !important;
+    }
+
+    .desktop-exam-table-view .take-exam-btn:hover {
+      background: #005c25 !important;
+      transform: translateY(-1px) !important;
+      box-shadow: 0 6px 16px rgba(0, 128, 55, 0.3) !important;
+    }
+
     #startButton:hover {
       background: #003314;
       transform: translateY(-2px);
@@ -251,6 +340,10 @@
                 <th>Duration (min)</th>
                 <th>Total Marks</th>
                 <th>Negative Mark</th>
+                <th>Exam Date</th>
+                <th>Start Time</th>
+                <th>End Date</th>
+                <th>End Time</th>
                 <th>Action</th>
               </tr>
             </thead>

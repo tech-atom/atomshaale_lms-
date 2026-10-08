@@ -101,6 +101,10 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'atomm_lms.wsgi.application'
+
+LOGIN_URL = 'login'
+LOGIN_REDIRECT_URL = 'student_dashboard'
+LOGOUT_REDIRECT_URL = 'login'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 DATABASES = {

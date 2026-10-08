@@ -5,6 +5,7 @@ from django.views.decorators.http import require_POST, require_http_methods, req
 from django.views.decorators.csrf import csrf_exempt
 from .models import Exam, ExamQuestion, ScheduledExam, ExamResult
 from .forms import ExamForm, ExamQuestionForm, ScheduleExamForm
+from .device_detector import parse_device_info
 import json
 import random
 from datetime import timedelta
@@ -720,6 +721,7 @@ def admin_list_exams(request):
 def admin_list_scheduled_exams(request):
     """List all scheduled exams (for admin dashboard)."""
     try:
+        check_and_update_scheduled_exams()
         schedules = (
             ScheduledExam.objects
             .select_related("exam", "college", "course")
@@ -938,6 +940,11 @@ def _build_live_monitor_payload(schedule):
             "risk_score": risk_score,
             "section": getattr(student.section, "name", "") or "",
             "course": schedule.course.name if schedule.course else "",
+            "device_info": getattr(sub, "device_info", "") or "-",
+            "device_type": getattr(sub, "device_type", "") or "-",
+            "os_name": getattr(sub, "os_name", "") or "-",
+            "browser_name": getattr(sub, "browser_name", "") or "-",
+            "ip_address": getattr(sub, "ip_address", "") or "-",
         })
 
     return {
@@ -1120,6 +1127,10 @@ def download_live_attendance_report(request, schedule_id):
             "Time Spent (Each Question)",
             "Risk Score",
             "Topic Wise Analysis",
+            "Device / Environment",
+            "Operating System",
+            "Browser",
+            "IP Address",
         ])
 
         for student in rows:
@@ -1145,6 +1156,10 @@ def download_live_attendance_report(request, schedule_id):
                 _format_time_spent(student.get("time_spent", {})),
                 f"{student.get('risk_score', 0)}%",
                 _topic_analysis_string(result_obj),
+                getattr(result_obj, "device_info", "") or student.get("device_info", "-"),
+                getattr(result_obj, "os_name", "") or student.get("os_name", "-"),
+                getattr(result_obj, "browser_name", "") or student.get("browser_name", "-"),
+                getattr(result_obj, "ip_address", "") or student.get("ip_address", "-"),
             ])
 
         return response
@@ -1536,8 +1551,269 @@ def is_student(user):
 
 
 LIVE_MONITOR_STATUSES = {"not_started", "active", "in_progress", "suspicious"}
-FINAL_SUBMISSION_STATUSES = {"submitted", "accidental_submit", "retaken"}
+FINAL_SUBMISSION_STATUSES = {"submitted", "accidental_submit", "retaken", "time_expired"}
 
+
+def evaluate_and_finalize_scheduled_exam_result(result, answers_override=None, submission_mode_val=None):
+    """
+    Evaluates in-progress answers and finalizes an ExamResult to 'submitted' or 'accidental_submit'.
+    Safe to call for any active or un-evaluated scheduled exam result.
+    """
+    exam = result.exam or (result.scheduled_exam.exam if result.scheduled_exam else None)
+    if not exam:
+        return result
+
+    answers_map = {}
+    if answers_override and isinstance(answers_override, list):
+        for entry in answers_override:
+            if isinstance(entry, dict):
+                q_id = str(entry.get("question_id") or "")
+                if q_id:
+                    answers_map[q_id] = entry.get("answer")
+    else:
+        raw_answers = result.question_wise_breakdown or []
+        if isinstance(raw_answers, list):
+            for entry in raw_answers:
+                if isinstance(entry, dict):
+                    q_id = str(entry.get("question_id") or "")
+                    ans = entry.get("answer") if "answer" in entry else entry.get("student_answer")
+                    if q_id:
+                        answers_map[q_id] = ans
+
+    total = 0
+    obtained = 0
+    attempted = 0
+    correct = 0
+    wrong = 0
+    breakdown = []
+
+    if result.selected_question_ids and isinstance(result.selected_question_ids, list) and len(result.selected_question_ids) > 0:
+        assigned_id_map = {q.id: q for q in ExamQuestion.objects.filter(exam=exam, id__in=result.selected_question_ids)}
+        exam_questions = [assigned_id_map[qid] for qid in result.selected_question_ids if qid in assigned_id_map]
+    else:
+        assigned_ids = [int(k) for k in answers_map.keys() if str(k).isdigit()]
+        pool_questions = list(ExamQuestion.objects.filter(exam=exam))
+        if assigned_ids and len(assigned_ids) < len(pool_questions):
+            assigned_id_map = {q.id: q for q in pool_questions if q.id in assigned_ids}
+            exam_questions = [assigned_id_map[qid] for qid in assigned_ids if qid in assigned_id_map]
+        else:
+            exam_questions = pool_questions
+
+    for q in exam_questions:
+        q_id_str = str(q.id)
+        if q_id_str not in answers_map or answers_map[q_id_str] is None or str(answers_map[q_id_str]).strip() == "":
+            total += q.marks
+            breakdown.append({
+                "question_id": q_id_str,
+                "type": q.type,
+                "student_answer": None,
+                "correct_answer": q.correct_answer if q.type in ["MCQ", "TF"] else None,
+                "correct": False,
+                "marks_awarded": 0
+            })
+            continue
+
+        student_ans = answers_map[q_id_str]
+        marks_awarded = 0
+        is_correct = False
+
+        if q.type in ["MCQ", "TF"]:
+            if str(student_ans).strip() == str(q.correct_answer).strip():
+                marks_awarded = q.marks
+                is_correct = True
+                correct += 1
+            else:
+                marks_awarded = -q.negative_mark
+                wrong += 1
+            breakdown.append({
+                "question_id": str(q.id),
+                "type": q.type,
+                "student_answer": student_ans,
+                "correct_answer": q.correct_answer,
+                "correct": is_correct,
+                "marks_awarded": marks_awarded
+            })
+        elif q.type == "Code":
+            code_text = ""
+            language = "python"
+            if isinstance(student_ans, str):
+                try:
+                    parsed = json.loads(student_ans)
+                    if isinstance(parsed, dict):
+                        code_text = str(parsed.get("code", "") or "")
+                        language = str(parsed.get("language", "python") or "python")
+                    else:
+                        code_text = student_ans
+                except Exception:
+                    code_text = student_ans
+            else:
+                code_text = str(student_ans or "")
+
+            if not code_text.strip():
+                marks_awarded = 0
+                wrong += 1
+                breakdown.append({
+                    "question_id": str(q.id),
+                    "type": q.type,
+                    "student_answer": student_ans,
+                    "correct_answer": None,
+                    "correct": False,
+                    "marks_awarded": 0,
+                    "test_results": []
+                })
+                total += q.marks
+                attempted += 1
+                continue
+
+            if q.test_cases and isinstance(q.test_cases, list) and len(q.test_cases) > 0:
+                judge = evaluate_code_with_test_cases(
+                    code_text,
+                    language,
+                    q.test_cases,
+                    max_score=float(q.marks)
+                )
+                passed_cases = int(judge.get("passed", 0))
+                total_cases = int(judge.get("total", 0))
+                score_ratio = (passed_cases / total_cases) if total_cases else 0.0
+                marks_awarded = round(float(q.marks) * score_ratio, 2)
+                is_correct = judge.get("verdict") == "Accepted"
+                test_results = judge.get("details", [])
+
+                if is_correct:
+                    correct += 1
+                else:
+                    wrong += 1
+
+                breakdown.append({
+                    "question_id": str(q.id),
+                    "type": q.type,
+                    "student_answer": student_ans,
+                    "correct_answer": None,
+                    "correct": is_correct,
+                    "marks_awarded": marks_awarded,
+                    "test_results": test_results
+                })
+            else:
+                if q.expected_output:
+                    judge = evaluate_code_with_test_cases(
+                        code_text,
+                        language,
+                        [{"input": q.input_example or "", "output": q.expected_output}],
+                        max_score=float(q.marks)
+                    )
+                    passed_cases = int(judge.get("passed", 0))
+                    total_cases = int(judge.get("total", 0))
+                    score_ratio = (passed_cases / total_cases) if total_cases else 0.0
+                    marks_awarded = round(float(q.marks) * score_ratio, 2)
+                    is_correct = judge.get("verdict") == "Accepted"
+
+                    if is_correct:
+                        correct += 1
+                    else:
+                        wrong += 1
+                else:
+                    marks_awarded = 0
+                    wrong += 1
+
+                breakdown.append({
+                    "question_id": str(q.id),
+                    "type": q.type,
+                    "student_answer": student_ans,
+                    "correct_answer": None,
+                    "correct": is_correct,
+                    "marks_awarded": marks_awarded
+                })
+        elif q.type == "DESC":
+            if q.min_characters and len(str(student_ans).strip()) >= q.min_characters:
+                marks_awarded = q.marks
+            else:
+                marks_awarded = 0
+
+            breakdown.append({
+                "question_id": str(q.id),
+                "type": q.type,
+                "student_answer": student_ans,
+                "correct_answer": None,
+                "correct": False,
+                "marks_awarded": marks_awarded
+            })
+
+        obtained += marks_awarded
+        total += q.marks
+        attempted += 1
+
+    tab_limit = 3
+    if result.scheduled_exam:
+        tab_limit = int(getattr(result.scheduled_exam, "allowed_tab_switches", 3) or 3)
+    tab_switch_count = getattr(result, "tab_switch_count", 0) or 0
+
+    if not submission_mode_val:
+        if tab_switch_count >= tab_limit:
+            status_to_save = "accidental_submit"
+        else:
+            status_to_save = "submitted"
+    else:
+        status_to_save = submission_mode_val
+
+    result.exam = exam
+    result.exam_title = exam.title
+    result.total_marks = total
+    result.marks_obtained = obtained
+    result.attempted_questions = attempted
+    result.correct_answers = correct
+    result.wrong_answers = wrong
+    result.question_wise_breakdown = breakdown
+    result.selected_question_ids = [q.id for q in exam_questions]
+    result.submission_status = status_to_save
+    result.live_status = "submitted"
+    if not result.time_taken and result.submitted_at:
+        result.time_taken = timezone.now() - result.submitted_at
+    result.save()
+    return result
+
+
+def check_and_update_scheduled_exams(schedule=None):
+    """
+    Checks scheduled exams and automatically:
+    1. Activates scheduled exams when start_datetime <= now <= end_datetime (status -> 'started').
+    2. Keeps upcoming exams as 'pending' when now < start_datetime.
+    3. Deactivates scheduled exams when now > end_datetime (status -> 'completed').
+    4. Evaluates and auto-submits any student attempts that were in progress when the deadline passed.
+    """
+    now = timezone.now()
+    if schedule:
+        schedules = [schedule]
+    else:
+        schedules = ScheduledExam.objects.filter(
+            start_datetime__isnull=False,
+            end_datetime__isnull=False
+        )
+
+    for sch in schedules:
+        if sch.start_datetime and sch.end_datetime:
+            if now < sch.start_datetime and sch.status != "completed":
+                if sch.status != "pending":
+                    sch.status = "pending"
+                    ScheduledExam.objects.filter(id=sch.id).update(status="pending")
+            elif sch.start_datetime <= now <= sch.end_datetime and sch.status != "completed":
+                if sch.status != "started":
+                    sch.status = "started"
+                    ScheduledExam.objects.filter(id=sch.id).update(status="started")
+            elif now > sch.end_datetime:
+                if sch.status != "completed":
+                    sch.status = "completed"
+                    ScheduledExam.objects.filter(id=sch.id).update(status="completed")
+
+                # Auto-finalize in-progress student attempts for this expired scheduled exam
+                active_results = ExamResult.objects.filter(
+                    scheduled_exam=sch
+                ).exclude(submission_status__in=FINAL_SUBMISSION_STATUSES)
+
+                for res in active_results:
+                    try:
+                        evaluate_and_finalize_scheduled_exam_result(res, submission_mode_val="submitted")
+                    except Exception as e:
+                        logger.exception("Failed to auto-finalize expired scheduled exam result %s: %s", res.id, e)
 
 
 @login_required
@@ -1552,6 +1828,9 @@ def student_get_exam(request):
     
     now = timezone.now()
     upcoming_window = now + timedelta(days=30)  # show exams starting within next 30 days (increased from 6 hours)
+
+    # Auto-activate and auto-deactivate scheduled exams
+    check_and_update_scheduled_exams()
 
     logger.info(f"Student {student.usn} querying exams - College: {student.college.id}, Course: {student.course.id}, Semester: {student.semester}, Year: {student.year}")
     logger.info(f"Time window: {now} to {upcoming_window}")
@@ -1652,10 +1931,14 @@ def student_get_exam_questions(request, scheduled_exam_id):
     now = timezone.now()
 
     if now < scheduled_exam.start_datetime:
-        return JsonResponse({"error": "Exam has not started yet."}, status=403)
+        start_local = timezone.localtime(scheduled_exam.start_datetime) if scheduled_exam.start_datetime else None
+        start_str = start_local.strftime("%d-%m-%Y %I:%M %p") if start_local else ""
+        return JsonResponse({"error": f"Exam has not started yet. It will automatically activate on {start_str}."}, status=403)
 
     if now > scheduled_exam.end_datetime:
-        return JsonResponse({"error": "Exam time is over. You cannot attend this exam now."}, status=403)
+        end_local = timezone.localtime(scheduled_exam.end_datetime) if scheduled_exam.end_datetime else None
+        end_str = end_local.strftime("%d-%m-%Y %I:%M %p") if end_local else ""
+        return JsonResponse({"error": f"Exam time is over. The scheduled window closed on {end_str}."}, status=403)
 
     # Check if there is already a completed latest submission for this exam (any schedule)
     latest_exam_sub = (
@@ -1797,10 +2080,9 @@ def submit_exam(request, scheduled_exam_id):
     now = timezone.now()
 
     if now < scheduled_exam.start_datetime:
-        return JsonResponse({"error": "Exam has not started yet."}, status=403)
-
-    if now > scheduled_exam.end_datetime:
-        return JsonResponse({"error": "Exam time is over. Submission window has expired."}, status=403)
+        start_local = timezone.localtime(scheduled_exam.start_datetime) if scheduled_exam.start_datetime else None
+        start_str = start_local.strftime("%d-%m-%Y %I:%M %p") if start_local else ""
+        return JsonResponse({"error": f"Exam has not started yet. It will automatically activate on {start_str}."}, status=403)
 
     # Check if there is already a completed latest submission for this exam (excluding the current attempt)
     latest_exam_sub = (
@@ -1821,6 +2103,8 @@ def submit_exam(request, scheduled_exam_id):
 
     data = json.loads(request.body)
     device_token = data.get("device_token")
+    device_hints = data.get("device_hints")
+    device_meta = parse_device_info(request, client_hints=device_hints)
 
     submission = (
         ExamResult.objects
@@ -2056,6 +2340,13 @@ def submit_exam(request, scheduled_exam_id):
         result.live_status = status_to_save
         if total_seconds > 0:
             result.time_taken = timezone.timedelta(seconds=total_seconds)
+        if device_meta.get('device_info'):
+            result.device_info = device_meta['device_info']
+            result.device_type = device_meta['device_type']
+            result.os_name = device_meta['os_name']
+            result.browser_name = device_meta['browser_name']
+            result.ip_address = device_meta['ip_address']
+            result.user_agent = device_meta['user_agent']
         result.save()
     else:
         selected_ids_to_save = [q.id for q in exam_questions]
@@ -2073,7 +2364,13 @@ def submit_exam(request, scheduled_exam_id):
             selected_question_ids=selected_ids_to_save,
             submission_status=status_to_save,
             live_status=status_to_save,
-            time_taken=timezone.timedelta(seconds=total_seconds) if total_seconds > 0 else None
+            time_taken=timezone.timedelta(seconds=total_seconds) if total_seconds > 0 else None,
+            device_type=device_meta.get('device_type', 'Laptop / Desktop'),
+            os_name=device_meta.get('os_name', 'Unknown OS'),
+            browser_name=device_meta.get('browser_name', 'Unknown Browser'),
+            ip_address=device_meta.get('ip_address', ''),
+            user_agent=device_meta.get('user_agent', ''),
+            device_info=device_meta.get('device_info', ''),
         )
 
     # Don't change scheduled_exam.status here - each student should be able to attempt independently
@@ -2147,6 +2444,9 @@ def student_live_update(request):
             status = "suspicious"
 
         temp_answers = data.get("temp_answers", [])
+        device_token = data.get("device_token")
+        device_hints = data.get("device_hints")
+        device_meta = parse_device_info(request, client_hints=device_hints)
 
         result = (
             ExamResult.objects
@@ -2154,8 +2454,6 @@ def student_live_update(request):
             .order_by("-submitted_at")
             .first()
         )
-
-        device_token = data.get("device_token")
 
         if result and result.submission_status in FINAL_SUBMISSION_STATUSES:
             # Ignore late heartbeat after final submit.
@@ -2189,6 +2487,12 @@ def student_live_update(request):
                 selected_question_ids=selected_ids,
                 last_active_at=timezone.now(),
                 device_session_token=device_token,
+                device_type=device_meta.get('device_type', 'Laptop / Desktop'),
+                os_name=device_meta.get('os_name', 'Unknown OS'),
+                browser_name=device_meta.get('browser_name', 'Unknown Browser'),
+                ip_address=device_meta.get('ip_address', ''),
+                user_agent=device_meta.get('user_agent', ''),
+                device_info=device_meta.get('device_info', ''),
             )
         else:
             # Check device lock
@@ -2216,16 +2520,20 @@ def student_live_update(request):
             result.live_status = status
             result.last_active_at = timezone.now()
             result.question_wise_breakdown = temp_answers
-            result.save(update_fields=[
-                "current_question",
-                "question_time_map",
-                "tab_switch_count",
-                "submission_status",
-                "live_status",
-                "last_active_at",
-                "question_wise_breakdown",
-                "device_session_token",
-            ])
+            if device_meta.get('device_info'):
+                result.device_info = device_meta['device_info']
+                result.device_type = device_meta['device_type']
+                result.os_name = device_meta['os_name']
+                result.browser_name = device_meta['browser_name']
+                result.ip_address = device_meta['ip_address']
+                result.user_agent = device_meta['user_agent']
+            result.save()
+
+        now = timezone.now()
+        if schedule.end_datetime and now > schedule.end_datetime:
+            if result and result.submission_status not in FINAL_SUBMISSION_STATUSES:
+                evaluate_and_finalize_scheduled_exam_result(result, answers_override=temp_answers, submission_mode_val="submitted")
+            return JsonResponse({"status": "success", "exam_ended": True, "message": "Exam window has closed and answers have been auto-submitted."})
 
         return JsonResponse({"status": "success"})
 
@@ -2570,29 +2878,61 @@ def get_exam_result_detail(request, result_id):
 
         if exam:
             # OK Get all questions for this exam
-            exam_questions = ExamQuestion.objects.filter(exam=exam)
-            total_questions = exam_questions.count()
+            exam_questions = list(ExamQuestion.objects.filter(exam=exam))
+            total_questions = len(exam_questions)
 
             # OK Create quick lookup table for questions
             question_map = {str(q.id): q for q in exam_questions}
+            breakdown_map = {}
+            for item in (result.question_wise_breakdown or []):
+                if isinstance(item, dict):
+                    qid = str(item.get('question_id') or '')
+                    if qid:
+                        breakdown_map[qid] = item
 
-            # OK Build question breakdown (student answers + question info)
-            for item in result.question_wise_breakdown:
-                question_id = item.get('question_id')
-                question_obj = question_map.get(question_id)
+            seen_ids = set()
+            for q in exam_questions:
+                qid = str(q.id)
+                seen_ids.add(qid)
+                item = breakdown_map.get(qid)
+                if item:
+                    questions_data.append({
+                        'question_id': qid,
+                        'question_text': q.question_text,
+                        'type': item.get('type', q.type or 'N/A'),
+                        'student_answer': item.get('student_answer', ''),
+                        'correct_answer': item.get('correct_answer', q.correct_answer if q.type in ['MCQ', 'TF'] else ''),
+                        'correct': item.get('correct', False),
+                        'marks_awarded': item.get('marks_awarded', 0),
+                    })
+                else:
+                    questions_data.append({
+                        'question_id': qid,
+                        'question_text': q.question_text,
+                        'type': q.type or 'N/A',
+                        'student_answer': '— (Recorded in final score)' if (result.attempted_questions or 0) > 0 else '— (Unanswered)',
+                        'correct_answer': q.correct_answer if q.type in ['MCQ', 'TF'] else '',
+                        'correct': False,
+                        'marks_awarded': 0,
+                    })
 
-                questions_data.append({
-                    'question_id': question_id,
-                    'question_text': (
-                        question_obj.question_text
-                        if question_obj else 'Question text not available'
-                    ),
-                    'type': item.get('type', 'N/A'),
-                    'student_answer': item.get('student_answer', ''),
-                    'correct_answer': item.get('correct_answer', ''),
-                    'correct': item.get('correct', False),
-                    'marks_awarded': item.get('marks_awarded', 0),
-                })
+            for item in (result.question_wise_breakdown or []):
+                if isinstance(item, dict):
+                    qid = str(item.get('question_id') or '')
+                    if qid and qid not in seen_ids:
+                        question_obj = question_map.get(qid)
+                        questions_data.append({
+                            'question_id': qid,
+                            'question_text': (
+                                question_obj.question_text
+                                if question_obj else 'Question text not available'
+                            ),
+                            'type': item.get('type', 'N/A'),
+                            'student_answer': item.get('student_answer', ''),
+                            'correct_answer': item.get('correct_answer', ''),
+                            'correct': item.get('correct', False),
+                            'marks_awarded': item.get('marks_awarded', 0),
+                        })
 
         # OK Prepare response payload
         response_data = {
@@ -2613,6 +2953,11 @@ def get_exam_result_detail(request, result_id):
             "wrong_answers": result.wrong_answers or 0,
             "total_questions": total_questions,
             "question_wise_breakdown": questions_data,
+            "device_info": result.device_info or "-",
+            "device_type": result.device_type or "-",
+            "os_name": result.os_name or "-",
+            "browser_name": result.browser_name or "-",
+            "ip_address": result.ip_address or "-",
         }
 
         return JsonResponse(response_data, safe=False)
