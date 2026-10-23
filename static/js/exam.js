@@ -408,6 +408,8 @@
     showSecurityNotice(message, isTabSwitch ? "error" : "warn", 3500);
   }
 
+  let liveUpdateSeq = 0;
+
   async function sendLiveUpdate(statusOverride = null) {
     if (!LIVE_URLS || !LIVE_URLS.live_update || !scheduledExamId) return;
 
@@ -415,6 +417,8 @@
     accumulateCurrentQuestionTime();
 
     const payloadStatus = statusOverride || (liveTabSwitchCount > 2 ? "suspicious" : "active");
+    const currentSeq = ++liveUpdateSeq;
+    const currentTs = Date.now();
 
     // Collect current answers for autosave
     const answers = [];
@@ -430,7 +434,9 @@
         const language = langEl ? langEl.value : "";
         answers.push({
           question_id: questionId,
-          answer: JSON.stringify({ code: code, language: language })
+          answer: JSON.stringify({ code: code, language: language }),
+          client_timestamp: currentTs,
+          seq: currentSeq
         });
       } else {
         const input = block.querySelector("input[type='radio']:checked");
@@ -438,7 +444,12 @@
         const name = input ? input.name : textarea?.name;
         const value = input ? input.value : textarea?.value;
         if (name) {
-          answers.push({ question_id: name.replace("q", ""), answer: value });
+          answers.push({
+            question_id: name.replace("q", ""),
+            answer: value,
+            client_timestamp: currentTs,
+            seq: currentSeq
+          });
         }
       }
     });
@@ -458,6 +469,8 @@
           question_time_map: questionTimeMap,
           status: payloadStatus,
           temp_answers: answers,
+          client_timestamp: currentTs,
+          sequence_number: currentSeq,
           device_token: deviceToken,
           device_hints: getClientDeviceHints()
         })
@@ -1321,6 +1334,8 @@
 
         if (--timeLeft < 0) {
           clearInterval(timerInterval);
+          window._autoSubmitReason = "time_expired";
+          showSecurityNotice("Time's up! Submitting your exam...", "info", 4000);
           form.requestSubmit();
         }
       }, 1000);
