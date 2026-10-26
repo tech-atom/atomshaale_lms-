@@ -2,7 +2,6 @@
 import datetime
 from django import forms
 from django.contrib.auth import get_user_model
-from django.contrib.auth import authenticate
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.forms import SetPasswordForm
 from django.core.exceptions import ValidationError
@@ -29,23 +28,9 @@ class UserLoginForm(forms.Form):
     email = forms.EmailField(required=True)
     password = forms.CharField(widget=forms.PasswordInput, required=True)
 
-    def clean(self):
-        cleaned_data = super().clean()
-        email = cleaned_data.get("email")
-        password = cleaned_data.get("password")
-
-        if email and password:
-            if User.objects.filter(email=email).exists():
-                user = authenticate(email=email, password=password)
-                if user is None:
-                    self.add_error('password', 'Invalid email or password.')
-        return cleaned_data
-
     def clean_email(self):
         email = self.cleaned_data.get('email')
-        if not User.objects.filter(email=email).exists():
-            raise forms.ValidationError("This email is not registered.")
-        return email
+        return email.strip().lower() if email else email
 
 
 class CustomSetPasswordForm(SetPasswordForm):
@@ -286,4 +271,3 @@ class StudentRegistrationForm(forms.Form):
         )
 
         return user, student_profile
-

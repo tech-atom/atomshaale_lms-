@@ -13,7 +13,7 @@ from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_http_methods, require_POST, require_GET
 from django.views.decorators.csrf import csrf_exempt
 
-from django.db import transaction
+from django.db import transaction, IntegrityError
 from django.db.models import Q
 from django.core.paginator import Paginator
 from pre_assessment.models import PreAssessmentExam
@@ -1287,267 +1287,284 @@ def candidate_register(request, code):
     Registers basic candidate details into session before starting the exam.
     Automatically validates against the scheduled window and dynamically configured registration fields.
     """
-    from college.models import College, Course
     clean_code = (code or "").strip().upper()
-    pre_exam = PreAssessmentExam.objects.filter(code=clean_code).first()
-
-    if not pre_exam:
-        return render(request, 'pre_assessment/inactive_code.html', {
-            'code': clean_code,
-            'is_inactive': False,
-            'is_not_found': True,
-            'title': 'Invalid Assessment Link',
-            'message': f'No assessment was found matching access code "{clean_code}". Please verify the link or enter a valid access code.'
-        }, status=404)
-
-    now = timezone.now()
-    check_and_finalize_expired_pre_assessments(pre_exam)
-    current_tz = timezone.get_current_timezone()
-    status_key, status_display = get_pre_assessment_dynamic_status(pre_exam, now)
-
-    if status_key == "upcoming":
-        start_str = pre_exam.start_datetime.astimezone(current_tz).strftime("%d-%b-%Y %I:%M %p") if pre_exam.start_datetime else "soon"
-        return render(request, 'pre_assessment/inactive_code.html', {
-            'code': clean_code,
-            'pre_exam': pre_exam,
-            'is_inactive': True,
-            'is_not_found': False,
-            'title': 'Assessment Has Not Started',
-            'message': f'The assessment "{pre_exam.exam.title if pre_exam.exam else clean_code}" is scheduled to automatically activate on {start_str}. Please return at the scheduled start time.'
-        }, status=403)
-
-    if status_key == "expired":
-        end_str = pre_exam.end_datetime.astimezone(current_tz).strftime("%d-%b-%Y %I:%M %p") if pre_exam.end_datetime else "earlier"
-        return render(request, 'pre_assessment/inactive_code.html', {
-            'code': clean_code,
-            'pre_exam': pre_exam,
-            'is_inactive': True,
-            'is_not_found': False,
-            'title': 'Assessment Window Closed',
-            'message': f'The assessment "{pre_exam.exam.title if pre_exam.exam else clean_code}" automatically closed on {end_str}. New registrations are no longer accepted.'
-        }, status=403)
-
-    if status_key == "inactive":
-        return render(request, 'pre_assessment/inactive_code.html', {
-            'code': clean_code,
-            'pre_exam': pre_exam,
-            'is_inactive': True,
-            'is_not_found': False,
-            'title': 'Assessment Currently Inactive',
-            'message': f'The assessment "{pre_exam.exam.title if pre_exam.exam else clean_code}" (Code: {clean_code}) is currently inactive or has been closed by the administrator.'
-        }, status=403)
-
     try:
-        colleges = College.objects.filter(is_active=True).order_by('name')
-    except Exception:
-        colleges = College.objects.all().order_by('name')
+        from college.models import College, Course
+        pre_exam = PreAssessmentExam.objects.filter(code=clean_code).first()
 
-    reg_config = get_assessment_registration_config(pre_exam)
-    std_cfg = reg_config.get("standard_fields", {})
-    
-    if request.method == 'POST':
+        if not pre_exam:
+            return render(request, 'pre_assessment/inactive_code.html', {
+                'code': clean_code,
+                'is_inactive': False,
+                'is_not_found': True,
+                'title': 'Invalid Assessment Link',
+                'message': f'No assessment was found matching access code "{clean_code}". Please verify the link or enter a valid access code.'
+            }, status=404)
+
+        now = timezone.now()
         try:
-            name = request.POST.get('name', '').strip()
-            email = request.POST.get('email', '').strip().lower()
-            
-            if not name or not email:
-                return render(request, 'pre_assessment/register.html', {
-                    'pre_exam': pre_exam,
-                    'colleges': colleges,
-                    'reg_config': reg_config,
-                    'error': 'Full Name and Email Address are mandatory.'
-                })
+            check_and_finalize_expired_pre_assessments(pre_exam)
+        except Exception:
+            logger.exception("Error checking expired pre_assessments in candidate_register")
 
-            custom_data = {}
-            
-            # 1. USN / Register Number
-            usn = ''
-            if std_cfg.get('usn', {}).get('enabled', True):
-                usn = request.POST.get('usn', '').strip().upper()
-                if std_cfg.get('usn', {}).get('required', True) and not usn:
+        current_tz = timezone.get_current_timezone()
+        status_key, status_display = get_pre_assessment_dynamic_status(pre_exam, now)
+
+        if status_key == "upcoming":
+            start_str = pre_exam.start_datetime.astimezone(current_tz).strftime("%d-%b-%Y %I:%M %p") if pre_exam.start_datetime else "soon"
+            return render(request, 'pre_assessment/inactive_code.html', {
+                'code': clean_code,
+                'pre_exam': pre_exam,
+                'is_inactive': True,
+                'is_not_found': False,
+                'title': 'Assessment Has Not Started',
+                'message': f'The assessment "{pre_exam.exam.title if pre_exam.exam else clean_code}" is scheduled to automatically activate on {start_str}. Please return at the scheduled start time.'
+            }, status=403)
+
+        if status_key == "expired":
+            end_str = pre_exam.end_datetime.astimezone(current_tz).strftime("%d-%b-%Y %I:%M %p") if pre_exam.end_datetime else "earlier"
+            return render(request, 'pre_assessment/inactive_code.html', {
+                'code': clean_code,
+                'pre_exam': pre_exam,
+                'is_inactive': True,
+                'is_not_found': False,
+                'title': 'Assessment Window Closed',
+                'message': f'The assessment "{pre_exam.exam.title if pre_exam.exam else clean_code}" automatically closed on {end_str}. New registrations are no longer accepted.'
+            }, status=403)
+
+        if status_key == "inactive":
+            return render(request, 'pre_assessment/inactive_code.html', {
+                'code': clean_code,
+                'pre_exam': pre_exam,
+                'is_inactive': True,
+                'is_not_found': False,
+                'title': 'Assessment Currently Inactive',
+                'message': f'The assessment "{pre_exam.exam.title if pre_exam.exam else clean_code}" (Code: {clean_code}) is currently inactive or has been closed by the administrator.'
+            }, status=403)
+
+        try:
+            colleges = list(College.objects.filter(is_active=True).order_by('name'))
+        except Exception:
+            try:
+                colleges = list(College.objects.all().order_by('name'))
+            except Exception:
+                colleges = []
+
+        reg_config = get_assessment_registration_config(pre_exam)
+        std_cfg = reg_config.get("standard_fields", {})
+        
+        if request.method == 'POST':
+            try:
+                name = request.POST.get('name', '').strip()
+                email = request.POST.get('email', '').strip().lower()
+                
+                if not name or not email:
                     return render(request, 'pre_assessment/register.html', {
                         'pre_exam': pre_exam,
                         'colleges': colleges,
                         'reg_config': reg_config,
-                        'error': f"{std_cfg.get('usn', {}).get('label', 'USN / Register Number')} is required."
+                        'error': 'Full Name and Email Address are mandatory.'
                     })
 
-            # 2. Phone Number
-            phone = ''
-            if std_cfg.get('phone', {}).get('enabled', True):
-                phone = request.POST.get('phone', '').strip()
-                if std_cfg.get('phone', {}).get('required', False) and not phone:
-                    return render(request, 'pre_assessment/register.html', {
-                        'pre_exam': pre_exam,
-                        'colleges': colleges,
-                        'reg_config': reg_config,
-                        'error': f"{std_cfg.get('phone', {}).get('label', 'Phone Number')} is required."
-                    })
-
-            # 3. College Name
-            college_name = ''
-            if std_cfg.get('college', {}).get('enabled', True):
-                college_id = request.POST.get('college', '').strip()
-                try:
-                    college_obj = College.objects.get(id=college_id, is_active=True)
-                    college_name = college_obj.name
-                except Exception:
-                    college_name = request.POST.get('college_text', '').strip() or college_id
-                if std_cfg.get('college', {}).get('required', True) and not college_name:
-                    return render(request, 'pre_assessment/register.html', {
-                        'pre_exam': pre_exam,
-                        'colleges': colleges,
-                        'reg_config': reg_config,
-                        'error': f"{std_cfg.get('college', {}).get('label', 'College Name')} is required."
-                    })
-
-            # 4. Course / Department
-            course_name = ''
-            if std_cfg.get('course', {}).get('enabled', True):
-                course_id = request.POST.get('course', '').strip()
-                try:
-                    course_obj = Course.objects.get(id=course_id)
-                    course_name = course_obj.name
-                except Exception:
-                    course_name = request.POST.get('course_text', '').strip() or course_id
-                if std_cfg.get('course', {}).get('required', True) and not course_name:
-                    return render(request, 'pre_assessment/register.html', {
-                        'pre_exam': pre_exam,
-                        'colleges': colleges,
-                        'reg_config': reg_config,
-                        'error': f"{std_cfg.get('course', {}).get('label', 'Course / Department')} is required."
-                    })
-
-            # 5. Year of Study
-            year_num = None
-            if std_cfg.get('year', {}).get('enabled', True):
-                year_val = request.POST.get('year', '').strip()
-                if std_cfg.get('year', {}).get('required', True) and not year_val:
-                    return render(request, 'pre_assessment/register.html', {
-                        'pre_exam': pre_exam,
-                        'colleges': colleges,
-                        'reg_config': reg_config,
-                        'error': f"{std_cfg.get('year', {}).get('label', 'Year of Study')} is required."
-                    })
-                year_num = int(year_val) if year_val.isdigit() else None
-
-            # 6. Semester
-            sem_num = None
-            if std_cfg.get('sem', {}).get('enabled', True):
-                sem_val = request.POST.get('sem', '').strip()
-                if std_cfg.get('sem', {}).get('required', True) and not sem_val:
-                    return render(request, 'pre_assessment/register.html', {
-                        'pre_exam': pre_exam,
-                        'colleges': colleges,
-                        'reg_config': reg_config,
-                        'error': f"{std_cfg.get('sem', {}).get('label', 'Semester')} is required."
-                    })
-                sem_num = int(sem_val) if sem_val.isdigit() else None
-
-            # 7. Additional standard fields (Gender, CGPA, DOB, City)
-            for f_key in ('gender', 'cgpa', 'dob', 'city'):
-                f_cfg = std_cfg.get(f_key, {})
-                if f_cfg.get('enabled'):
-                    f_val = request.POST.get(f_key, '').strip()
-                    f_label = f_cfg.get('label') or f_key.title()
-                    if f_cfg.get('required') and not f_val:
+                custom_data = {}
+                
+                # 1. USN / Register Number
+                usn = ''
+                if std_cfg.get('usn', {}).get('enabled', True):
+                    usn = request.POST.get('usn', '').strip().upper()
+                    if std_cfg.get('usn', {}).get('required', True) and not usn:
                         return render(request, 'pre_assessment/register.html', {
                             'pre_exam': pre_exam,
                             'colleges': colleges,
                             'reg_config': reg_config,
-                            'error': f"{f_label} is required."
+                            'error': f"{std_cfg.get('usn', {}).get('label', 'USN / Register Number')} is required."
                         })
-                    if f_val:
-                        custom_data[f_label] = f_val
 
-            # 8. Dynamic custom fields
-            for cf in reg_config.get('custom_fields', []):
-                cid = cf.get('id')
-                clabel = cf.get('label', 'Custom Field')
-                val = request.POST.get(f'custom_{cid}', '').strip()
-                if not val:
-                    val = request.POST.get(cid, '').strip()
-                if cf.get('required') and not val:
+                # 2. Phone Number
+                phone = ''
+                if std_cfg.get('phone', {}).get('enabled', True):
+                    phone = request.POST.get('phone', '').strip()
+                    if std_cfg.get('phone', {}).get('required', False) and not phone:
+                        return render(request, 'pre_assessment/register.html', {
+                            'pre_exam': pre_exam,
+                            'colleges': colleges,
+                            'reg_config': reg_config,
+                            'error': f"{std_cfg.get('phone', {}).get('label', 'Phone Number')} is required."
+                        })
+
+                # 3. College Name
+                college_name = ''
+                if std_cfg.get('college', {}).get('enabled', True):
+                    college_id = request.POST.get('college', '').strip()
+                    try:
+                        college_obj = College.objects.get(id=college_id, is_active=True)
+                        college_name = college_obj.name
+                    except Exception:
+                        college_name = request.POST.get('college_text', '').strip() or college_id
+                    if std_cfg.get('college', {}).get('required', True) and not college_name:
+                        return render(request, 'pre_assessment/register.html', {
+                            'pre_exam': pre_exam,
+                            'colleges': colleges,
+                            'reg_config': reg_config,
+                            'error': f"{std_cfg.get('college', {}).get('label', 'College Name')} is required."
+                        })
+
+                # 4. Course / Department
+                course_name = ''
+                if std_cfg.get('course', {}).get('enabled', True):
+                    course_id = request.POST.get('course', '').strip()
+                    try:
+                        course_obj = Course.objects.get(id=course_id)
+                        course_name = course_obj.name
+                    except Exception:
+                        course_name = request.POST.get('course_text', '').strip() or course_id
+                    if std_cfg.get('course', {}).get('required', True) and not course_name:
+                        return render(request, 'pre_assessment/register.html', {
+                            'pre_exam': pre_exam,
+                            'colleges': colleges,
+                            'reg_config': reg_config,
+                            'error': f"{std_cfg.get('course', {}).get('label', 'Course / Department')} is required."
+                        })
+
+                # 5. Year of Study
+                year_num = None
+                if std_cfg.get('year', {}).get('enabled', True):
+                    year_val = request.POST.get('year', '').strip()
+                    if std_cfg.get('year', {}).get('required', True) and not year_val:
+                        return render(request, 'pre_assessment/register.html', {
+                            'pre_exam': pre_exam,
+                            'colleges': colleges,
+                            'reg_config': reg_config,
+                            'error': f"{std_cfg.get('year', {}).get('label', 'Year of Study')} is required."
+                        })
+                    year_num = int(year_val) if year_val.isdigit() else None
+
+                # 6. Semester
+                sem_num = None
+                if std_cfg.get('sem', {}).get('enabled', True):
+                    sem_val = request.POST.get('sem', '').strip()
+                    if std_cfg.get('sem', {}).get('required', True) and not sem_val:
+                        return render(request, 'pre_assessment/register.html', {
+                            'pre_exam': pre_exam,
+                            'colleges': colleges,
+                            'reg_config': reg_config,
+                            'error': f"{std_cfg.get('sem', {}).get('label', 'Semester')} is required."
+                        })
+                    sem_num = int(sem_val) if sem_val.isdigit() else None
+
+                # 7. Additional standard fields (Gender, CGPA, DOB, City)
+                for f_key in ('gender', 'cgpa', 'dob', 'city'):
+                    f_cfg = std_cfg.get(f_key, {})
+                    if f_cfg.get('enabled'):
+                        f_val = request.POST.get(f_key, '').strip()
+                        f_label = f_cfg.get('label') or f_key.title()
+                        if f_cfg.get('required') and not f_val:
+                            return render(request, 'pre_assessment/register.html', {
+                                'pre_exam': pre_exam,
+                                'colleges': colleges,
+                                'reg_config': reg_config,
+                                'error': f"{f_label} is required."
+                            })
+                        if f_val:
+                            custom_data[f_label] = f_val
+
+                # 8. Dynamic custom fields
+                for cf in reg_config.get('custom_fields', []):
+                    cid = cf.get('id')
+                    clabel = cf.get('label', 'Custom Field')
+                    val = request.POST.get(f'custom_{cid}', '').strip()
+                    if not val:
+                        val = request.POST.get(cid, '').strip()
+                    if cf.get('required') and not val:
+                        return render(request, 'pre_assessment/register.html', {
+                            'pre_exam': pre_exam,
+                            'colleges': colleges,
+                            'reg_config': reg_config,
+                            'error': f"{clabel} is required."
+                        })
+                    if val:
+                        custom_data[clabel] = val
+                    
+                # Check if already attempted by Email
+                existing_email = ExamResult.objects.filter(
+                    pre_assessment=pre_exam,
+                    candidate_email__iexact=email,
+                    submission_status__in=FINAL_SUBMISSION_STATUSES
+                ).first()
+                
+                if existing_email:
                     return render(request, 'pre_assessment/register.html', {
                         'pre_exam': pre_exam,
                         'colleges': colleges,
                         'reg_config': reg_config,
-                        'error': f"{clabel} is required."
+                        'error': f'A candidate with the email "{email}" has already submitted this assessment.'
                     })
-                if val:
-                    custom_data[clabel] = val
-                
-            # Check if already attempted by Email
-            existing_email = ExamResult.objects.filter(
-                pre_assessment=pre_exam,
-                candidate_email__iexact=email,
-                submission_status__in=FINAL_SUBMISSION_STATUSES
-            ).first()
-            
-            if existing_email:
+
+                # Check if already attempted by USN (if non-empty USN was provided)
+                if usn:
+                    existing_usn = ExamResult.objects.filter(
+                        pre_assessment=pre_exam,
+                        candidate_usn__iexact=usn,
+                        submission_status__in=FINAL_SUBMISSION_STATUSES
+                    ).first()
+                    
+                    if existing_usn:
+                        return render(request, 'pre_assessment/register.html', {
+                            'pre_exam': pre_exam,
+                            'colleges': colleges,
+                            'reg_config': reg_config,
+                            'error': f'A candidate with the USN "{usn}" has already submitted this assessment.'
+                        })
+                    
+                # Detect candidate device metadata
+                device_hints_raw = request.POST.get('device_hints')
+                device_hints = None
+                if device_hints_raw:
+                    try:
+                        device_hints = json.loads(device_hints_raw)
+                    except Exception:
+                        device_hints = None
+                device_meta = parse_device_info(request, client_hints=device_hints)
+
+                # Save into session
+                request.session['pre_assessment_candidate'] = {
+                    'name': name,
+                    'email': email,
+                    'usn': usn,
+                    'phone': phone,
+                    'college': college_name,
+                    'course': course_name,
+                    'year': year_num,
+                    'sem': sem_num,
+                    'custom_data': custom_data,
+                    'code': clean_code,
+                    'session_token': str(uuid.uuid4()),
+                    'device_meta': device_meta,
+                }
+                return redirect('pre_assessment_exam_page', code=clean_code)
+            except Exception as e:
+                logger.exception("Error in candidate_register POST")
                 return render(request, 'pre_assessment/register.html', {
                     'pre_exam': pre_exam,
                     'colleges': colleges,
                     'reg_config': reg_config,
-                    'error': f'A candidate with the email "{email}" has already submitted this assessment.'
+                    'error': f'An unexpected registration error occurred: {str(e)}'
                 })
-
-            # Check if already attempted by USN (if non-empty USN was provided)
-            if usn:
-                existing_usn = ExamResult.objects.filter(
-                    pre_assessment=pre_exam,
-                    candidate_usn__iexact=usn,
-                    submission_status__in=FINAL_SUBMISSION_STATUSES
-                ).first()
-                
-                if existing_usn:
-                    return render(request, 'pre_assessment/register.html', {
-                        'pre_exam': pre_exam,
-                        'colleges': colleges,
-                        'reg_config': reg_config,
-                        'error': f'A candidate with the USN "{usn}" has already submitted this assessment.'
-                    })
-                
-            # Detect candidate device metadata
-            device_hints_raw = request.POST.get('device_hints')
-            device_hints = None
-            if device_hints_raw:
-                try:
-                    device_hints = json.loads(device_hints_raw)
-                except Exception:
-                    device_hints = None
-            device_meta = parse_device_info(request, client_hints=device_hints)
-
-            # Save into session
-            request.session['pre_assessment_candidate'] = {
-                'name': name,
-                'email': email,
-                'usn': usn,
-                'phone': phone,
-                'college': college_name,
-                'course': course_name,
-                'year': year_num,
-                'sem': sem_num,
-                'custom_data': custom_data,
-                'code': clean_code,
-                'session_token': str(uuid.uuid4()),
-                'device_meta': device_meta,
-            }
-            return redirect('pre_assessment_exam_page', code=clean_code)
-        except Exception as e:
-            logger.exception("Error in candidate_register POST")
-            return render(request, 'pre_assessment/register.html', {
-                'pre_exam': pre_exam,
-                'colleges': colleges,
-                'reg_config': reg_config,
-                'error': f'An unexpected registration error occurred: {str(e)}'
-            })
-        
-    return render(request, 'pre_assessment/register.html', {
-        'pre_exam': pre_exam,
-        'colleges': colleges,
-        'reg_config': reg_config
-    })
+            
+        return render(request, 'pre_assessment/register.html', {
+            'pre_exam': pre_exam,
+            'colleges': colleges,
+            'reg_config': reg_config
+        })
+    except Exception as e:
+        logger.exception("Critical unexpected error in candidate_register GET for code %s", clean_code)
+        return render(request, 'pre_assessment/inactive_code.html', {
+            'code': clean_code,
+            'is_inactive': True,
+            'is_not_found': False,
+            'title': 'High Server Load / Temporary Issue',
+            'message': 'The assessment portal is temporarily experiencing high traffic. Please wait a few moments and refresh this page.'
+        }, status=503)
 
 
 def candidate_exam_page(request, code):
@@ -1571,7 +1588,10 @@ def candidate_exam_page(request, code):
 
         # Issue 4: Dynamic status check MUST be performed regardless of whether candidate session exists
         now = timezone.now()
-        check_and_finalize_expired_pre_assessments(pre_exam)
+        try:
+            check_and_finalize_expired_pre_assessments(pre_exam)
+        except Exception:
+            logger.exception("Error checking expired pre_assessments in candidate_exam_page")
         current_tz = timezone.get_current_timezone()
         status_key, status_display = get_pre_assessment_dynamic_status(pre_exam, now)
 
@@ -1764,35 +1784,39 @@ def api_get_exam_questions(request, code):
                 ])
                 
             if not submission:
-                submission = ExamResult.objects.create(
-                    student=None,
-                    exam=pre_exam.exam,
-                    pre_assessment=pre_exam,
-                    candidate_name=candidate['name'],
-                    candidate_email=cand_email,
-                    candidate_usn=cand_usn,
-                    candidate_college=candidate.get('college', ''),
-                    candidate_course=candidate.get('course', ''),
-                    candidate_year=candidate.get('year'),
-                    candidate_sem=candidate.get('sem'),
-                    candidate_phone=candidate.get('phone', ''),
-                    candidate_custom_data=candidate.get('custom_data', {}),
-                    exam_title=pre_exam.exam.title if pre_exam.exam else 'Untitled Exam',
-                    total_marks=0,
-                    marks_obtained=0,
-                    attempted_questions=0,
-                    correct_answers=0,
-                    wrong_answers=0,
-                    question_wise_breakdown=[],
-                    submission_status='active',
-                    live_status='active',
-                    device_type=device_meta.get('device_type', 'Laptop / Desktop'),
-                    os_name=device_meta.get('os_name', 'Unknown OS'),
-                    browser_name=device_meta.get('browser_name', 'Unknown Browser'),
-                    ip_address=device_meta.get('ip_address', ''),
-                    user_agent=device_meta.get('user_agent', ''),
-                    device_info=device_meta.get('device_info', ''),
-                )
+                try:
+                    with transaction.atomic():
+                        submission = ExamResult.objects.create(
+                            student=None,
+                            exam=pre_exam.exam,
+                            pre_assessment=pre_exam,
+                            candidate_name=candidate['name'],
+                            candidate_email=cand_email,
+                            candidate_usn=cand_usn,
+                            candidate_college=candidate.get('college', ''),
+                            candidate_course=candidate.get('course', ''),
+                            candidate_year=candidate.get('year'),
+                            candidate_sem=candidate.get('sem'),
+                            candidate_phone=candidate.get('phone', ''),
+                            candidate_custom_data=candidate.get('custom_data', {}),
+                            exam_title=pre_exam.exam.title if pre_exam.exam else 'Untitled Exam',
+                            total_marks=0,
+                            marks_obtained=0,
+                            attempted_questions=0,
+                            correct_answers=0,
+                            wrong_answers=0,
+                            question_wise_breakdown=[],
+                            submission_status='active',
+                            live_status='active',
+                            device_type=device_meta.get('device_type', 'Laptop / Desktop'),
+                            os_name=device_meta.get('os_name', 'Unknown OS'),
+                            browser_name=device_meta.get('browser_name', 'Unknown Browser'),
+                            ip_address=device_meta.get('ip_address', ''),
+                            user_agent=device_meta.get('user_agent', ''),
+                            device_info=device_meta.get('device_info', ''),
+                        )
+                except IntegrityError:
+                    submission = _get_candidate_exam_query(candidate, pre_exam).first()
             else:
                 updates = []
                 if candidate.get('phone') and not submission.candidate_phone:
@@ -1944,45 +1968,49 @@ def api_live_update(request, code):
                 if status_key != "active":
                     return JsonResponse({"error": f"Assessment is {status_display.lower()}."}, status=403)
 
-                ExamResult.objects.create(
-                    student=None,
-                    exam=pre_exam.exam,
-                    pre_assessment=pre_exam,
-                    candidate_name=candidate['name'],
-                    candidate_email=(candidate.get('email') or "").strip().lower(),
-                    candidate_usn=(candidate.get('usn') or "").strip(),
-                    candidate_college=candidate.get('college', ''),
-                    candidate_course=candidate.get('course', ''),
-                    candidate_year=candidate.get('year'),
-                    candidate_sem=candidate.get('sem'),
-                    candidate_phone=candidate.get('phone', ''),
-                    candidate_custom_data=candidate.get('custom_data', {}),
-                    exam_title=pre_exam.exam.title if pre_exam.exam else 'Untitled Exam',
-                    total_marks=0,
-                    marks_obtained=0,
-                    attempted_questions=0,
-                    correct_answers=0,
-                    wrong_answers=0,
-                    question_wise_breakdown=_merge_autosaved_answers(
-                        [],
-                        temp_answers,
-                        client_timestamp=client_ts,
-                        client_seq=client_seq
-                    ),
-                    submission_status=status,
-                    live_status=status,
-                    current_question=current_question,
-                    question_time_map=question_time_map,
-                    tab_switch_count=tab_switch_count,
-                    last_active_at=timezone.now(),
-                    device_session_token=device_token,
-                    device_type=device_meta.get('device_type', 'Laptop / Desktop'),
-                    os_name=device_meta.get('os_name', 'Unknown OS'),
-                    browser_name=device_meta.get('browser_name', 'Unknown Browser'),
-                    ip_address=device_meta.get('ip_address', ''),
-                    user_agent=device_meta.get('user_agent', ''),
-                    device_info=device_meta.get('device_info', ''),
-                )
+                try:
+                    with transaction.atomic():
+                        result = ExamResult.objects.create(
+                            student=None,
+                            exam=pre_exam.exam,
+                            pre_assessment=pre_exam,
+                            candidate_name=candidate['name'],
+                            candidate_email=(candidate.get('email') or "").strip().lower(),
+                            candidate_usn=(candidate.get('usn') or "").strip(),
+                            candidate_college=candidate.get('college', ''),
+                            candidate_course=candidate.get('course', ''),
+                            candidate_year=candidate.get('year'),
+                            candidate_sem=candidate.get('sem'),
+                            candidate_phone=candidate.get('phone', ''),
+                            candidate_custom_data=candidate.get('custom_data', {}),
+                            exam_title=pre_exam.exam.title if pre_exam.exam else 'Untitled Exam',
+                            total_marks=0,
+                            marks_obtained=0,
+                            attempted_questions=0,
+                            correct_answers=0,
+                            wrong_answers=0,
+                            question_wise_breakdown=_merge_autosaved_answers(
+                                [],
+                                temp_answers,
+                                client_timestamp=client_ts,
+                                client_seq=client_seq
+                            ),
+                            submission_status=status,
+                            live_status=status,
+                            current_question=current_question,
+                            question_time_map=question_time_map,
+                            tab_switch_count=tab_switch_count,
+                            last_active_at=timezone.now(),
+                            device_session_token=device_token,
+                            device_type=device_meta.get('device_type', 'Laptop / Desktop'),
+                            os_name=device_meta.get('os_name', 'Unknown OS'),
+                            browser_name=device_meta.get('browser_name', 'Unknown Browser'),
+                            ip_address=device_meta.get('ip_address', ''),
+                            user_agent=device_meta.get('user_agent', ''),
+                            device_info=device_meta.get('device_info', ''),
+                        )
+                except IntegrityError:
+                    result = _get_candidate_exam_query(candidate, pre_exam).select_for_update().first()
             else:
                 # Issue 2: Merge answers safely per-question instead of replacing whole list
                 result.question_wise_breakdown = _merge_autosaved_answers(
@@ -2110,38 +2138,42 @@ def api_submit(request, code):
             if result is None:
                 if status_key != "active":
                     return JsonResponse({"error": f"Assessment is {status_display.lower()}."}, status=403)
-                result = ExamResult.objects.create(
-                    student=None,
-                    exam=pre_exam.exam,
-                    pre_assessment=pre_exam,
-                    candidate_name=candidate['name'],
-                    candidate_email=(candidate.get('email') or "").strip().lower(),
-                    candidate_usn=(candidate.get('usn') or "").strip(),
-                    candidate_college=candidate.get('college', ''),
-                    candidate_course=candidate.get('course', ''),
-                    candidate_year=candidate.get('year'),
-                    candidate_sem=candidate.get('sem'),
-                    candidate_phone=candidate.get('phone', ''),
-                    candidate_custom_data=candidate.get('custom_data', {}),
-                    exam_title=pre_exam.exam.title if pre_exam.exam else 'Untitled Exam',
-                    total_marks=0,
-                    marks_obtained=0,
-                    attempted_questions=0,
-                    correct_answers=0,
-                    wrong_answers=0,
-                    question_wise_breakdown=[],
-                    submission_status="evaluating",  # Claimed for evaluation (Issue 4)
-                    live_status="submitting",
-                    last_active_at=now_dt,
-                    time_taken=time_taken,
-                    device_session_token=device_token,
-                    device_type=device_meta.get('device_type', 'Laptop / Desktop'),
-                    os_name=device_meta.get('os_name', 'Unknown OS'),
-                    browser_name=device_meta.get('browser_name', 'Unknown Browser'),
-                    ip_address=device_meta.get('ip_address', ''),
-                    user_agent=device_meta.get('user_agent', ''),
-                    device_info=device_meta.get('device_info', ''),
-                )
+                try:
+                    with transaction.atomic():
+                        result = ExamResult.objects.create(
+                            student=None,
+                            exam=pre_exam.exam,
+                            pre_assessment=pre_exam,
+                            candidate_name=candidate['name'],
+                            candidate_email=(candidate.get('email') or "").strip().lower(),
+                            candidate_usn=(candidate.get('usn') or "").strip(),
+                            candidate_college=candidate.get('college', ''),
+                            candidate_course=candidate.get('course', ''),
+                            candidate_year=candidate.get('year'),
+                            candidate_sem=candidate.get('sem'),
+                            candidate_phone=candidate.get('phone', ''),
+                            candidate_custom_data=candidate.get('custom_data', {}),
+                            exam_title=pre_exam.exam.title if pre_exam.exam else 'Untitled Exam',
+                            total_marks=0,
+                            marks_obtained=0,
+                            attempted_questions=0,
+                            correct_answers=0,
+                            wrong_answers=0,
+                            question_wise_breakdown=[],
+                            submission_status="evaluating",  # Claimed for evaluation (Issue 4)
+                            live_status="submitting",
+                            last_active_at=now_dt,
+                            time_taken=time_taken,
+                            device_session_token=device_token,
+                            device_type=device_meta.get('device_type', 'Laptop / Desktop'),
+                            os_name=device_meta.get('os_name', 'Unknown OS'),
+                            browser_name=device_meta.get('browser_name', 'Unknown Browser'),
+                            ip_address=device_meta.get('ip_address', ''),
+                            user_agent=device_meta.get('user_agent', ''),
+                            device_info=device_meta.get('device_info', ''),
+                        )
+                except IntegrityError:
+                    result = _get_candidate_exam_query(candidate, pre_exam).select_for_update().first()
             else:
                 result.time_taken = time_taken
                 result.submission_status = "evaluating"  # Claimed for evaluation (Issue 4)

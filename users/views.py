@@ -1,4 +1,6 @@
 # users/views.py
+import logging
+
 from django.contrib.auth import authenticate, login,logout,get_user_model
 from django.shortcuts import render, redirect
 from .forms import UserLoginForm, StudentRegistrationForm, CustomSetPasswordForm
@@ -12,6 +14,7 @@ from .utils import send_verification_email
 from django.urls import reverse
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 def _style_set_password_form(form):
@@ -37,16 +40,45 @@ def login_view(request):
         if form.is_valid():
             email = form.cleaned_data.get('email')
             password = form.cleaned_data.get('password')
-            user = authenticate(request, email=email, password=password)
+            matching_users = list(User.objects.filter(email__iexact=email)[:2])
+            if len(matching_users) > 1:
+                logger.error("Multiple user accounts match a case-insensitive login email")
+                user = None
+            elif matching_users:
+                # Authenticate with the stored spelling so older mixed-case
+                # addresses continue to work with Django's exact-match backend.
+                user = authenticate(request, email=matching_users[0].email, password=password)
+            else:
+                user = None
             if user is not None:
                 # --- Student group pause check ---
                 if user.role == 'student':
                     from student.models import StudentProfile
                     from college.models import StudentGroupAccess
-                    try:
-                        profile = StudentProfile.objects.select_related(
+                    profiles = list(
+                        StudentProfile.objects.select_related(
                             'college', 'section', 'course'
-                        ).get(user=user, is_current=True)
+                        ).filter(user=user, is_current=True)[:2]
+                    )
+                    if len(profiles) > 1:
+                        logger.error(
+                            "Multiple current student profiles found for user %s",
+                            user.pk,
+                        )
+                        msg = (
+                            "Your account needs administrator review before you can sign in. "
+                            "Please contact your institution."
+                        )
+                        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                            return JsonResponse(
+                                {'status': 'error', 'message': msg},
+                                status=HTTPStatus.SERVICE_UNAVAILABLE,
+                            )
+                        messages.error(request, msg)
+                        return render(request, 'login.html', {'form': form}, status=503)
+
+                    if profiles:
+                        profile = profiles[0]
                         paused = StudentGroupAccess.is_group_paused(
                             college_id=profile.college_id,
                             year=profile.year,
@@ -64,8 +96,6 @@ def login_view(request):
                                 return JsonResponse({'status': 'error', 'message': msg}, status=HTTPStatus.FORBIDDEN)
                             messages.error(request, msg)
                             return render(request, 'login.html', {'form': form})
-                    except StudentProfile.DoesNotExist:
-                        pass  # No profile yet — allow login
                 # --- End pause check ---
 
                 # Determine redirect target by role and show a success popup first.
@@ -92,23 +122,13 @@ def login_view(request):
                 messages.error(request, "Invalid email or password.")
                 return render(request, 'login.html', {'form': form})
         else:
-            email_errors = form.errors.get('email', [])
-            password_errors = form.errors.get('password', [])
-
-            if email_errors:
-                messages.error(request, "Email ID is not registered.")
-            elif password_errors:
-                messages.error(request, "Incorrect password.")
-            else:
-                messages.error(request, "Invalid login details.")
+            messages.error(request, "Invalid email or password.")
 
             if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                ajax_message = "Invalid form data."
-                if email_errors:
-                    ajax_message = "Email ID is not registered."
-                elif password_errors:
-                    ajax_message = "Incorrect password."
-                return JsonResponse({'status': 'error', 'message': ajax_message}, status=HTTPStatus.BAD_REQUEST)
+                return JsonResponse(
+                    {'status': 'error', 'message': 'Invalid email or password.'},
+                    status=HTTPStatus.BAD_REQUEST,
+                )
 
     return render(request, 'login.html', {'form': form})
 @login_required

@@ -31,11 +31,23 @@ class StudentAccessMiddleware:
                 from student.models import StudentProfile
                 from college.models import StudentGroupAccess
 
-                profile = (
+                profiles = list(
                     StudentProfile.objects
                     .select_related('college', 'section', 'course')
-                    .get(user=request.user, is_current=True)
+                    .filter(user=request.user, is_current=True)[:2]
                 )
+                if len(profiles) > 1:
+                    logger.error(
+                        "Multiple current student profiles found for user %s",
+                        request.user.pk,
+                    )
+                    return JsonResponse(
+                        {"error": "Student access is temporarily unavailable."},
+                        status=503,
+                    )
+                if not profiles:
+                    return self.get_response(request)
+                profile = profiles[0]
 
                 is_paused = StudentGroupAccess.is_group_paused(
                     college_id=profile.college_id,
@@ -55,8 +67,6 @@ class StudentAccessMiddleware:
                     )
                     return redirect(reverse('login'))
 
-            except StudentProfile.DoesNotExist:
-                pass
             except Exception:
                 logger.exception("Student access check failed for user %s", request.user.pk)
                 return JsonResponse(

@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Q
 from users.models import User
 from college.models import College, Course, Section
 import uuid
@@ -27,10 +28,10 @@ class StudentProfile(models.Model):
     is_current = models.BooleanField(default=True)
     
     def save(self, *args, **kwargs):
-        self.full_clean()
         with transaction.atomic():
             if self.is_current:
                 StudentProfile.objects.filter(user=self.user, is_current=True).exclude(pk=self.pk).update(is_current=False)
+            self.full_clean()
             super().save(*args, **kwargs)
 
     def clean(self):
@@ -38,6 +39,13 @@ class StudentProfile(models.Model):
 
     class Meta:
         unique_together = ('usn', 'college', 'course', 'year', 'semester')
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user'],
+                condition=Q(is_current=True),
+                name='unique_current_student_profile_per_user',
+            ),
+        ]
 
     def __str__(self):
         return f"{self.user.first_name} - {self.usn} - {self.college} - Y{self.year}S{self.semester}"
