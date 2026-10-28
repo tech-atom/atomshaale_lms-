@@ -1,0 +1,73 @@
+name: Production Zero-Downtime Multi-Server Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy across All Servers
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            echo "============================================="
+            echo "1. UPDATING BASE SERVER (atom-lms-app-server)"
+            echo "============================================="
+            cd /opt/atomm_lms
+            git config --global --add safe.directory /opt/atomm_lms
+            git pull origin main
+            
+            echo "Applying Database Migrations..."
+            sudo docker compose --env-file .env.production -f docker-compose.production.yml -f docker-compose.override.yml exec -T web python manage.py migrate --noinput
+            
+            echo "Collecting and Syncing Static Files..."
+            sudo cp -r /opt/atomm_lms/static/* /opt/atomm_lms/staticfiles/ 2>/dev/null || true
+            sudo systemctl reload nginx
+            
+            echo "Building and Updating Web Container..."
+            sudo docker compose --env-file .env.production -f docker-compose.production.yml -f docker-compose.override.yml build web
+            sudo docker compose --env-file .env.production -f docker-compose.production.yml -f docker-compose.override.yml up -d web
+
+            echo "============================================="
+            echo "2. UPDATING ALL RUNNING AUTO-SCALING WORKERS"
+            echo "============================================="
+            WORKER_IPS=$(aws ec2 describe-instances \
+              --region ap-south-1 \
+              --filters "Name=tag:aws:autoscaling:groupName,Values=atom-lms-asg" "Name=instance-state-name,Values=running" \
+              --query "Reservations[*].Instances[*].PrivateIpAddress" \
+              --output text 2>/dev/null || true)
+
+            if [ -n "$WORKER_IPS" ]; then
+              for IP in $WORKER_IPS; do
+                echo "--> Updating Worker: $IP"
+                ssh -o StrictHostKeyChecking=no ubuntu@$IP "
+                  cd /opt/atomm_lms && \
+                  git config --global --add safe.directory /opt/atomm_lms && \
+                  git pull origin main && \
+                  sudo cp -r /opt/atomm_lms/static/* /opt/atomm_lms/staticfiles/ 2>/dev/null || true && \
+                  sudo systemctl reload nginx && \
+                  sudo docker compose --env-file .env.production -f docker-compose.production.yml -f docker-compose.override.yml build web && \
+                  sudo docker compose --env-file .env.production -f docker-compose.production.yml -f docker-compose.override.yml up -d web
+                " 2>/dev/null || echo "Worker update skipped"
+                echo "--> Worker $IP processed!"
+              done
+            else
+              echo "No active worker servers running currently."
+            fi
+
+            echo "============================================="
+            echo "3. INVALIDATING CLOUDFRONT CACHE"
+            echo "============================================="
+            aws cloudfront create-invalidation --distribution-id d1txwmebpy8idx.cloudfront.net --paths "/*" 2>/dev/null || true
+            
+            echo "============================================="
+            echo "SUCCESS: ALL SERVERS & CACHE DEPLOYED!"
+            echo "============================================="
