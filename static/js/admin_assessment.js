@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', async function () {
   let liveSectionFilter = '';
   let liveCourseFilter = '';
   let liveSearchText = '';
+  let cachedExams = [];
   const csrfToken = (() => {
     const m = document.querySelector('meta[name="csrf-token"]');
     return m ? m.getAttribute('content') : '';
@@ -236,79 +237,245 @@ document.addEventListener('DOMContentLoaded', async function () {
   async function renderExamTable() {
     const r = await fetch(urls.listExams,{credentials:'same-origin'});
     const { exams=[] } = await r.json();
+    cachedExams = exams;
     const main = document.getElementById('assessment-main');
     main.textContent = '';
 
-    const h2 = document.createElement('h2'); h2.textContent='Exams';
-    const btn = document.createElement('button');
-    btn.className='add-btn'; btn.id='addExamBtn'; btn.type='button'; btn.textContent='+ Add Exam';
-    main.append(h2,btn);
+    // 1. Header Row (Title, Subtitle, + Add Exam button)
+    const headerRow = document.createElement('div');
+    headerRow.className = 'scheduled-header-row';
 
-    // SEARCH input area for Exams (will be used by shared search handler)
-    const searchWrap = document.createElement('div');
-    searchWrap.className = 'search-wrap';
+    const titleGroup = document.createElement('div');
+    const h2 = document.createElement('h2');
+    h2.className = 'scheduled-header-title';
+    h2.textContent = 'Exams';
+    const sub = document.createElement('p');
+    sub.className = 'scheduled-header-subtitle';
+    sub.textContent = 'Create, manage, and configure all assessment exams.';
+    titleGroup.append(h2, sub);
+
+    const addExamBtn = document.createElement('button');
+    addExamBtn.type = 'button';
+    addExamBtn.className = 'btn-schedule-new-exam';
+    addExamBtn.id = 'addExamBtn';
+    addExamBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      <span style="pointer-events:none;">Add Exam</span>
+    `;
+
+    headerRow.append(titleGroup, addExamBtn);
+    main.appendChild(headerRow);
+
+    // 2. Search Bar
+    const searchBar = document.createElement('div');
+    searchBar.className = 'scheduled-search-bar';
+    searchBar.innerHTML = `
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    `;
     const searchInput = document.createElement('input');
     searchInput.type = 'search';
     searchInput.placeholder = 'Search Exams...';
     searchInput.id = 'examSearchInput';
-    searchWrap.appendChild(searchInput);
-    main.appendChild(searchWrap);
+    searchInput.autocomplete = 'off';
+    searchBar.appendChild(searchInput);
+    main.appendChild(searchBar);
 
-    const table = document.createElement('table');
-    table.className='exam-table'; table.id='examTable';
-    const thead = document.createElement('thead');
-    const rowH = document.createElement('tr');
-    ['Title','Domain','Passing','Total','Duration','Questions','Actions'].forEach(t=>{
-      const th=document.createElement('th'); th.textContent=t; rowH.appendChild(th);
-    });
-    thead.appendChild(rowH);
-    table.appendChild(thead);
+    // 3. Cards Container
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'scheduled-cards-container';
+    cardsContainer.id = 'examCardsContainer';
 
-    const tb = document.createElement('tbody');
-    exams.forEach(exam=>{
-      const tr = document.createElement('tr');
-      tr.dataset.examId = exam.id;
-      tr.dataset.questionsToDisplay = exam.questions_to_display || 0;
+    if (!exams.length) {
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'sch-empty-state';
+      emptyDiv.textContent = 'No exams found.';
+      cardsContainer.appendChild(emptyDiv);
+      main.appendChild(cardsContainer);
+      return;
+    }
+
+    exams.forEach(exam => {
+      const card = document.createElement('div');
+      card.className = 'scheduled-exam-card status-border-green';
+      card.dataset.examId = exam.id;
+      card.dataset.title = exam.title || '';
+      card.dataset.domain = exam.domain || '';
+      card.dataset.domainName = exam.domain_name || '';
+      card.dataset.passingMarks = exam.passing_marks ?? 0;
+      card.dataset.maxMarks = exam.max_marks ?? 0;
+      card.dataset.duration = exam.duration_minutes ?? 0;
+      card.dataset.questionsToDisplay = exam.questions_to_display || 0;
+
       const qCountDisplay = (exam.questions_to_display && exam.questions_to_display > 0)
         ? `${exam.questions_to_display} / student (Pool: ${exam.question_count})`
         : `${exam.question_count} (All)`;
-      const cols = [
-        exam.title,
-        exam.domain_name,
-        exam.passing_marks,
-        exam.max_marks,
-        `${exam.duration_minutes} min`,
-        qCountDisplay
-      ];
-      cols.forEach(txt=> {
-        const td = document.createElement('td');
-        td.textContent = txt;
-        tr.appendChild(td);
-      });
 
-      // Actions (added Download + Bulk Upload)
-      const act = document.createElement('td');
-      [
-        ['Questions','view-q'],
-        ['Preview','preview-exam'],
-        ['Edit','edit-exam'],
-        ['Delete','delete-exam'],
-        ['Schedule','schedule-exam'],
-        ['Download','download-exam'],
-        ['Bulk Upload','bulk-upload']
-      ].forEach(([label, cls])=>{
-        const b = document.createElement('button');
-        b.className='action-btn ' + cls;
-        b.type='button';
-        b.textContent=label;
-        b.dataset.id=exam.id;
-        act.appendChild(b);
-      });
-      tr.appendChild(act);
-      tb.appendChild(tr);
+      card.innerHTML = `
+        <div class="card-header-row">
+          <div class="card-title-group">
+            <div class="card-doc-icon doc-icon-green">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <line x1="10" y1="9" x2="8" y2="9"></line>
+              </svg>
+            </div>
+            <div class="card-title-meta">
+              <h3 class="card-exam-title">${exam.title || 'Untitled Exam'}</h3>
+              <div class="card-exam-sub">${exam.domain_name || 'General'} <span class="meta-pipe">|</span> ${exam.duration_minutes || 0} min <span class="meta-bullet">•</span> Passing: ${exam.passing_marks ?? 0} / ${exam.max_marks ?? 0}</div>
+            </div>
+          </div>
+
+          <div class="card-actions-group">
+            <button type="button" class="sch-card-btn sch-card-btn-schedule schedule-exam" data-id="${exam.id}" title="Schedule this exam">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+              <span style="pointer-events:none;">Schedule</span>
+            </button>
+
+            <button type="button" class="sch-card-btn sch-card-btn-questions view-q" data-id="${exam.id}" title="View & Manage Questions">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              <span style="pointer-events:none;">Questions</span>
+            </button>
+
+            <button type="button" class="sch-card-btn sch-card-btn-preview preview-exam" data-id="${exam.id}" title="Preview Exam Paper">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                <circle cx="12" cy="12" r="3"></circle>
+              </svg>
+              <span style="pointer-events:none;">Preview</span>
+            </button>
+
+            <button type="button" class="sch-card-btn sch-card-btn-upload bulk-upload" data-id="${exam.id}" title="Bulk Upload Questions">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="17 8 12 3 7 8"></polyline>
+                <line x1="12" y1="3" x2="12" y2="15"></line>
+              </svg>
+              <span style="pointer-events:none;">Bulk Upload</span>
+            </button>
+
+            <button type="button" class="sch-card-btn sch-card-btn-download download-exam" data-id="${exam.id}" title="Download Exam Paper">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                <polyline points="7 10 12 15 17 10"></polyline>
+                <line x1="12" y1="15" x2="12" y2="3"></line>
+              </svg>
+              <span style="pointer-events:none;">Download</span>
+            </button>
+
+            <button type="button" class="sch-card-btn sch-card-btn-edit edit-exam" data-id="${exam.id}" title="Edit Exam">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+              <span style="pointer-events:none;">Edit</span>
+            </button>
+
+            <button type="button" class="sch-card-btn sch-card-btn-delete delete-exam" data-id="${exam.id}" title="Delete Exam">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+              <span style="pointer-events:none;">Delete</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-metrics-row exam-card-metrics-row">
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">Domain</span>
+              <span class="sch-metric-value">${exam.domain_name || 'General'}</span>
+            </div>
+          </div>
+
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">Duration</span>
+              <span class="sch-metric-value">${exam.duration_minutes || 0} min</span>
+            </div>
+          </div>
+
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">Passing Marks</span>
+              <span class="sch-metric-value">${exam.passing_marks ?? 0}</span>
+            </div>
+          </div>
+
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">Total Marks</span>
+              <span class="sch-metric-value">${exam.max_marks ?? 0}</span>
+            </div>
+          </div>
+
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <line x1="10" y1="9" x2="8" y2="9"></line>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">Questions</span>
+              <span class="sch-metric-value">${qCountDisplay}</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      cardsContainer.appendChild(card);
     });
-    table.appendChild(tb);
-    main.appendChild(table);
+
+    main.appendChild(cardsContainer);
   }
 
   async function renderScheduledExams() {
@@ -316,110 +483,355 @@ document.addEventListener('DOMContentLoaded', async function () {
     const { schedules=[] } = await r.json();
     const panel = document.getElementById('scheduled-exams-panel');
     panel.textContent='';
-    const h2 = document.createElement('h2'); h2.textContent='Scheduled Exams';
-    panel.appendChild(h2);
 
-    const searchWrap = document.createElement('div');
-    searchWrap.className = 'search-wrap';
+    // 1. Header Row (Title, Subtitle, + Schedule New Exam button)
+    const headerRow = document.createElement('div');
+    headerRow.className = 'scheduled-header-row';
+
+    const titleGroup = document.createElement('div');
+    const h2 = document.createElement('h2');
+    h2.className = 'scheduled-header-title';
+    h2.textContent = 'Scheduled Exams';
+    const sub = document.createElement('p');
+    sub.className = 'scheduled-header-subtitle';
+    sub.textContent = 'Manage and monitor all scheduled exams.';
+    titleGroup.append(h2, sub);
+
+    const scheduleNewBtn = document.createElement('button');
+    scheduleNewBtn.type = 'button';
+    scheduleNewBtn.className = 'btn-schedule-new-exam';
+    scheduleNewBtn.id = 'scheduleNewExamBtn';
+    scheduleNewBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      <span style="pointer-events:none;">Schedule New Exam</span>
+    `;
+
+    headerRow.append(titleGroup, scheduleNewBtn);
+    panel.appendChild(headerRow);
+
+    // 2. Search Bar
+    const searchBar = document.createElement('div');
+    searchBar.className = 'scheduled-search-bar';
+    searchBar.innerHTML = `
+      <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    `;
     const searchInput = document.createElement('input');
     searchInput.type = 'search';
     searchInput.placeholder = 'Search Exams...';
     searchInput.id = 'scheduledSearchInput';
-    searchWrap.appendChild(searchInput);
-    panel.appendChild(searchWrap);
+    searchInput.autocomplete = 'off';
+    searchBar.appendChild(searchInput);
+    panel.appendChild(searchBar);
 
-    const table = document.createElement('table');
-    table.className='exam-table'; table.id='scheduledExamTable';
-    const thead = document.createElement('thead');
-    const headRow = document.createElement('tr');
-  ['Exam','College','Course','Section','Sem','Year','Start','End','Status','Results Released','Attendance','Live Monitor','Trainer Access','TPO Access','Tab Switch Limit','Questions / Student','Actions']
-      .forEach(t=>{
-        const th=document.createElement('th'); th.textContent=t; headRow.appendChild(th);
-      });
-    thead.appendChild(headRow);
-    table.appendChild(thead);
+    // 3. Cards Container
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'scheduled-cards-container';
+    cardsContainer.id = 'scheduledCardsContainer';
 
-    const tb = document.createElement('tbody');
-    schedules.forEach(s=>{
-      const tr=document.createElement('tr');
-      tr.dataset.schId=s.id;
- [
-  s.exam_title,
-  s.college_name,
-  s.course_name,
-  s.section_name,
-  s.semester,
-  s.year,
-  s.start_datetime,
-  s.end_datetime,
-  s.status,
-  s.result_released ? 'Yes' : 'No',
-  s.require_attendance ? 'Yes' : 'No',
-  s.live_exam_monitor ? 'Enabled' : 'Disabled',
-  (s.monitor_trainers_names && s.monitor_trainers_names.length) ? s.monitor_trainers_names.join(', ') : '-',
-  (s.monitor_tpos_names && s.monitor_tpos_names.length) ? s.monitor_tpos_names.join(', ') : '-',
-  s.allowed_tab_switches ?? 3,
-  s.random_question_count ? `${s.random_question_count} (Override)` : (s.questions_to_display ? `${s.questions_to_display} (From Exam)` : 'All')
-].forEach(txt=>{
+    if (!schedules.length) {
+      const emptyDiv = document.createElement('div');
+      emptyDiv.className = 'sch-empty-state';
+      emptyDiv.textContent = 'No scheduled exams found.';
+      cardsContainer.appendChild(emptyDiv);
+      panel.appendChild(cardsContainer);
+      return;
+    }
 
-        const td=document.createElement('td'); td.textContent=txt; tr.appendChild(td);
-      });
-      const act=document.createElement('td');
-      const actionGroup = document.createElement('div');
-      actionGroup.className = 'action-group';
-      [
-        ['Edit', 'edit-schedule'],
-        ['Delete', 'delete-schedule'],
-        ['Submissions', 'view-submissions']
-      ].forEach(([label, cls])=>{
-        const b=document.createElement('button');
-        b.className=`action-btn ${cls}`;
-        b.type='button';
-        b.textContent=label;
-        b.dataset.id=s.id;
-        actionGroup.appendChild(b);
-      });
-      act.appendChild(actionGroup);
-      tr.appendChild(act);
-      tb.appendChild(tr);
+    schedules.forEach(s => {
+      const card = document.createElement('div');
+      card.dataset.schId = s.id;
+
+      // Status resolution
+      const rawStatus = String(s.status || 'pending').toLowerCase();
+      let statusTheme = 'amber';
+      let statusLabel = 'Pending';
+      if (rawStatus === 'started' || rawStatus === 'active' || rawStatus === 'in_progress') {
+        statusTheme = 'green';
+        statusLabel = 'Started';
+      } else if (rawStatus === 'completed' || rawStatus === 'finished') {
+        statusTheme = 'blue';
+        statusLabel = 'Completed';
+      }
+
+      card.className = `scheduled-exam-card status-border-${statusTheme}`;
+
+      // Date parsing
+      const formatDT = (dtStr) => {
+        if (!dtStr || dtStr === 'N/A') return { date: 'N/A', time: '' };
+        const parts = dtStr.trim().split(/\s+/);
+        if (parts.length >= 3) {
+          return { date: parts[0], time: `${parts[1]} ${parts[2]}` };
+        } else if (parts.length === 2) {
+          return { date: parts[0], time: parts[1] };
+        }
+        return { date: dtStr, time: '' };
+      };
+
+      const startDT = formatDT(s.start_datetime);
+      const endDT = formatDT(s.end_datetime);
+
+      const qCountDisplay = s.random_question_count
+        ? `${s.random_question_count} (Override)`
+        : (s.questions_to_display ? `${s.questions_to_display} (From Exam)` : 'All');
+
+      const trainersText = (s.monitor_trainers_names && s.monitor_trainers_names.length)
+        ? s.monitor_trainers_names.join(', ')
+        : '-';
+
+      const tposText = (s.monitor_tpos_names && s.monitor_tpos_names.length)
+        ? s.monitor_tpos_names.join(', ')
+        : '-';
+
+      card.innerHTML = `
+        <div class="card-header-row">
+          <div class="card-title-group">
+            <div class="card-doc-icon doc-icon-${statusTheme}">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <line x1="10" y1="9" x2="8" y2="9"></line>
+              </svg>
+            </div>
+            <div class="card-title-meta">
+              <h3 class="card-exam-title">${s.exam_title || 'Untitled Exam'}</h3>
+              <div class="card-exam-sub">${s.college_name || 'N/A'} <span class="meta-pipe">|</span> ${s.course_name || 'N/A'} <span class="meta-bullet">•</span> Sem ${s.semester ?? 'N/A'} <span class="meta-pipe">|</span> Section: ${s.section_name || 'N/A'} <span class="meta-pipe">|</span> Year: ${s.year ?? 'N/A'}</div>
+            </div>
+          </div>
+
+          <div class="card-actions-group">
+            <span class="status-pill-${statusTheme}">
+              <span class="status-dot"></span>
+              ${statusLabel}
+            </span>
+
+            <button type="button" class="sch-card-btn sch-card-btn-edit edit-schedule" data-id="${s.id}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+              <span style="pointer-events:none;">Edit</span>
+            </button>
+
+            <button type="button" class="sch-card-btn sch-card-btn-delete delete-schedule" data-id="${s.id}">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+              </svg>
+              <span style="pointer-events:none;">Delete</span>
+            </button>
+
+            <button type="button" class="sch-card-btn sch-card-btn-monitor view-submissions" data-id="${s.id}" title="Submissions / Live Monitor">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+              <span style="pointer-events:none;">Submissions / Live Monitor</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-metrics-row">
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">Start Date & Time</span>
+              <span class="sch-metric-value">${startDT.date} <span class="sch-metric-subtime">${startDT.time}</span></span>
+            </div>
+          </div>
+
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">End Date & Time</span>
+              <span class="sch-metric-value">${endDT.date} <span class="sch-metric-subtime">${endDT.time}</span></span>
+            </div>
+          </div>
+
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="20" x2="18" y2="10"></line>
+                <line x1="12" y1="20" x2="12" y2="4"></line>
+                <line x1="6" y1="20" x2="6" y2="14"></line>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">Results Released</span>
+              <span class="sch-metric-value">${s.result_released ? 'Yes' : 'No'}</span>
+            </div>
+          </div>
+
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">Attendance</span>
+              <span class="sch-metric-value">${s.require_attendance ? 'Yes' : 'No'}</span>
+            </div>
+          </div>
+
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                <line x1="8" y1="21" x2="16" y2="21"></line>
+                <line x1="12" y1="17" x2="12" y2="21"></line>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">Live Monitor</span>
+              <span class="sch-metric-value">${s.live_exam_monitor ? 'Enabled' : 'Disabled'}</span>
+            </div>
+          </div>
+
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">Trainer Access</span>
+              <span class="sch-metric-value">${trainersText}</span>
+            </div>
+          </div>
+
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                <circle cx="9" cy="7" r="4"></circle>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">TPO Access</span>
+              <span class="sch-metric-value">${tposText}</span>
+            </div>
+          </div>
+
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="21" x2="4" y2="14"></line>
+                <line x1="4" y1="10" x2="4" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12" y2="3"></line>
+                <line x1="20" y1="21" x2="20" y2="16"></line>
+                <line x1="20" y1="12" x2="20" y2="3"></line>
+                <line x1="1" y1="14" x2="7" y2="14"></line>
+                <line x1="9" y1="8" x2="15" y2="8"></line>
+                <line x1="17" y1="16" x2="23" y2="16"></line>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">Tab Switch Limit</span>
+              <span class="sch-metric-value">${s.allowed_tab_switches ?? 3}</span>
+            </div>
+          </div>
+
+          <div class="sch-metric-item">
+            <div class="sch-metric-icon">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <line x1="10" y1="9" x2="8" y2="9"></line>
+              </svg>
+            </div>
+            <div class="sch-metric-body">
+              <span class="sch-metric-label">Questions / Student</span>
+              <span class="sch-metric-value">${qCountDisplay}</span>
+            </div>
+          </div>
+        </div>
+      `;
+
+      cardsContainer.appendChild(card);
     });
-    table.appendChild(tb);
-    panel.appendChild(table);
+
+    panel.appendChild(cardsContainer);
   }
 
   // ─── Events ────────────────────────────────────────────────────────────────
- document.addEventListener('click', async e=>{
-    if (e.target.id==='addExamBtn') openExamModal();
-    if (e.target.classList.contains('edit-exam')) openExamModal(e.target.dataset.id);
-    if (e.target.classList.contains('delete-exam')) {
-      if (confirm('Delete this exam?')) await doDeleteExam(e.target.dataset.id);
+  document.addEventListener('click', async e=>{
+    if (e.target.id==='addExamBtn' || e.target.closest('#addExamBtn')) openExamModal();
+    if (e.target.closest('#scheduleNewExamBtn')) openScheduleModal();
+    const editExamBtn = e.target.closest('.edit-exam');
+    if (editExamBtn) openExamModal(editExamBtn.dataset.id);
+    const delExamBtn = e.target.closest('.delete-exam');
+    if (delExamBtn) {
+      if (confirm('Delete this exam?')) await doDeleteExam(delExamBtn.dataset.id);
     }
-    if (e.target.classList.contains('schedule-exam')) openScheduleModal(null,e.target.dataset.id);
-    if (e.target.classList.contains('edit-schedule')) openScheduleModal(e.target.dataset.id,null);
-    if (e.target.classList.contains('delete-schedule')) {
-      if (confirm('Delete this scheduled exam?')) await doDeleteSchedule(e.target.dataset.id);
+    const schExamBtn = e.target.closest('.schedule-exam');
+    if (schExamBtn) openScheduleModal(null, schExamBtn.dataset.id);
+    const editSchBtn = e.target.closest('.edit-schedule');
+    if (editSchBtn) openScheduleModal(editSchBtn.dataset.id, null);
+    const delSchBtn = e.target.closest('.delete-schedule');
+    if (delSchBtn) {
+      if (confirm('Delete this scheduled exam?')) await doDeleteSchedule(delSchBtn.dataset.id);
     }
-    if (e.target.classList.contains('view-q')) openQuestionsModal(e.target.dataset.id);
-    if (e.target.classList.contains('preview-exam')) openExamPreviewModal(e.target.dataset.id);
+    const viewQBtn = e.target.closest('.view-q');
+    if (viewQBtn) openQuestionsModal(viewQBtn.dataset.id);
+    const prevExamBtn = e.target.closest('.preview-exam');
+    if (prevExamBtn) openExamPreviewModal(prevExamBtn.dataset.id);
 
-    if (e.target.classList.contains('view-submissions')) {
-      openLiveMonitor(e.target.dataset.id);
+    const viewSubmissionsBtn = e.target.closest('.view-submissions');
+    if (viewSubmissionsBtn) {
+      openLiveMonitor(viewSubmissionsBtn.dataset.id);
     }
 
-    if (e.target.classList.contains('allow-retake-btn')) {
-      allowRetake(e.target.dataset.id || e.target.dataset.result);
+    const retakeBtn = e.target.closest('.allow-retake-btn');
+    if (retakeBtn) {
+      allowRetake(retakeBtn.dataset.id || retakeBtn.dataset.result);
     }
 
-    if (e.target.classList.contains('download-exam')) {
-      const id = e.target.dataset.id;
+    const downloadBtn = e.target.closest('.download-exam');
+    if (downloadBtn) {
+      const id = downloadBtn.dataset.id;
       const url = urls.downloadExamPaper?.replace(placeholder, id);
       if (!url) { showToast('Download URL not configured', false); return; }
       window.location.href = url;
     }
 
     // 🔹 UPDATED: Bulk upload questions
-    if (e.target.classList.contains('bulk-upload')) {
-      const id = e.target.dataset.id;
+    const bulkUploadBtn = e.target.closest('.bulk-upload');
+    if (bulkUploadBtn) {
+      const id = bulkUploadBtn.dataset.id;
       const endpoint = urls.bulkUpload?.replace(placeholder, id);
       if (!endpoint) {
         showToast('Bulk upload URL not configured', false);
@@ -861,16 +1273,27 @@ function getSubmissionStatusMeta(status) {
     openModal(modalId);
 
     if(id){
-      const tr=root.querySelector(`tr[data-exam-id="${id}"]`);
-      if (tr) {
-        form.examTitle.value        = tr.children[0].textContent;
-        const domainCellText        = tr.children[1].textContent;
-        const matchOption = Array.from(form.examDomain.options).find(o=>o.textContent===domainCellText);
-        form.examDomain.value       = matchOption ? matchOption.value : '';
-        form.examPassingMarks.value = tr.children[2].textContent;
-        form.examMaxMarks.value     = tr.children[3].textContent;
-        form.examDuration.value     = tr.children[4].textContent.replace(' min','');
-        form.examQuestionsToDisplay.value = tr.dataset.questionsToDisplay || 0;
+      const examObj = (cachedExams || []).find(e => String(e.id) === String(id));
+      const card = root.querySelector(`[data-exam-id="${id}"]`);
+      if (examObj) {
+        form.examTitle.value = examObj.title || '';
+        if (examObj.domain) {
+          form.examDomain.value = examObj.domain;
+        } else if (examObj.domain_name) {
+          const matchOption = Array.from(form.examDomain.options).find(o => o.textContent === examObj.domain_name);
+          form.examDomain.value = matchOption ? matchOption.value : '';
+        }
+        form.examPassingMarks.value = examObj.passing_marks ?? 0;
+        form.examMaxMarks.value = examObj.max_marks ?? 0;
+        form.examDuration.value = examObj.duration_minutes ?? 0;
+        form.examQuestionsToDisplay.value = examObj.questions_to_display ?? 0;
+      } else if (card) {
+        form.examTitle.value = card.dataset.title || '';
+        form.examDomain.value = card.dataset.domain || '';
+        form.examPassingMarks.value = card.dataset.passingMarks || 0;
+        form.examMaxMarks.value = card.dataset.maxMarks || 0;
+        form.examDuration.value = card.dataset.duration || 0;
+        form.examQuestionsToDisplay.value = card.dataset.questionsToDisplay || 0;
       }
     }
 
@@ -900,7 +1323,7 @@ function getSubmissionStatusMeta(status) {
   }
 
   // ─── Schedule Modal ────────────────────────────────────────────────────────
-  function openScheduleModal(sid=null, ex=null) {
+  async function openScheduleModal(sid=null, ex=null) {
     console.log('╔═══════════════════════════════════════╗');
     console.log('║  OPENING SCHEDULE MODAL - v2.0       ║');
     console.log('╚═══════════════════════════════════════╝');
@@ -910,9 +1333,19 @@ function getSubmissionStatusMeta(status) {
     console.log('CSRF Token:', csrfToken ? 'Present' : 'MISSING!');
     
     if (!ex && !sid) {
-      console.error('ERROR ERROR: No exam ID or schedule ID provided!');
-      showToast('Cannot open schedule modal: Missing ID', false);
-      return;
+      if (!cachedExams || !cachedExams.length) {
+        try {
+          const r = await fetch(urls.listExams, { credentials: 'same-origin' });
+          const d = await r.json();
+          cachedExams = d.exams || [];
+        } catch (err) {
+          console.error('Failed to load exams list:', err);
+        }
+      }
+      if (!cachedExams || !cachedExams.length) {
+        showToast('No exams available to schedule. Please create an exam first.', false);
+        return;
+      }
     }
     
     const modalId='schedule-modal';
@@ -1177,7 +1610,16 @@ function getSubmissionStatusMeta(status) {
       return dropdownContent;
     }
 
-    addInputField({label:'Exam ID',type:'text',id:'scheduleExam',name:'scheduleExam',value:ex||'',readonly:!!ex});
+    if (ex || sid) {
+      addInputField({label:'Exam ID',type:'text',id:'scheduleExam',name:'scheduleExam',value:ex||'',readonly:!!ex});
+    } else {
+      addSelectField({
+        label: 'Select Exam',
+        id: 'scheduleExam',
+        name: 'scheduleExam',
+        options: (cachedExams || []).map(x => ({ v: x.id, t: `${x.title} (${x.domain_name || 'General'})` }))
+      });
+    }
     addMultiSelectCheckboxField({id:'scheduleCollege',label:'Colleges',options:(DROPDOWNS.colleges||[]).map(c=>({v:c.id,t:c.name}))});
     addMultiSelectCheckboxField({id:'scheduleCourse',label:'Courses',options:(DROPDOWNS.courses||[]).map(c=>({v:c.id,t:c.name}))});
     addMultiSelectCheckboxField({id:'scheduleSemester',label:'Semesters',options:Array.from({length:12},(_, i)=>({v:i+1,t:`Semester ${i+1}`}))});
@@ -1606,108 +2048,265 @@ const d = {
   }
 
   // ─── Questions ─────────────────────────────────────────────────────────────
+  // ─── Questions (Fullscreen Modal) ──────────────────────────────────────────
   async function openQuestionsModal(examId) {
-    const modalId='questions-modal';
+    const modalId = 'questions-modal';
     const r = await fetch(
-      urls.getExamQuestions.replace(placeholder,examId),
-      {credentials:'same-origin'}
+      urls.getExamQuestions.replace(placeholder, examId),
+      { credentials: 'same-origin' }
     );
     const data = await r.json();
-    if(data.status!=='success'){ showToast('Failed to fetch questions',false); return; }
-    const qArr = data.questions||[];
+    if (data.status !== 'success') {
+      showToast('Failed to fetch questions', false);
+      return;
+    }
+    const qArr = data.questions || [];
 
-    const cont=document.createElement('div');
-    const x=document.createElement('button');
-    x.className='close-modal'; x.type='button'; x.textContent='×'; x.onclick=()=>closeModal(modalId);
-    cont.appendChild(x);
+    const examObj = (cachedExams || []).find(e => String(e.id) === String(examId));
+    const examCard = document.querySelector(`[data-exam-id="${examId}"]`);
+    const examTitle = examObj?.title || examCard?.dataset.title || 'Exam Questions';
+    const examDomain = examObj?.domain_name || examCard?.dataset.domainName || 'General';
+    const totalMarks = examObj?.max_marks ?? examCard?.dataset.maxMarks ?? '-';
+    const passingMarks = examObj?.passing_marks ?? examCard?.dataset.passingMarks ?? '-';
 
-    const h3=document.createElement('h3'); h3.textContent='Questions';
-    cont.appendChild(h3);
+    const cont = document.createElement('div');
+    cont.className = 'questions-fullscreen-wrapper';
 
-    const addB=document.createElement('button');
-    addB.id='addQuestionBtn'; addB.type='button'; addB.className='add-btn';
-    addB.dataset.exam=examId; addB.textContent='+ Add Question';
-    cont.appendChild(addB);
+    // 1. Header Bar
+    const header = document.createElement('div');
+    header.className = 'questions-fs-header';
 
-    const tableDiv=document.createElement('div');
-    tableDiv.style.maxHeight='400px'; tableDiv.style.overflowY='auto';
+    const headerLeft = document.createElement('div');
+    headerLeft.className = 'questions-fs-header-left';
+    headerLeft.innerHTML = `
+      <div class="questions-fs-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+      </div>
+      <div>
+        <h2 class="questions-fs-title">Questions &mdash; <span class="highlight-title">${escapeHtml(examTitle)}</span></h2>
+        <div class="questions-fs-meta">
+          <span><strong>Domain:</strong> ${escapeHtml(examDomain)}</span>
+          <span class="meta-pipe">|</span>
+          <span><strong>Pass / Max Marks:</strong> ${passingMarks} / ${totalMarks}</span>
+          <span class="meta-pipe">|</span>
+          <span><strong>Total Questions:</strong> <span id="q-total-count">${qArr.length}</span></span>
+        </div>
+      </div>
+    `;
 
-    const table=document.createElement('table');
-    table.className='exam-table'; table.style.marginTop='1em';
-    const thead=document.createElement('thead');
-    const headerRow=document.createElement('tr');
-    ['Type','Section','Text','Marks','Neg','Actions']
-      .forEach(t=>{
-        const th=document.createElement('th'); th.textContent=t; headerRow.appendChild(th);
-      });
-    thead.appendChild(headerRow);
+    const headerRight = document.createElement('div');
+    headerRight.className = 'questions-fs-header-right';
+
+    // Live search input
+    const searchWrap = document.createElement('div');
+    searchWrap.className = 'questions-fs-search-wrap';
+    searchWrap.innerHTML = `
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    `;
+    const searchInp = document.createElement('input');
+    searchInp.type = 'search';
+    searchInp.placeholder = 'Search questions...';
+    searchInp.className = 'questions-fs-search-input';
+    searchWrap.appendChild(searchInp);
+
+    // + Add Question Button
+    const addB = document.createElement('button');
+    addB.id = 'addQuestionBtn';
+    addB.type = 'button';
+    addB.className = 'btn-schedule-new-exam';
+    addB.dataset.exam = examId;
+    addB.innerHTML = `
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+        <line x1="12" y1="5" x2="12" y2="19"></line>
+        <line x1="5" y1="12" x2="19" y2="12"></line>
+      </svg>
+      <span style="pointer-events:none;">Add Question</span>
+    `;
+
+    // Exit Button
+    const exitBtn = document.createElement('button');
+    exitBtn.type = 'button';
+    exitBtn.className = 'questions-fs-exit-btn';
+    exitBtn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+      <span style="pointer-events:none;">Close</span>
+    `;
+    exitBtn.onclick = () => closeModal(modalId);
+
+    headerRight.append(searchWrap, addB, exitBtn);
+    header.append(headerLeft, headerRight);
+    cont.appendChild(header);
+
+    // 2. Table / Body Container
+    const bodyCont = document.createElement('div');
+    bodyCont.className = 'questions-fs-body';
+
+    const cardTableWrap = document.createElement('div');
+    cardTableWrap.className = 'questions-fs-table-card';
+
+    const table = document.createElement('table');
+    table.className = 'questions-fs-table';
+    table.id = 'questionsTable';
+
+    const thead = document.createElement('thead');
+    thead.innerHTML = `
+      <tr>
+        <th style="width: 50px; text-align: center;">#</th>
+        <th style="width: 100px; text-align: center;">Type</th>
+        <th style="width: 130px; text-align: center;">Section</th>
+        <th style="text-align: left;">Question Text</th>
+        <th style="width: 90px; text-align: center;">Marks</th>
+        <th style="width: 90px; text-align: center;">Negative</th>
+        <th style="width: 150px; text-align: center;">Actions</th>
+      </tr>
+    `;
     table.appendChild(thead);
 
-    const tb=document.createElement('tbody');
-    qArr.forEach(q=>{
-      const tr=document.createElement('tr');
-      tr.dataset.qid=q.id;
+    const tb = document.createElement('tbody');
 
-      const typeTd = document.createElement('td');
-      typeTd.textContent = q.type;
-      tr.appendChild(typeTd);
+    if (!qArr.length) {
+      const emptyRow = document.createElement('tr');
+      emptyRow.className = 'q-empty-row';
+      emptyRow.innerHTML = `
+        <td colspan="7" style="text-align: center; padding: 48px 16px; color: #64748b;">
+          <div style="font-size: 32px; margin-bottom: 8px;">📝</div>
+          <div style="font-size: 15px; font-weight: 600; color: #334155;">No questions added to this exam yet.</div>
+          <div style="font-size: 13px; color: #94a3b8; margin-top: 4px;">Click the "+ Add Question" button above to add your first question.</div>
+        </td>
+      `;
+      tb.appendChild(emptyRow);
+    } else {
+      qArr.forEach((q, idx) => {
+        const tr = document.createElement('tr');
+        tr.dataset.qid = q.id;
 
-      const sectionTd = document.createElement('td');
-      sectionTd.textContent = q.section_tag || '-';
-      tr.appendChild(sectionTd);
+        // Type badge theme
+        const qType = String(q.type || 'MCQ').toUpperCase();
+        let typeBadgeClass = 'q-type-badge-mcq';
+        if (qType.includes('CODE')) typeBadgeClass = 'q-type-badge-code';
+        else if (qType.includes('DESC')) typeBadgeClass = 'q-type-badge-desc';
 
-      const textTd = document.createElement('td');
-      textTd.textContent = q.question_text;
-      tr.appendChild(textTd);
+        tr.innerHTML = `
+          <td style="text-align: center; color: #64748b; font-weight: 600; font-size: 12.5px;">${idx + 1}</td>
+          <td style="text-align: center;"><span class="q-type-badge ${typeBadgeClass}">${escapeHtml(qType)}</span></td>
+          <td style="text-align: center;"><span class="q-section-tag">${escapeHtml(q.section_tag || '-')}</span></td>
+          <td class="q-text-cell">
+            <div class="q-text-content">${escapeHtml(q.question_text || '')}</div>
+            ${q.image_url ? `<div class="q-image-preview"><a href="${escapeHtml(q.image_url)}" target="_blank" rel="noopener">🖼 View Attached Image</a></div>` : ''}
+          </td>
+          <td style="text-align: center;"><span class="q-marks-val">${q.marks ?? 0}</span></td>
+          <td style="text-align: center;"><span class="q-neg-val ${Number(q.negative_mark) > 0 ? 'has-neg' : ''}">${q.negative_mark || 0}</span></td>
+          <td style="text-align: center;">
+            <div style="display: flex; gap: 6px; justify-content: center;">
+              <button type="button" class="sch-card-btn sch-card-btn-edit edit-question" data-qid="${q.id}" data-exam="${examId}" title="Edit question">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+                <span style="pointer-events:none;">Edit</span>
+              </button>
+              <button type="button" class="sch-card-btn sch-card-btn-delete delete-question" data-qid="${q.id}" data-exam="${examId}" title="Delete question">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+                  <polyline points="3 6 5 6 21 6"></polyline>
+                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                  <line x1="10" y1="11" x2="10" y2="17"></line>
+                  <line x1="14" y1="11" x2="14" y2="17"></line>
+                </svg>
+                <span style="pointer-events:none;">Delete</span>
+              </button>
+            </div>
+          </td>
+        `;
 
-      const marksTd = document.createElement('td');
-      marksTd.textContent = q.marks;
-      tr.appendChild(marksTd);
+        tb.appendChild(tr);
+      });
+    }
 
-      const negTd = document.createElement('td');
-      negTd.textContent = q.negative_mark || 0;
-      tr.appendChild(negTd);
-
-      const tdAct=document.createElement('td');
-      const eb=document.createElement('button');
-      eb.className='action-btn edit-question'; eb.type='button'; eb.textContent='Edit';
-      eb.dataset.qid=q.id; eb.dataset.exam=examId;
-      const db=document.createElement('button');
-      db.className='action-btn delete-question'; db.type='button'; db.textContent='Delete';
-      db.dataset.qid=q.id; db.dataset.exam=examId;
-      tdAct.append(eb,db);
-      tr.appendChild(tdAct);
-
-      tb.appendChild(tr);
-    });
     table.appendChild(tb);
-    tableDiv.appendChild(table);
-    cont.appendChild(tableDiv);
+    cardTableWrap.appendChild(table);
+    bodyCont.appendChild(cardTableWrap);
+    cont.appendChild(bodyCont);
 
-    createModal(modalId,cont);
+    // Live search inside questions
+    searchInp.addEventListener('input', (ev) => {
+      const qVal = ev.target.value.trim().toLowerCase();
+      const rows = tb.querySelectorAll('tr:not(.q-empty-row)');
+      let matchedCount = 0;
+      rows.forEach(r => {
+        const txt = (r.textContent || '').toLowerCase();
+        const match = !qVal || txt.includes(qVal);
+        r.style.display = match ? '' : 'none';
+        if (match) matchedCount++;
+      });
+      let noMatchRow = tb.querySelector('.q-no-match-row');
+      if (matchedCount === 0 && rows.length > 0) {
+        if (!noMatchRow) {
+          noMatchRow = document.createElement('tr');
+          noMatchRow.className = 'q-no-match-row';
+          noMatchRow.innerHTML = `<td colspan="7" style="text-align:center; padding: 24px; color: #64748b;">No matching questions found for "${escapeHtml(qVal)}".</td>`;
+          tb.appendChild(noMatchRow);
+        }
+      } else if (noMatchRow) {
+        noMatchRow.remove();
+      }
+    });
+
+    // Create modal with fullscreen flag
+    const modalEl = createModal(modalId, cont, true);
+    modalEl.style.zIndex = '100000';
+    const boxEl = modalEl.querySelector('.modal-content');
+    if (boxEl) {
+      boxEl.style.maxWidth = 'none';
+      boxEl.style.width = '100vw';
+      boxEl.style.height = '100vh';
+      boxEl.style.margin = '0';
+      boxEl.style.padding = '0';
+      boxEl.style.borderRadius = '0';
+      boxEl.style.overflow = 'hidden';
+      boxEl.style.display = 'flex';
+      boxEl.style.flexDirection = 'column';
+    }
     openModal(modalId);
 
-    addB.addEventListener('click',()=>openQuestionFormModal(examId,null,null,modalId));
-    cont.querySelectorAll('.edit-question').forEach(btn=>{
-      btn.addEventListener('click',()=>{
-        const qid=btn.dataset.qid;
-        const q = qArr.find(x=>String(x.id)===String(qid));
-        openQuestionFormModal(examId,qid,q,modalId);
+    // Add and Edit Question bindings
+    addB.addEventListener('click', () => openQuestionFormModal(examId, null, null, modalId));
+    cont.querySelectorAll('.edit-question').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const qid = btn.dataset.qid;
+        const q = qArr.find(x => String(x.id) === String(qid));
+        openQuestionFormModal(examId, qid, q, modalId);
       });
     });
-    cont.querySelectorAll('.delete-question').forEach(btn=>{
-      btn.addEventListener('click',async ()=>{
-        if(!confirm('Delete this question?')) return;
-        const qid=btn.dataset.qid;
+    cont.querySelectorAll('.delete-question').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        if (!confirm('Delete this question?')) return;
+        const qid = btn.dataset.qid;
         const url = urls.deleteQuestion
-          .replace(placeholder,examId)
-          .replace('/1/',`/${qid}/`);
-        const r = await fetch(url,{
-          method:'POST',credentials:'same-origin',headers:{'X-CSRFToken':csrfToken}
+          .replace(placeholder, examId)
+          .replace('/1/', `/${qid}/`);
+        const r = await fetch(url, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: { 'X-CSRFToken': csrfToken }
         });
         const d = await r.json();
-        showToast(d.message,d.status==='success');
-        if(d.status==='success'){ closeModal(modalId); openQuestionsModal(examId); }
+        showToast(d.message, d.status === 'success');
+        if (d.status === 'success') {
+          closeModal(modalId);
+          openQuestionsModal(examId);
+          // Also refresh the exam cards so question count updates
+          renderExamTable();
+        }
       });
     });
   }
@@ -1725,12 +2324,13 @@ const d = {
     }
     const questions = data.questions || [];
 
-    const row = document.querySelector(`tr[data-exam-id="${examId}"]`);
-    const examTitle = row ? row.cells[0].textContent : "Exam Preview";
-    const examDomain = row ? row.cells[1].textContent : "";
-    const passingMarks = row ? row.cells[2].textContent : "";
-    const totalMarks = row ? row.cells[3].textContent : "";
-    const duration = row ? row.cells[4].textContent : "";
+    const examObj = (cachedExams || []).find(e => String(e.id) === String(examId));
+    const card = document.querySelector(`[data-exam-id="${examId}"]`);
+    const examTitle = examObj?.title || card?.dataset.title || "Exam Preview";
+    const examDomain = examObj?.domain_name || card?.dataset.domainName || "";
+    const passingMarks = examObj?.passing_marks ?? card?.dataset.passingMarks ?? "";
+    const totalMarks = examObj?.max_marks ?? card?.dataset.maxMarks ?? "";
+    const duration = examObj?.duration_minutes ?? card?.dataset.duration ?? "";
 
     const durMin = parseInt(duration) || 60;
     
@@ -2322,334 +2922,627 @@ const d = {
       .replace(/'/g, "&#039;");
   }
 
-  // ─── Question Form ─────────────────────────────────────────────────────────
+  // ─── Question Form (Fullscreen Modal) ───────────────────────────────────────
   function openQuestionFormModal(examId, questionId, existing, parentModalId) {
     const isEdit = Boolean(questionId);
     const modalId = 'question-form-modal';
     closeModal(modalId);
 
-    const cont = document.createElement('div');
-    const x = document.createElement('button');
-    x.className='close-modal'; x.type='button'; x.textContent='×';
-    x.onclick=()=>closeModal(modalId);
-    cont.appendChild(x);
+    const examObj = (cachedExams || []).find(e => String(e.id) === String(examId));
+    const examCard = document.querySelector(`[data-exam-id="${examId}"]`);
+    const examTitle = examObj?.title || examCard?.dataset.title || 'Exam';
+    const examDomain = examObj?.domain_name || examCard?.dataset.domainName || '';
 
-    const h3 = document.createElement('h3');
-    h3.textContent = isEdit?'Edit Question':'Add Question';
-    cont.appendChild(h3);
+    const cont = document.createElement('div');
+    cont.className = 'q-form-fullscreen-wrapper';
+
+    // 1. Header Bar
+    const header = document.createElement('div');
+    header.className = 'questions-fs-header';
+
+    const headerLeft = document.createElement('div');
+    headerLeft.className = 'questions-fs-header-left';
+    headerLeft.innerHTML = `
+      <div class="questions-fs-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+        </svg>
+      </div>
+      <div>
+        <h2 class="questions-fs-title">${isEdit ? 'Edit Question' : 'Add Question'} &mdash; <span class="highlight-title">${escapeHtml(examTitle)}</span></h2>
+        <div class="questions-fs-meta">
+          <span><strong>Domain:</strong> ${escapeHtml(examDomain || 'General')}</span>
+          <span class="meta-pipe">|</span>
+          <span>Configure question type, marks, statement, and options.</span>
+        </div>
+      </div>
+    `;
+
+    const headerRight = document.createElement('div');
+    headerRight.className = 'questions-fs-header-right';
+
+    // Cancel Button
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'questions-fs-exit-btn';
+    cancelBtn.innerHTML = `
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+      <span style="pointer-events:none;">Cancel</span>
+    `;
+    cancelBtn.onclick = () => closeModal(modalId);
+
+    // Save Button (Header)
+    const headerSaveBtn = document.createElement('button');
+    headerSaveBtn.type = 'button';
+    headerSaveBtn.className = 'btn-schedule-new-exam';
+    headerSaveBtn.innerHTML = `
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+        <polyline points="20 6 9 17 4 12"></polyline>
+      </svg>
+      <span style="pointer-events:none;">${isEdit ? 'Save Changes' : 'Save Question'}</span>
+    `;
+
+    headerRight.append(cancelBtn, headerSaveBtn);
+    header.append(headerLeft, headerRight);
+    cont.appendChild(header);
+
+    // 2. Form Body
+    const bodyCont = document.createElement('div');
+    bodyCont.className = 'q-form-fs-body';
 
     const form = document.createElement('form');
-    form.id='qForm'; form.autocomplete='off';
+    form.id = 'qForm';
+    form.autocomplete = 'off';
+    form.className = 'q-form-fs-inner';
 
-    // Optional image upload
-    const imgLabel = document.createElement('label');
-    imgLabel.textContent = 'Attach Image (optional)';
-    const imgInput = document.createElement('input');
-    imgInput.type = 'file';
-    imgInput.name = 'image';
-    imgInput.accept = 'image/*';
-    form.append(imgLabel, imgInput);
+    headerSaveBtn.onclick = () => {
+      form.requestSubmit();
+    };
 
-    // Existing image preview (for edit mode)
-  if (existing && existing.image_url) {
-    const currentImg = document.createElement('img');
-    currentImg.src = existing.image_url;
-    currentImg.alt = 'Current image';
-    currentImg.style.maxWidth = '200px';
-    currentImg.style.display = 'block';
-    currentImg.style.marginBottom = '10px';
-    form.appendChild(currentImg);
-  }
-form.append(imgLabel, imgInput);
+    // ─── Card 1: Question Setup ───
+    const card1 = document.createElement('div');
+    card1.className = 'q-form-card';
+    card1.innerHTML = `<h3 class="q-form-card-title">1. Question Setup & Details</h3>`;
 
-  // Live preview for new image
-  const preview = document.createElement('img');
-  preview.id = 'image-preview';
-  preview.alt = 'Image preview';
-  preview.style.maxWidth = '200px';
-  preview.style.display = 'none';
-  preview.style.marginTop = '10px';
-  form.appendChild(preview);
+    const gridRow = document.createElement('div');
+    gridRow.className = 'q-form-grid-3';
 
-  // Optional: clear selected image
-  const clearBtn = document.createElement('button');
-  clearBtn.type = 'button';
-  clearBtn.textContent = 'Remove Selected Image';
-  clearBtn.className = 'action-btn';
-  clearBtn.style.marginLeft = '10px';
-  clearBtn.onclick = () => {
-    imgInput.value = '';
-    preview.src = '';
-    preview.style.display = 'none';
-  };
-  form.appendChild(clearBtn);
-
-  imgInput.addEventListener('change', function () {
-    if (imgInput.files && imgInput.files[0]) {
-      const file = imgInput.files[0];
-      const reader = new FileReader();
-      reader.onload = function (e) {
-        preview.src = e.target.result;
-        preview.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
-    } else {
-      preview.src = '';
-      preview.style.display = 'none';
-    }
-  });
-
-    // Type selector
-    const trType = document.createElement('div');
+    // Type Selector
+    const typeGroup = document.createElement('div');
+    typeGroup.className = 'q-form-group';
     const labType = document.createElement('label');
-    labType.textContent='Type';
+    labType.className = 'q-form-label';
+    labType.textContent = 'Question Type';
     const selType = document.createElement('select');
-    selType.id='qType'; selType.name='type';
-    ['MCQ','TF','Code','DESC'].forEach(val=>{
-      const o=document.createElement('option');
-      o.value=val;
-      o.textContent= val==='TF'?'True/False': val==='DESC'?'Descriptive': val;
-      if((existing?.type||'MCQ')===val) o.selected=true;
+    selType.id = 'qType';
+    selType.name = 'type';
+    selType.className = 'q-form-select';
+    [
+      ['MCQ', 'Multiple Choice (MCQ)'],
+      ['TF', 'True / False'],
+      ['Code', 'Coding Challenge'],
+      ['DESC', 'Descriptive / Essay']
+    ].forEach(([val, label]) => {
+      const o = document.createElement('option');
+      o.value = val;
+      o.textContent = label;
+      if ((existing?.type || 'MCQ') === val) o.selected = true;
       selType.appendChild(o);
     });
-    trType.append(labType,selType);
-    form.appendChild(trType);
+    typeGroup.append(labType, selType);
 
-    // Question section/topic selector
+    // Section/Topic
+    const sectionGroup = document.createElement('div');
+    sectionGroup.className = 'q-form-group';
     const sectionLabel = document.createElement('label');
-    sectionLabel.textContent = 'Section / Topic';
+    sectionLabel.className = 'q-form-label';
+    sectionLabel.textContent = 'Section / Topic (Optional)';
     const sectionInput = document.createElement('input');
     sectionInput.type = 'text';
     sectionInput.id = 'qSection';
     sectionInput.name = 'section_tag';
-    sectionInput.placeholder = 'Example: Python / C / GK';
-    sectionInput.required = false;
+    sectionInput.className = 'q-form-input';
+    sectionInput.placeholder = 'e.g. Python, Quantitative, GK';
     sectionInput.value = existing?.section_tag || '';
-    form.append(sectionLabel, sectionInput);
+    sectionGroup.append(sectionLabel, sectionInput);
 
-    // Question text
-    form.appendChild(Object.assign(document.createElement('label'),{textContent:'Question'}));
+    // Marks Grid
+    const marksGroup = document.createElement('div');
+    marksGroup.className = 'q-form-group';
+    marksGroup.innerHTML = `
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div>
+          <label class="q-form-label" for="qMarks">Marks *</label>
+          <input type="number" id="qMarks" name="marks" class="q-form-input" required min="1" value="${existing?.marks ?? 1}">
+        </div>
+        <div>
+          <label class="q-form-label" for="qNegMark">Negative Mark</label>
+          <input type="number" id="qNegMark" name="negative_mark" class="q-form-input" min="0" step="any" value="${existing?.negative_mark ?? 0}">
+        </div>
+      </div>
+    `;
+
+    gridRow.append(typeGroup, sectionGroup, marksGroup);
+    card1.appendChild(gridRow);
+
+    // Question Text
+    const textGroup = document.createElement('div');
+    textGroup.className = 'q-form-group';
+    textGroup.style.marginTop = '14px';
+    const textLabel = document.createElement('label');
+    textLabel.className = 'q-form-label';
+    textLabel.htmlFor = 'qText';
+    textLabel.textContent = 'Question Statement *';
     const inText = document.createElement('textarea');
-    inText.id='qText'; inText.name='question_text'; inText.required=true;
-    inText.value = existing?.question_text||'';
-    form.appendChild(inText);
+    inText.id = 'qText';
+    inText.name = 'question_text';
+    inText.required = true;
+    inText.className = 'q-form-textarea';
+    inText.rows = 4;
+    inText.placeholder = 'Enter the complete question text or problem statement here...';
+    inText.value = existing?.question_text || '';
+    textGroup.append(textLabel, inText);
+    card1.appendChild(textGroup);
 
-    // Marks
-    form.appendChild(Object.assign(document.createElement('label'),{textContent:'Marks'}));
-    const inMarks = document.createElement('input');
-    inMarks.type='number'; inMarks.id='qMarks'; inMarks.name='marks'; inMarks.required=true; inMarks.min=1;
-    inMarks.value = existing?.marks||'';
-    form.appendChild(inMarks);
+    // Image Upload
+    const imgGroup = document.createElement('div');
+    imgGroup.className = 'q-form-group q-img-upload-box';
+    imgGroup.style.marginTop = '16px';
 
-    // Negative mark
-    form.appendChild(Object.assign(document.createElement('label'),{textContent:'Negative Mark'}));
-    const inNeg = document.createElement('input');
-    inNeg.type='number'; inNeg.id='qNegMark'; inNeg.name='negative_mark'; inNeg.min=0;
-    inNeg.value = existing?.negative_mark||'';
-    form.appendChild(inNeg);
+    const imgLabel = document.createElement('label');
+    imgLabel.className = 'q-form-label';
+    imgLabel.textContent = 'Attach Image (optional)';
 
-    // Dynamic container
+    const imgRow = document.createElement('div');
+    imgRow.style.display = 'flex';
+    imgRow.style.alignItems = 'center';
+    imgRow.style.gap = '12px';
+    imgRow.style.flexWrap = 'wrap';
+
+    const imgInput = document.createElement('input');
+    imgInput.type = 'file';
+    imgInput.name = 'image';
+    imgInput.id = 'qImageInput';
+    imgInput.accept = 'image/*';
+    imgInput.style.fontSize = '12.5px';
+
+    const clearBtn = document.createElement('button');
+    clearBtn.type = 'button';
+    clearBtn.textContent = 'Remove Selected Image';
+    clearBtn.className = 'sch-card-btn sch-card-btn-delete';
+    clearBtn.style.display = 'none';
+
+    imgRow.append(imgInput, clearBtn);
+    imgGroup.append(imgLabel, imgRow);
+
+    // Existing image preview
+    if (existing && existing.image_url) {
+      const currentWrap = document.createElement('div');
+      currentWrap.style.marginTop = '8px';
+      currentWrap.innerHTML = `
+        <div style="font-size: 11.5px; color: #64748b; margin-bottom: 4px;">Current Attached Image:</div>
+        <img src="${escapeHtml(existing.image_url)}" alt="Current image" style="max-width: 220px; max-height: 140px; border-radius: 6px; border: 1px solid #cbd5e1; display: block;">
+      `;
+      imgGroup.appendChild(currentWrap);
+    }
+
+    // Live preview
+    const preview = document.createElement('img');
+    preview.id = 'image-preview';
+    preview.alt = 'Image preview';
+    preview.style.maxWidth = '220px';
+    preview.style.maxHeight = '140px';
+    preview.style.display = 'none';
+    preview.style.marginTop = '8px';
+    preview.style.borderRadius = '6px';
+    preview.style.border = '1px solid #cbd5e1';
+    imgGroup.appendChild(preview);
+
+    clearBtn.onclick = () => {
+      imgInput.value = '';
+      preview.src = '';
+      preview.style.display = 'none';
+      clearBtn.style.display = 'none';
+    };
+
+    imgInput.addEventListener('change', function () {
+      if (imgInput.files && imgInput.files[0]) {
+        const file = imgInput.files[0];
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+          clearBtn.style.display = 'inline-flex';
+        };
+        reader.readAsDataURL(file);
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+        clearBtn.style.display = 'none';
+      }
+    });
+
+    card1.appendChild(imgGroup);
+    form.appendChild(card1);
+
+    // ─── Card 2: Answers & Options (Dynamic) ───
+    const card2 = document.createElement('div');
+    card2.className = 'q-form-card';
+    card2.id = 'q-card-answers';
+
+    const card2Title = document.createElement('h3');
+    card2Title.className = 'q-form-card-title';
+    card2Title.textContent = '2. Answer Options & Evaluation';
+    card2.appendChild(card2Title);
+
     const dyn = document.createElement('div');
-    dyn.id='q-type-fields';
-    form.appendChild(dyn);
+    dyn.id = 'q-type-fields';
+    card2.appendChild(dyn);
+    form.appendChild(card2);
 
-    // Submit
+    // Bottom Action Buttons
+    const bottomBar = document.createElement('div');
+    bottomBar.className = 'q-form-bottom-bar';
+
+    const bCancel = document.createElement('button');
+    bCancel.type = 'button';
+    bCancel.className = 'questions-fs-exit-btn';
+    bCancel.textContent = 'Cancel';
+    bCancel.onclick = () => closeModal(modalId);
+
     const bsub = document.createElement('button');
-    bsub.type='submit'; bsub.className='add-btn';
-    bsub.textContent = isEdit?'Update':'Add';
-    form.appendChild(bsub);
+    bsub.type = 'submit';
+    bsub.className = 'btn-schedule-new-exam';
+    bsub.style.padding = '8px 22px';
+    bsub.style.fontSize = '13.5px';
+    bsub.textContent = isEdit ? 'Update Question' : 'Add Question';
 
-    cont.appendChild(form);
-    createModal(modalId,cont);
-    openModal(modalId);
+    bottomBar.append(bCancel, bsub);
+    form.appendChild(bottomBar);
+
+    bodyCont.appendChild(form);
+    cont.appendChild(bodyCont);
 
     function renderFields(type) {
-      dyn.textContent='';
-      if(type==='MCQ') {
-        const init = Array.isArray(existing?.options)&&existing.options.length
-          ? existing.options.map(o=>({value:o,correct:o===existing.correct_answer}))
-          : [{value:'',correct:false},{value:'',correct:false}];
-        const list = document.createElement('div'); list.id='mcq-options-list';
-        init.forEach(o=>{
-          const row=document.createElement('div'); row.className='mcq-opt-row';
-          const inp=document.createElement('input'); inp.type='text'; inp.className='mcq-option-input'; inp.value=o.value;
-          const rd=document.createElement('input'); rd.type='radio'; rd.name='correct_option'; rd.value=o.value;
-          if(o.correct) rd.checked=true;
-          const rm=document.createElement('button'); rm.type='button'; rm.textContent='Remove'; rm.onclick=()=>row.remove();
-          row.append(inp,document.createTextNode(' '),rd,document.createTextNode(' Correct '),rm);
-          list.appendChild(row);
-        });
-        const add=document.createElement('button'); add.type='button'; add.textContent='+ Option';
-        add.onclick=()=>{ const row=document.createElement('div'); row.className='mcq-opt-row';
-          const inp=document.createElement('input'); inp.type='text'; inp.className='mcq-option-input';
-          const rd=document.createElement('input'); rd.type='radio'; rd.name='correct_option';
-          const rm=document.createElement('button'); rm.type='button'; rm.textContent='Remove'; rm.onclick=()=>row.remove();
-          row.append(inp,document.createTextNode(' '),rd,document.createTextNode(' Correct '),rm);
-          list.appendChild(row);
+      dyn.textContent = '';
+
+      if (type === 'MCQ') {
+        const init = Array.isArray(existing?.options) && existing.options.length
+          ? existing.options.map(o => ({ value: o, correct: o === existing.correct_answer }))
+          : [
+              { value: '', correct: true },
+              { value: '', correct: false },
+              { value: '', correct: false },
+              { value: '', correct: false }
+            ];
+
+        const mcqWrap = document.createElement('div');
+        mcqWrap.innerHTML = `
+          <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">
+            Add answer choices below and select the radio button corresponding to the <strong>Correct Answer</strong>.
+          </div>
+        `;
+
+        const list = document.createElement('div');
+        list.id = 'mcq-options-list';
+
+        const refreshLetters = () => {
+          const rows = list.querySelectorAll('.mcq-opt-row');
+          rows.forEach((row, idx) => {
+            const letter = String.fromCharCode(65 + idx);
+            const badge = row.querySelector('.mcq-opt-letter');
+            if (badge) badge.textContent = letter;
+            const inp = row.querySelector('.mcq-option-input');
+            if (inp && !inp.value) inp.placeholder = `Option ${letter}`;
+          });
         };
-        dyn.append(list,add);
+
+        const createOptionRow = (o, idx) => {
+          const row = document.createElement('div');
+          row.className = 'mcq-opt-row';
+          const letter = String.fromCharCode(65 + idx);
+
+          const badge = document.createElement('span');
+          badge.className = 'mcq-opt-letter';
+          badge.textContent = letter;
+
+          const inp = document.createElement('input');
+          inp.type = 'text';
+          inp.className = 'mcq-option-input q-form-input';
+          inp.placeholder = `Option ${letter}`;
+          inp.value = o.value || '';
+          inp.style.flex = '1';
+
+          const radioLabel = document.createElement('label');
+          radioLabel.className = 'mcq-radio-label';
+          const rd = document.createElement('input');
+          rd.type = 'radio';
+          rd.name = 'correct_option';
+          rd.value = o.value || '';
+          if (o.correct) rd.checked = true;
+          radioLabel.append(rd, document.createTextNode(' Correct Answer'));
+
+          const rm = document.createElement('button');
+          rm.type = 'button';
+          rm.className = 'sch-card-btn sch-card-btn-delete';
+          rm.textContent = 'Remove';
+          rm.onclick = () => {
+            row.remove();
+            refreshLetters();
+          };
+
+          row.append(badge, inp, radioLabel, rm);
+          return row;
+        };
+
+        init.forEach((o, i) => {
+          list.appendChild(createOptionRow(o, i));
+        });
+
+        const addBtn = document.createElement('button');
+        addBtn.type = 'button';
+        addBtn.className = 'sch-card-btn sch-card-btn-questions';
+        addBtn.style.marginTop = '10px';
+        addBtn.innerHTML = `
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          <span style="pointer-events:none;">+ Add Another Option</span>
+        `;
+        addBtn.onclick = () => {
+          const count = list.querySelectorAll('.mcq-opt-row').length;
+          list.appendChild(createOptionRow({ value: '', correct: false }, count));
+          refreshLetters();
+        };
+
+        mcqWrap.append(list, addBtn);
+        dyn.appendChild(mcqWrap);
       }
-      if(type==='TF') {
-        const lab=document.createElement('label'); lab.textContent='Correct Answer';
-        const sel=document.createElement('select'); sel.id='tfCorrect'; sel.name='correct_answer';
-        ['True','False'].forEach(v=>{
-          const o=document.createElement('option'); o.value=v; o.textContent=v;
-          if(existing?.correct_answer===v) o.selected=true;
+
+      if (type === 'TF') {
+        const tfWrap = document.createElement('div');
+        tfWrap.className = 'q-form-group';
+        tfWrap.style.maxWidth = '300px';
+
+        const lab = document.createElement('label');
+        lab.className = 'q-form-label';
+        lab.textContent = 'Correct Answer *';
+
+        const sel = document.createElement('select');
+        sel.id = 'tfCorrect';
+        sel.name = 'correct_answer';
+        sel.className = 'q-form-select';
+        ['True', 'False'].forEach(v => {
+          const o = document.createElement('option');
+          o.value = v;
+          o.textContent = v;
+          if (existing?.correct_answer === v) o.selected = true;
           sel.appendChild(o);
         });
-        dyn.append(lab,sel);
+
+        tfWrap.append(lab, sel);
+        dyn.appendChild(tfWrap);
       }
-      if(type==='Code') {
-        const lblIn=document.createElement('label'); lblIn.textContent='Input Example';
-        const inEg=document.createElement('input'); inEg.type='text'; inEg.id='inputExample'; inEg.value=existing?.input_example||'';
-        const lblOut=document.createElement('label'); lblOut.textContent='Expected Output';
-        const outEg=document.createElement('input'); outEg.type='text'; outEg.id='expectedOutput'; outEg.value=existing?.expected_output||'';
-        const list=document.createElement('div'); list.id='tc-list';
-        const init=Array.isArray(existing?.test_cases)&&existing.test_cases.length
+
+      if (type === 'Code') {
+        const codeWrap = document.createElement('div');
+
+        const ioGrid = document.createElement('div');
+        ioGrid.className = 'q-form-grid-2';
+        ioGrid.innerHTML = `
+          <div class="q-form-group">
+            <label class="q-form-label" for="inputExample">Input Example</label>
+            <textarea id="inputExample" class="q-form-textarea" rows="3" placeholder="Sample input values...">${escapeHtml(existing?.input_example || '')}</textarea>
+          </div>
+          <div class="q-form-group">
+            <label class="q-form-label" for="expectedOutput">Expected Output</label>
+            <textarea id="expectedOutput" class="q-form-textarea" rows="3" placeholder="Expected execution output...">${escapeHtml(existing?.expected_output || '')}</textarea>
+          </div>
+        `;
+        codeWrap.appendChild(ioGrid);
+
+        const tcHeader = document.createElement('div');
+        tcHeader.style.marginTop = '18px';
+        tcHeader.style.marginBottom = '8px';
+        tcHeader.innerHTML = `<label class="q-form-label">Test Cases (Auto-Grading)</label>`;
+        codeWrap.appendChild(tcHeader);
+
+        const list = document.createElement('div');
+        list.id = 'tc-list';
+
+        const init = Array.isArray(existing?.test_cases) && existing.test_cases.length
           ? existing.test_cases
-          : [{input:'',output:''}];
-        init.forEach(tc=>{
-          const row=document.createElement('div'); row.className='tc-row';
-          const inp=document.createElement('input'); inp.type='text'; inp.className='tc-input'; inp.value=tc.input;
-          const outp=document.createElement('input'); outp.type='text'; outp.className='tc-output'; outp.value=tc.output;
-          const rm=document.createElement('button'); rm.type='button'; rm.textContent='Remove'; rm.onclick=()=>row.remove();
-          row.append(inp,outp,rm); list.appendChild(row);
-        });
-        const add=document.createElement('button'); add.type='button'; add.textContent='+ Test Case';
-        add.onclick=()=>{ const row=document.createElement('div'); row.className='tc-row';
-          const inp=document.createElement('input'); inp.type='text'; inp.className='tc-input';
-          const outp=document.createElement('input'); outp.type='text'; outp.className='tc-output';
-          const rm=document.createElement('button'); rm.type='button'; rm.textContent='Remove'; rm.onclick=()=>row.remove();
-          row.append(inp,outp,rm); list.appendChild(row);
+          : [{ input: '', output: '' }];
+
+        const createTcRow = (tc) => {
+          const row = document.createElement('div');
+          row.className = 'tc-row';
+          row.innerHTML = `
+            <input type="text" class="tc-input q-form-input" placeholder="Test Case Input..." value="${escapeHtml(tc.input || '')}" style="flex: 1;">
+            <input type="text" class="tc-output q-form-input" placeholder="Expected Output..." value="${escapeHtml(tc.output || '')}" style="flex: 1;">
+            <button type="button" class="sch-card-btn sch-card-btn-delete">Remove</button>
+          `;
+          row.querySelector('button').onclick = () => row.remove();
+          return row;
         };
-        dyn.append(lblIn,inEg,lblOut,outEg,list,add);
+
+        init.forEach(tc => list.appendChild(createTcRow(tc)));
+
+        const addTc = document.createElement('button');
+        addTc.type = 'button';
+        addTc.className = 'sch-card-btn sch-card-btn-questions';
+        addTc.style.marginTop = '10px';
+        addTc.innerHTML = `<span>+ Add Test Case</span>`;
+        addTc.onclick = () => list.appendChild(createTcRow({ input: '', output: '' }));
+
+        codeWrap.append(list, addTc);
+        dyn.appendChild(codeWrap);
       }
-      if(type==='DESC') {
-        const lblKw=document.createElement('label'); lblKw.textContent='Expected Keywords';
-        const list=document.createElement('div'); list.id='kw-list';
-        const init=Array.isArray(existing?.expected_keywords)&&existing.expected_keywords.length
+
+      if (type === 'DESC') {
+        const descWrap = document.createElement('div');
+        descWrap.innerHTML = `
+          <div style="font-size: 13px; color: #64748b; margin-bottom: 10px;">
+            Specify essential keywords expected in student descriptive responses:
+          </div>
+        `;
+
+        const list = document.createElement('div');
+        list.id = 'kw-list';
+
+        const init = Array.isArray(existing?.expected_keywords) && existing.expected_keywords.length
           ? existing.expected_keywords
           : [''];
-        init.forEach(kw=>{
-          const row=document.createElement('div'); row.className='kw-row';
-          const inp=document.createElement('input'); inp.type='text'; inp.className='kw-input'; inp.value=kw;
-          const rm=document.createElement('button'); rm.type='button'; rm.textContent='Remove'; rm.onclick=()=>row.remove();
-          row.append(inp,rm); list.appendChild(row);
-        });
-        const add=document.createElement('button'); add.type='button'; add.textContent='+ Keyword';
-        add.onclick=()=>{ const row=document.createElement('div'); row.className='kw-row';
-          const inp=document.createElement('input'); inp.type='text'; inp.className='kw-input';
-          const rm=document.createElement('button'); rm.type='button'; rm.textContent='Remove'; rm.onclick=()=>row.remove();
-          row.append(inp,rm); list.appendChild(row);
+
+        const createKwRow = (kw) => {
+          const row = document.createElement('div');
+          row.className = 'kw-row';
+          row.style.display = 'flex';
+          row.style.gap = '8px';
+          row.style.marginBottom = '8px';
+          row.innerHTML = `
+            <input type="text" class="kw-input q-form-input" placeholder="Expected keyword..." value="${escapeHtml(kw || '')}" style="flex: 1;">
+            <button type="button" class="sch-card-btn sch-card-btn-delete">Remove</button>
+          `;
+          row.querySelector('button').onclick = () => row.remove();
+          return row;
         };
-        dyn.append(lblKw,list,add);
+
+        init.forEach(kw => list.appendChild(createKwRow(kw)));
+
+        const addKw = document.createElement('button');
+        addKw.type = 'button';
+        addKw.className = 'sch-card-btn sch-card-btn-questions';
+        addKw.style.marginTop = '8px';
+        addKw.innerHTML = `<span>+ Add Keyword</span>`;
+        addKw.onclick = () => list.appendChild(createKwRow(''));
+
+        descWrap.append(list, addKw);
+        dyn.appendChild(descWrap);
       }
     }
 
     renderFields(selType.value);
-    selType.onchange = ()=>renderFields(selType.value);
+    selType.onchange = () => renderFields(selType.value);
 
-form.onsubmit = async ev => {
-  ev.preventDefault();
-
-  // ← Default body with all keys
-  let body = {
-    question_text:   inText.value,
-    type:            selType.value,
-    marks:           Number(inMarks.value),
-    negative_mark:   Number(inNeg.value) || 0,
-    options:          [],
-    correct_answer:   '',
-    test_cases:       [],
-    input_example:    '',
-    expected_output:  '',
-    expected_keywords:[],
-    min_characters:   0
-  };
-
-  // ← Override only the ones needed per type
-  if (body.type === 'MCQ') {
-    body.options = Array
-      .from(document.querySelectorAll('.mcq-option-input'))
-      .map(x => x.value)
-      .filter(x => x);
-    const sel = document.querySelector('input[name="correct_option"]:checked');
-    if (sel) {
-      const row = sel.closest('.mcq-opt-row');
-      body.correct_answer = row.querySelector('.mcq-option-input').value;
+    // Create modal with fullscreen flag
+    const modalEl = createModal(modalId, cont, true);
+    modalEl.style.zIndex = '100010';
+    const boxEl = modalEl.querySelector('.modal-content');
+    if (boxEl) {
+      boxEl.style.maxWidth = 'none';
+      boxEl.style.width = '100vw';
+      boxEl.style.height = '100vh';
+      boxEl.style.margin = '0';
+      boxEl.style.padding = '0';
+      boxEl.style.borderRadius = '0';
+      boxEl.style.overflow = 'hidden';
+      boxEl.style.display = 'flex';
+      boxEl.style.flexDirection = 'column';
     }
-  }
+    openModal(modalId);
 
-  if (body.type === 'TF') {
-    body.correct_answer = document.getElementById('tfCorrect').value;
-  }
+    form.onsubmit = async ev => {
+      ev.preventDefault();
 
-  if (body.type === 'Code') {
-    body.input_example   = document.getElementById('inputExample').value;
-    body.expected_output = document.getElementById('expectedOutput').value;
-    body.test_cases      = Array.from(document.querySelectorAll('.tc-row'))
-                              .map(tc => ({
-                                input:  tc.querySelector('.tc-input').value,
-                                output: tc.querySelector('.tc-output').value
-                              }))
-                              .filter(tc => tc.input && tc.output);
-  }
+      let body = {
+        question_text: inText.value,
+        type: selType.value,
+        marks: Number(inMarks.value),
+        negative_mark: Number(inNeg.value) || 0,
+        options: [],
+        correct_answer: '',
+        test_cases: [],
+        input_example: '',
+        expected_output: '',
+        expected_keywords: [],
+        min_characters: 0
+      };
 
-  if (body.type === 'DESC') {
-    body.expected_keywords = Array.from(document.querySelectorAll('.kw-input'))
-                                  .map(x => x.value).filter(x => x);
-  }
+      if (body.type === 'MCQ') {
+        body.options = Array.from(document.querySelectorAll('.mcq-option-input'))
+          .map(x => x.value)
+          .filter(x => x);
+        const sel = document.querySelector('input[name="correct_option"]:checked');
+        if (sel) {
+          const row = sel.closest('.mcq-opt-row');
+          body.correct_answer = row ? row.querySelector('.mcq-option-input').value : '';
+        }
+      }
 
-  // OK Use FormData for text + image
-  const fd = new FormData();
-  fd.append('question_text', body.question_text);
-  fd.append('type', body.type);
-  fd.append('section_tag', sectionInput.value || '');
-  fd.append('marks', body.marks);
-  fd.append('negative_mark', body.negative_mark);
-  fd.append('options', JSON.stringify(body.options || []));
-  fd.append('correct_answer', body.correct_answer || '');
-  fd.append('test_cases', JSON.stringify(body.test_cases || []));
-  fd.append('input_example', body.input_example || '');
-  fd.append('expected_output', body.expected_output || '');
-  fd.append('expected_keywords', JSON.stringify(body.expected_keywords || []));
-  fd.append('min_characters', body.min_characters || 0);
+      if (body.type === 'TF') {
+        body.correct_answer = document.getElementById('tfCorrect')?.value || 'True';
+      }
 
-  // Attach image file if present
-  if (imgInput.files && imgInput.files[0]) {
-    fd.append('image', imgInput.files[0]);
-  }
+      if (body.type === 'Code') {
+        body.input_example = document.getElementById('inputExample')?.value || '';
+        body.expected_output = document.getElementById('expectedOutput')?.value || '';
+        body.test_cases = Array.from(document.querySelectorAll('.tc-row'))
+          .map(tc => ({
+            input: tc.querySelector('.tc-input')?.value || '',
+            output: tc.querySelector('.tc-output')?.value || ''
+          }))
+          .filter(tc => tc.input && tc.output);
+      }
 
-  // Determine endpoint (add or update)
-  const endpoint = isEdit
-    ? urls.updateQuestion
-        .replace(placeholder, examId)
-        .replace('/1/', `/${questionId}/`)
-    : urls.addQuestion.replace(placeholder, examId);
+      if (body.type === 'DESC') {
+        body.expected_keywords = Array.from(document.querySelectorAll('.kw-input'))
+          .map(x => x.value).filter(x => x);
+      }
 
-  // OK Send multipart FormData with image
-  const r = await fetch(endpoint, {
-    method: 'POST',
-    credentials: 'same-origin',
-    headers: { 'X-CSRFToken': csrfToken },
-    body: fd  // <-- includes text + image
-  });
+      const fd = new FormData();
+      fd.append('question_text', body.question_text);
+      fd.append('type', body.type);
+      fd.append('section_tag', sectionInput.value || '');
+      fd.append('marks', body.marks);
+      fd.append('negative_mark', body.negative_mark);
+      fd.append('options', JSON.stringify(body.options || []));
+      fd.append('correct_answer', body.correct_answer || '');
+      fd.append('test_cases', JSON.stringify(body.test_cases || []));
+      fd.append('input_example', body.input_example || '');
+      fd.append('expected_output', body.expected_output || '');
+      fd.append('expected_keywords', JSON.stringify(body.expected_keywords || []));
+      fd.append('min_characters', body.min_characters || 0);
 
-  const resp = await r.json();
+      if (imgInput.files && imgInput.files[0]) {
+        fd.append('image', imgInput.files[0]);
+      }
 
-  if (resp.status !== 'success') {
-    console.error('Validation errors:', resp.errors);
-    const f = resp.errors ? Object.keys(resp.errors)[0] : 'error';
-    showToast(resp.message || `${f}: ${resp.errors?.[f]?.join(', ') || 'Invalid data'}`, false);
-    return;
-  }
+      const endpoint = isEdit
+        ? urls.updateQuestion
+            .replace(placeholder, examId)
+            .replace('/1/', `/${questionId}/`)
+        : urls.addQuestion.replace(placeholder, examId);
 
-  showToast(resp.message, true);
-  closeModal(modalId);
-  closeModal(parentModalId);
-  openQuestionsModal(examId);
-};
+      const r = await fetch(endpoint, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'X-CSRFToken': csrfToken },
+        body: fd
+      });
 
+      const resp = await r.json();
+
+      if (resp.status !== 'success') {
+        console.error('Validation errors:', resp.errors);
+        const f = resp.errors ? Object.keys(resp.errors)[0] : 'error';
+        showToast(resp.message || `${f}: ${resp.errors?.[f]?.join(', ') || 'Invalid data'}`, false);
+        return;
+      }
+
+      showToast(resp.message, true);
+      closeModal(modalId);
+      if (parentModalId) {
+        closeModal(parentModalId);
+        openQuestionsModal(examId);
+      }
+      renderExamTable();
+    };
   }
 
   // ─── SEARCH: client-side filtering for both tables ──────────────────────────
@@ -2720,28 +3613,64 @@ form.onsubmit = async ev => {
   function attachSearchControls() {
     const examInput = document.getElementById('examSearchInput');
     const scheduledInput = document.getElementById('scheduledSearchInput');
-    const examTable = document.getElementById('examTable');
-    const scheduledTable = document.getElementById('scheduledExamTable');
+
+    const filterCards = (container, q, emptyLabel = 'exams') => {
+      if (!container) return;
+      const cards = container.querySelectorAll('.scheduled-exam-card');
+      let visible = 0;
+      cards.forEach(card => {
+        if (!q) {
+          card.style.display = '';
+          visible++;
+          return;
+        }
+        const text = (card.textContent || '').toLowerCase();
+        const matches = text.includes(q);
+        card.style.display = matches ? '' : 'none';
+        if (matches) visible++;
+      });
+      let emptyMsg = container.querySelector('.sch-no-results');
+      if (visible === 0) {
+        if (!emptyMsg) {
+          emptyMsg = document.createElement('div');
+          emptyMsg.className = 'sch-no-results';
+          emptyMsg.textContent = `No matching ${emptyLabel} found.`;
+          container.appendChild(emptyMsg);
+        }
+      } else if (emptyMsg) {
+        emptyMsg.remove();
+      }
+    };
 
     const doSearch = (raw) => {
-      const v = String(raw || '').trim();
+      const v = String(raw || '').trim().toLowerCase();
+      const examCards = document.getElementById('examCardsContainer');
+      const examTable = document.getElementById('examTable');
+      const scheduledCards = document.getElementById('scheduledCardsContainer');
+      const scheduledTable = document.getElementById('scheduledExamTable');
+
       try {
-        filterTable(examTable, v);
+        if (examCards) filterCards(examCards, v, 'exams');
+        else if (examTable) filterTable(examTable, v);
       } catch (e) { console.error(e); }
+
       try {
-        filterTable(scheduledTable, v);
+        if (scheduledCards) filterCards(scheduledCards, v, 'scheduled exams');
+        else if (scheduledTable) filterTable(scheduledTable, v);
       } catch (e) { console.error(e); }
     };
 
     const debounced = debounce((ev) => doSearch(ev.target.value), 200);
 
-    if (examInput) {
+    if (examInput && !examInput.dataset.searchAttached) {
+      examInput.dataset.searchAttached = 'true';
       examInput.addEventListener('input', debounced);
       examInput.addEventListener('keydown', (ev) => {
         if (ev.key === 'Escape') { examInput.value = ''; doSearch(''); }
       });
     }
-    if (scheduledInput) {
+    if (scheduledInput && !scheduledInput.dataset.searchAttached) {
+      scheduledInput.dataset.searchAttached = 'true';
       scheduledInput.addEventListener('input', debounced);
       scheduledInput.addEventListener('keydown', (ev) => {
         if (ev.key === 'Escape') { scheduledInput.value = ''; doSearch(''); }
@@ -2750,7 +3679,8 @@ form.onsubmit = async ev => {
 
     // Also support typing in either box to search both tables (synchronized)
     [examInput, scheduledInput].forEach(inp => {
-      if (!inp) return;
+      if (!inp || inp.dataset.syncAttached) return;
+      inp.dataset.syncAttached = 'true';
       inp.addEventListener('input', function (ev) {
         const val = ev.target.value;
         // mirror value to other input to give consistent UX
