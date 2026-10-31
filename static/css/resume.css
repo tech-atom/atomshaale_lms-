@@ -61,9 +61,11 @@ body {
     text-decoration: underline;
 }
 
-/* SECTION TITLE */
+/* SECTION TITLE & PAGE BREAK PROTECTION */
 .section {
     margin-bottom: 20px;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
 }
 .section-title {
     font-size: 18px;
@@ -72,6 +74,20 @@ body {
     text-transform: uppercase;
     border-bottom: 1px solid #333;
     padding-bottom: 5px;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+}
+
+.personal-details,
+.declaration,
+.job-item,
+.project-grid,
+.internship-item,
+.skills-container {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
 }
 
 /* JOBS, PROJECTS, INTERNSHIPS */

@@ -1,4 +1,11 @@
 function getCSRFToken() {
+  const tokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]') ||
+                     document.querySelector('[name=csrfmiddlewaretoken]');
+  if (tokenInput && tokenInput.value) return tokenInput.value;
+
+  const metaTag = document.querySelector('meta[name="csrf-token"]');
+  if (metaTag && metaTag.content) return metaTag.content;
+
   const name = 'csrftoken';
   const cookies = document.cookie.split(';');
   for (let i = 0; i < cookies.length; i++) {
@@ -24,9 +31,13 @@ async function loadSchedule() {
   tbody.innerHTML = '<tr><td colspan="5" class="centered-text">Loading schedule...</td></tr>';
 
   try {
+    const headers = {};
+    const token = getCSRFToken();
+    if (token) headers['X-CSRFToken'] = token;
+
     const res = await fetch("/trainer/api/schedule/", {
       method: 'GET',
-      headers: { 'X-CSRFToken': getCSRFToken() },
+      headers: headers,
       credentials: 'include'
     });
 

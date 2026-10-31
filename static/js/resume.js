@@ -4,6 +4,15 @@
 
     // ============ Utility Functions ============= //
     function getCSRFToken() {
+        const tokenInput = document.querySelector('input[name="csrfmiddlewaretoken"]') ||
+                           document.querySelector('[name=csrfmiddlewaretoken]');
+        if (tokenInput && tokenInput.value) {
+            return tokenInput.value;
+        }
+        const metaTag = document.querySelector('meta[name="csrf-token"]');
+        if (metaTag && metaTag.content) {
+            return metaTag.content;
+        }
         const cookie = document.cookie.split(';').find(c => c.trim().startsWith('csrftoken='));
         return cookie ? decodeURIComponent(cookie.split('=')[1]) : '';
     }
@@ -393,7 +402,28 @@
             const fullName = (document.getElementById('full-name').value.trim() || 'resume').replace(/\s+/g, '_');
             const fileName = `${fullName}_resume.pdf`;
 
-            html2pdf().from(element).outputPdf('blob').then(function (pdfBlob) {
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: fileName,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: {
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true,
+                    scrollY: 0
+                },
+                jsPDF: {
+                    unit: 'mm',
+                    format: 'a4',
+                    orientation: 'portrait'
+                },
+                pagebreak: {
+                    mode: ['avoid-all', 'css', 'legacy'],
+                    avoid: ['.section', '.section-title', '.personal-details', '.declaration', '.job-item', '.project-grid', '.internship-item']
+                }
+            };
+
+            html2pdf().set(opt).from(element).outputPdf('blob').then(function (pdfBlob) {
                 // Download PDF
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(pdfBlob);
@@ -403,14 +433,15 @@
                 // Secure upload
                 const formData = new FormData();
                 formData.append('resume', pdfBlob, fileName);
+                if (getCSRFToken()) formData.append('csrfmiddlewaretoken', getCSRFToken());
 
                 fetch('/student/upload_resume/', {
                     method: 'POST',
                     body: formData,
                     credentials: 'include',
-                    headers: { 'X-CSRFToken': getCSRFToken() }
+                    headers: getCSRFToken() ? { 'X-CSRFToken': getCSRFToken() } : {}
                 })
-                    .then(res => res.json())
+                    .then(res => { if (!res.ok) throw new Error('HTTP ' + res.status); return res.json(); })
                     .then(data => {
                         if (data.status === 'success') {
                             alert("Resume uploaded and saved successfully.");
