@@ -16,19 +16,21 @@ jobs:
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          script_stop: true
           script: |
+            set -e
             echo "============================================="
             echo "1. UPDATING BASE SERVER (atom-lms-app-server)"
             echo "============================================="
             cd /opt/atomm_lms
             git config --global --add safe.directory /opt/atomm_lms
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
             
             echo "Applying Database Migrations..."
             sudo docker compose --env-file .env.production -f docker-compose.production.yml -f docker-compose.override.yml exec -T web python manage.py migrate --noinput
             
             echo "Collecting and Syncing Static Files..."
+            sudo docker compose --env-file .env.production -f docker-compose.production.yml -f docker-compose.override.yml exec -T web python manage.py collectstatic --noinput
             sudo cp -r /opt/atomm_lms/static/* /opt/atomm_lms/staticfiles/ 2>/dev/null || true
             sudo systemctl reload nginx
             
@@ -37,26 +39,14 @@ jobs:
             sudo docker compose --env-file .env.production -f docker-compose.production.yml -f docker-compose.override.yml up -d web
 
             echo "============================================="
-            echo "2. UPDATING ALL RUNNING AUTO-SCALING WORKERS"
+            echo "2. UPDATING RUNNING AUTO-SCALING WORKERS"
             echo "============================================="
-            WORKER_IPS=$(aws ec2 describe-instances \
-              --region ap-south-1 \
-              --filters "Name=tag:aws:autoscaling:groupName,Values=atom-lms-asg" "Name=instance-state-name,Values=running" \
-              --query "Reservations[*].Instances[*].PrivateIpAddress" \
-              --output text 2>/dev/null || true)
+            WORKER_IPS=$(aws ec2 describe-instances --region ap-south-1 --filters "Name=tag:aws:autoscaling:groupName,Values=atom-lms-asg" "Name=instance-state-name,Values=running" --query "Reservations[*].Instances[*].PrivateIpAddress" --output text 2>/dev/null || true)
 
             if [ -n "$WORKER_IPS" ]; then
               for IP in $WORKER_IPS; do
                 echo "--> Updating Worker: $IP"
-                ssh -o StrictHostKeyChecking=no ubuntu@$IP "
-                  cd /opt/atomm_lms && \
-                  git config --global --add safe.directory /opt/atomm_lms && \
-                  git pull origin main && \
-                  sudo cp -r /opt/atomm_lms/static/* /opt/atomm_lms/staticfiles/ 2>/dev/null || true && \
-                  sudo systemctl reload nginx && \
-                  sudo docker compose --env-file .env.production -f docker-compose.production.yml -f docker-compose.override.yml build web && \
-                  sudo docker compose --env-file .env.production -f docker-compose.production.yml -f docker-compose.override.yml up -d web
-                " 2>/dev/null || echo "Worker update skipped"
+                ssh -o StrictHostKeyChecking=no ubuntu@$IP "cd /opt/atomm_lms && git fetch origin main && git reset --hard origin/main && sudo cp -r /opt/atomm_lms/static/* /opt/atomm_lms/staticfiles/ 2>/dev/null || true && sudo systemctl reload nginx && sudo docker compose --env-file .env.production -f docker-compose.production.yml -f docker-compose.override.yml build web && sudo docker compose --env-file .env.production -f docker-compose.production.yml -f docker-compose.override.yml up -d web" 2>/dev/null || echo "Worker update skipped"
                 echo "--> Worker $IP processed!"
               done
             else
@@ -66,8 +56,8 @@ jobs:
             echo "============================================="
             echo "3. INVALIDATING CLOUDFRONT CACHE"
             echo "============================================="
-            aws cloudfront create-invalidation --distribution-id d1txwmebpy8idx.cloudfront.net --paths "/*" 2>/dev/null || true
+            aws cloudfront create-invalidation --distribution-id E1AYTT6AU835YB --paths '/*' 2>/dev/null || true
             
             echo "============================================="
-            echo "SUCCESS: ALL SERVERS & CACHE DEPLOYED!"
+            echo "SUCCESS: ALL SERVERS DEPLOYED AUTOMATICALLY!"
             echo "============================================="
