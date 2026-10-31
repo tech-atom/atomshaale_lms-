@@ -4,12 +4,12 @@
 {% block title %}Trainer Profile{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/profile.css' %}?v=2.0">
+<link rel="stylesheet" href="{% static 'css/profile.css' %}?v=2.2">
 {% endblock %}
 
 {% block content %}
 
-<div id="profile-urls" data-save-url="{% url 'save_trainer_pdf' %}"></div>
+<div id="profile-urls" data-save-url="{% url 'save_trainer_pdf' %}" data-csrf-token="{{ csrf_token }}"></div>
 
 <div class="container" id="form-section">
     <h1 class="main-heading">Trainer Profile Generator</h1>
@@ -63,41 +63,44 @@
 
 <div id="resume-output" class="hidden">
     <div class="resume-page" id="trainerProfileSection">
+        <div class="resume-content-wrapper" id="resumeContentWrapper">
 
-        <div class="top-header">
-            <div class="logo-section">
-                <img src="{% static 'images/atom logo.png' %}" class="logo-img">
+            <div class="top-header">
+                <div class="logo-section">
+                    <img src="{% static 'images/atom logo.png' %}" class="logo-img">
+                </div>
+
+                <div class="profile-header">
+                    <h1 id="nameDisplay"></h1>
+                    <h2 id="titleDisplay"></h2>
+                </div>
             </div>
 
-            <div class="profile-header">
-                <h1 id="nameDisplay"></h1>
-                <h2 id="titleDisplay"></h2>
+            <div class="resume-section">
+                <h3>Professional Summary</h3>
+                <p id="summaryDisplay"></p>
             </div>
-        </div>
 
-        <div class="resume-section">
-            <h3>Professional Summary <small>(max 60 words)</small></h3>
-            <p id="summaryDisplay"></p>
-        </div>
+            <div class="resume-section">
+                <h3>Experience</h3>
+                <div id="experienceDisplay"></div>
+            </div>
 
-        <div class="resume-section">
-            <h3>Experience</h3>
-            <div id="experienceDisplay"></div>
-        </div>
+            <div class="resume-section">
+                <h3>Skills</h3>
+                <div id="skillsDisplay"></div>
+            </div>
 
-        <div class="resume-section">
-            <h3>Skills</h3>
-            <div id="skillsDisplay"></div>
-        </div>
+            <div class="resume-section">
+                <h3>Awards & Recognitions</h3>
+                <div id="achievementsDisplay"></div>
+            </div>
 
-        <div class="resume-section">
-            <h3>Awards & Recognitions</h3>
-            <div id="achievementsDisplay"></div>
-        </div>
+            <div class="resume-section">
+                <h3>Education</h3>
+                <div id="educationDisplay"></div>
+            </div>
 
-        <div class="resume-section">
-            <h3>Education</h3>
-            <div id="educationDisplay"></div>
         </div>
     </div>
 
@@ -112,5 +115,5 @@
 {% block extra_script %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-<script src="{% static 'js/profile_script.js' %}" defer></script>
+<script src="{% static 'js/profile_script.js' %}?v=2.2" defer></script>
 {% endblock %}

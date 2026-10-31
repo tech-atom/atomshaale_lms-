@@ -380,7 +380,7 @@ def save_trainer_pdf(request):
                 "error": "No PDF uploaded"
             }, status=400)
 
-        profile = TrainerProfile.objects.get(user=request.user)
+        profile, _ = TrainerProfile.objects.get_or_create(user=request.user)
 
         filename = f"trainer_profile_{request.user.id}.pdf"
 
