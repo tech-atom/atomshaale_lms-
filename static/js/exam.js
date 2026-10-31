@@ -394,7 +394,9 @@
     lastViolationAt = now;
 
     securityViolationCount++;
+    liveTabSwitchCount = securityViolationCount;
     updateSecurityCounter();
+    sendLiveUpdate();
     if (securityViolationCount >= allowedTabSwitches) {
       autoSubmitExam(`${reason} limit reached (${securityViolationCount}/${allowedTabSwitches})`);
       return;
@@ -532,8 +534,6 @@
     if (document.visibilityState === "hidden") {
       // Allow brief 1.5s grace period immediately upon clicking start for initial full-screen transition
       if (Date.now() - examStartedAt < 1500) return;
-      liveTabSwitchCount += 1;
-      sendLiveUpdate();
       registerSecurityViolation("tab switch");
     }
   }
@@ -541,10 +541,6 @@
   function windowBlurHandler() {
     if (!examInProgress) return;
     if (Date.now() - examStartedAt < 1500) return;
-    const now = Date.now();
-    if (now - lastViolationAt < 1200) return;
-    liveTabSwitchCount += 1;
-    sendLiveUpdate();
     registerSecurityViolation("window blur / tab switch");
   }
 
@@ -1410,7 +1406,7 @@
           question_time_map: questionTimeMap,
           device_token: deviceToken,
           device_hints: getClientDeviceHints(),
-          tab_switch_count: liveTabSwitchCount || securityViolationCount,
+          tab_switch_count: securityViolationCount,
           reason: submissionReason
         }),
         credentials: "include"
