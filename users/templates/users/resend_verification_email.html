@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Resend Verification Email | Atom Shaale{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/reset_password.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="main-container">
+  <div class="reset-box">
+    <h2>Resend Verification Email</h2>
+    <p>Enter the email address used to create your account. If it is still pending verification, we will attempt to send a new link.</p>
+    {% if messages %}
+      {% for message in messages %}
+        <p class="message-alert alert-{{ message.tags }}">{{ message }}</p>
+      {% endfor %}
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <label for="{{ form.email.id_for_label }}">Email:</label>
+      {{ form.email }}
+      {% for error in form.email.errors %}
+        <p class="field-error">{{ error }}</p>
+      {% endfor %}
+      <button type="submit">Send Verification Link</button>
+    </form>
+    <a href="{% url 'login' %}" class="back-link">Back to Login</a>
+  </div>
+</div>
+{% endblock %}

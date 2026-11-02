@@ -2,9 +2,10 @@ import pandas as pd
 from django import forms
 from django.db import transaction
 from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
 from users.models import User
-from users.utils import send_verification_email
+from users.utils import send_verification_email_on_commit
 from student.models import StudentProfile
 from college.models import College, Course, Section
 from trainer.models import TrainerProfile, TrainerSkill
@@ -95,8 +96,8 @@ class StudentRegistrationForm(BootstrapFormMixin,forms.ModelForm):
                 semester=self.cleaned_data['semester'],
                 year=self.cleaned_data['year']
             )
-            send_verification_email(request, user)
-        return user
+        email_sent = send_verification_email_on_commit(request, user)
+        return user, email_sent
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -129,11 +130,11 @@ class BulkStudentUploadForm(BootstrapFormMixin,forms.Form):
         df['mobile_number'] = df.get('mobile_number', '').fillna('').apply(lambda x: str(x).strip().rstrip('.0'))
         df['gender']        = df.get('gender', '').fillna('').apply(lambda x: str(x).strip())
 
-        created, failed = [], []
+        created, failed, email_failed = [], [], []
 
         for idx, row in enumerate(df.to_dict(orient='records'), start=2):
             first_name    = row.get('first_name', '').strip()
-            email         = row.get('email', '').strip()
+            email         = row.get('email', '').strip().lower()
             mobile_number = row.get('mobile_number', '').strip()
             gender        = row.get('gender', '').strip()
             usn           = row.get('usn', '').strip().upper()
@@ -141,6 +142,11 @@ class BulkStudentUploadForm(BootstrapFormMixin,forms.Form):
             # Quick row‐level sanity checks
             if not (first_name and email):
                 failed.append({'row': idx, 'email': email, 'error': 'Missing first_name or email'})
+                continue
+            try:
+                validate_email(email)
+            except ValidationError:
+                failed.append({'row': idx, 'email': email, 'error': 'Invalid email address'})
                 continue
             if not mobile_number:
                 failed.append({'row': idx, 'email': email, 'error': 'Missing mobile_number'})
@@ -162,6 +168,8 @@ class BulkStudentUploadForm(BootstrapFormMixin,forms.Form):
                 continue
 
             # 4) Try to create (with atomic rollback)
+            email_sent = None
+            created_new_user = False
             try:
                 with transaction.atomic():
                     if User.objects.filter(email=email).exists():
@@ -176,7 +184,7 @@ class BulkStudentUploadForm(BootstrapFormMixin,forms.Form):
                             role='student',
                             is_active=False
                         )
-                        send_verification_email(request, user)
+                        created_new_user = True
 
                     # demote existing student profile
                     StudentProfile.objects.filter(user=user, is_current=True).update(is_current=False)
@@ -198,14 +206,18 @@ class BulkStudentUploadForm(BootstrapFormMixin,forms.Form):
                         year=row.get('year')
                     )
 
+                if created_new_user:
+                    email_sent = send_verification_email_on_commit(request, user)
                 created.append(email)
+                if email_sent is False:
+                    email_failed.append(email)
 
             except ValidationError as ve:
                 failed.append({'row': idx, 'email': email, 'error': ve.message})
             except Exception as e:
                 failed.append({'row': idx, 'email': email, 'error': str(e)})
 
-        return created, failed
+        return created, failed, email_failed
 
 
 
@@ -277,8 +289,8 @@ class TrainerRegistrationForm(BootstrapFormMixin,forms.ModelForm):
                         domain=domain,
                         subdomain=None
                     )
-            send_verification_email(request, user)
-        return user
+        email_sent = send_verification_email_on_commit(request, user)
+        return user, email_sent
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -307,8 +319,8 @@ class TpoRegistrationForm(BootstrapFormMixin,forms.ModelForm):
                 is_active=False
             )
             TpoProfile.objects.create(user=user, college=self.cleaned_data['college'])
-            send_verification_email(request, user)
-        return user
+        email_sent = send_verification_email_on_commit(request, user)
+        return user, email_sent
 
 
 # ──────────────────────────────────────────────────────────────────────────────
@@ -397,4 +409,3 @@ class StudentEditForm(BootstrapFormMixin, forms.ModelForm):
             if commit:
                 self.student_profile.save()
         return user, self.student_profile
-

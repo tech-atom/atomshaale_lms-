@@ -14,6 +14,8 @@ from pathlib import Path
 import environ
 import os
 from csp.constants import NONCE
+from django.core.exceptions import ImproperlyConfigured, ValidationError
+from django.core.validators import validate_email
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 # Initialise environment variables
@@ -214,7 +216,41 @@ EMAIL_BACKEND = env(
     'EMAIL_BACKEND',
     default='django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend',
 )
-DEFAULT_FROM_EMAIL = 'webmaster@localhost'
+EMAIL_HOST = env('EMAIL_HOST', default='')
+EMAIL_PORT = env.int('EMAIL_PORT', default=587)
+EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=False)
+EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL', default=False)
+EMAIL_TIMEOUT = env.int('EMAIL_TIMEOUT', default=20)
+DEFAULT_FROM_EMAIL = env(
+    'DEFAULT_FROM_EMAIL',
+    default=EMAIL_HOST_USER or 'webmaster@localhost',
+)
+VERIFICATION_RESEND_IP_RATE = env('VERIFICATION_RESEND_IP_RATE', default='10/h')
+VERIFICATION_RESEND_EMAIL_RATE = env('VERIFICATION_RESEND_EMAIL_RATE', default='3/h')
+PASSWORD_RESET_TIMEOUT = env.int('PASSWORD_RESET_TIMEOUT', default=86400)
+if PASSWORD_RESET_TIMEOUT <= 0:
+    raise ImproperlyConfigured('PASSWORD_RESET_TIMEOUT must be greater than zero.')
+if EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend':
+    if not EMAIL_HOST or not DEFAULT_FROM_EMAIL:
+        raise ImproperlyConfigured(
+            'EMAIL_HOST and DEFAULT_FROM_EMAIL must be configured for SMTP email.'
+        )
+    if not 1 <= EMAIL_PORT <= 65535:
+        raise ImproperlyConfigured('EMAIL_PORT must be between 1 and 65535.')
+    if EMAIL_TIMEOUT <= 0:
+        raise ImproperlyConfigured('EMAIL_TIMEOUT must be greater than zero.')
+    if EMAIL_USE_TLS and EMAIL_USE_SSL:
+        raise ImproperlyConfigured('Set only one of EMAIL_USE_TLS or EMAIL_USE_SSL.')
+    if bool(EMAIL_HOST_USER) != bool(EMAIL_HOST_PASSWORD):
+        raise ImproperlyConfigured(
+            'EMAIL_HOST_USER and EMAIL_HOST_PASSWORD must either both be set or both be empty.'
+        )
+    try:
+        validate_email(DEFAULT_FROM_EMAIL)
+    except ValidationError as exc:
+        raise ImproperlyConfigured('DEFAULT_FROM_EMAIL must be a valid email address.') from exc
 
 
 
@@ -262,4 +298,3 @@ CONTENT_SECURITY_POLICY = {
 # Allow up to 60 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 62914560    # 60 MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 62914560    # 60 MB
-

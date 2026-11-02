@@ -313,27 +313,36 @@ def admin_registration(request):
         if 'student_single' in request.POST:
             student_form = StudentRegistrationForm(request.POST)
             if student_form.is_valid():
-                student_form.save(request)
-                messages.success(request, "Student created; verification email sent.")
+                _, email_sent = student_form.save(request)
+                if email_sent is True:
+                    messages.success(request, "Student created; verification email sent.")
+                elif email_sent is False:
+                    messages.warning(request, "Student created, but the verification email could not be sent. Check the SMTP configuration and server logs.")
+                else:
+                    messages.success(request, "Student created; verification email will be attempted after the account transaction commits. The recipient can request another email from login.")
                 return redirect('admin_registration')
 
         elif 'student_bulk' in request.POST:
             bulk_form = BulkStudentUploadForm(request.POST, request.FILES)
             if bulk_form.is_valid():
-                created, failed = bulk_form.process(request)
+                created, failed, email_failed = bulk_form.process(request)
 
-                # Success toast
                 if created:
                     messages.success(
                         request,
-                        f"Processed {len(created)} rows; verification emails sent to {', '.join(created)}."
+                        f"Processed {len(created)} rows; student accounts/profiles created for {', '.join(created)}."
                     )
 
-                # Error toasts
                 for err in failed:
                     messages.error(
                         request,
                         f"Row {err['row']} ({err['email']}): {err['error']}"
+                    )
+
+                if email_failed:
+                    messages.warning(
+                        request,
+                        f"Verification emails could not be sent to: {', '.join(email_failed)}. Check the SMTP configuration and server logs."
                     )
 
                 return redirect('admin_registration')
@@ -341,15 +350,25 @@ def admin_registration(request):
         elif 'trainer' in request.POST:
             trainer_form = TrainerRegistrationForm(request.POST, request.FILES)
             if trainer_form.is_valid():
-                trainer_form.save(request)
-                messages.success(request, "Trainer created; verification email sent.")
+                _, email_sent = trainer_form.save(request)
+                if email_sent is True:
+                    messages.success(request, "Trainer created; verification email sent.")
+                elif email_sent is False:
+                    messages.warning(request, "Trainer created, but the verification email could not be sent. Check the SMTP configuration and server logs.")
+                else:
+                    messages.success(request, "Trainer created; verification email will be attempted after the account transaction commits. The recipient can request another email from login.")
                 return redirect('admin_registration')
 
         elif 'tpo' in request.POST:
             tpo_form = TpoRegistrationForm(request.POST)
             if tpo_form.is_valid():
-                tpo_form.save(request)
-                messages.success(request, "TPO created; verification email sent.")
+                _, email_sent = tpo_form.save(request)
+                if email_sent is True:
+                    messages.success(request, "TPO created; verification email sent.")
+                elif email_sent is False:
+                    messages.warning(request, "TPO created, but the verification email could not be sent. Check the SMTP configuration and server logs.")
+                else:
+                    messages.success(request, "TPO created; verification email will be attempted after the account transaction commits. The recipient can request another email from login.")
                 return redirect('admin_registration')
 
     return render(request, 'admin_registration.html', {
@@ -3416,5 +3435,3 @@ def admin_delete_student(request, student_id):
     if next_url:
         return redirect(next_url)
     return redirect('admin_college')
-
-

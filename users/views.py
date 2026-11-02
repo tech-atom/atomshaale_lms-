@@ -3,14 +3,19 @@ import logging
 
 from django.contrib.auth import authenticate, login,logout,get_user_model
 from django.shortcuts import render, redirect
-from .forms import UserLoginForm, StudentRegistrationForm, CustomSetPasswordForm
+from .forms import (
+    CustomSetPasswordForm,
+    ResendVerificationEmailForm,
+    StudentRegistrationForm,
+    UserLoginForm,
+)
 from django.contrib import messages
 from django.http import JsonResponse
 from http import HTTPStatus
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_decode
-from .utils import send_verification_email
+from .utils import send_verification_email, send_verification_email_on_commit
 from django.urls import reverse
 
 User = get_user_model()
@@ -29,6 +34,10 @@ def _style_set_password_form(form):
         'autocomplete': 'new-password',
     })
     return form
+
+
+def normalized_post_email_rate_limit_key(group, request):
+    return request.POST.get('email', '').strip().casefold()
 
 
 def home_view(request):
@@ -144,10 +153,13 @@ def student_register(request):
             try:
                 user, student_profile = form.save()
 
-                # Send verification email
-                send_verification_email(request, user)
-
-                messages.success(request, "Registration successful! Please check your email to set your password and verify your account.")
+                email_sent = send_verification_email_on_commit(request, user)
+                if email_sent is True:
+                    messages.success(request, "Registration successful! Please check your email to set your password and verify your account.")
+                elif email_sent is False:
+                    messages.error(request, "Your account was created, but the verification email could not be sent. Use the verification resend link on the login page or contact support.")
+                else:
+                    messages.success(request, "Registration is complete. A verification email will be attempted after the account transaction commits. If it does not arrive, use the verification resend link on the login page.")
                 return redirect('login')
             except Exception as e:
                 messages.error(request, f"An error occurred during registration: {str(e)}")
@@ -163,6 +175,26 @@ def student_register(request):
         form = StudentRegistrationForm()
 
     return render(request, 'users/student_register.html', {'form': form})
+
+
+def resend_verification_email(request):
+    form = ResendVerificationEmailForm(request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        email = form.cleaned_data['email']
+        user = User.objects.filter(
+            email__iexact=email,
+            is_active=False,
+            is_verified=False,
+        ).first()
+        if user:
+            send_verification_email(request, user)
+        messages.success(
+            request,
+            "If an unverified account matches that email, a new verification message will be attempted. Check your spam folder; if it does not arrive, try again later or contact support.",
+        )
+    return render(request, 'users/resend_verification_email.html', {'form': form})
+
+
 def email_verify(request, uidb64, token):
     try:
         uid = urlsafe_base64_decode(uidb64).decode()

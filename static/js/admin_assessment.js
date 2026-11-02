@@ -3065,6 +3065,8 @@ const d = {
         </div>
       </div>
     `;
+    const inMarks = marksGroup.querySelector('#qMarks');
+    const inNeg = marksGroup.querySelector('#qNegMark');
 
     gridRow.append(typeGroup, sectionGroup, marksGroup);
     card1.appendChild(gridRow);

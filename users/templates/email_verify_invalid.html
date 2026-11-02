@@ -7,7 +7,8 @@
     <h2>Invalid or Expired Link</h2>
     <p>
       This verification link is no longer valid. 
-      Please ask the admin to resend your verification email.
+      Please request a new verification email or contact your administrator.
     </p>
+    <a href="{% url 'resend_verification_email' %}">Request a new verification email</a>
   </div>
 {% endblock %}

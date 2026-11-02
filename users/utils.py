@@ -7,39 +7,51 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.urls import reverse
+from django.db import transaction
 
 logger = logging.getLogger(__name__)
 
 
 def send_verification_email(request, user):
-    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
-    token = default_token_generator.make_token(user)
-    verify_url = request.build_absolute_uri(
-        reverse('email_verify', kwargs={'uidb64': uidb64, 'token': token})
-    )
-    subject = "Welcome to AtomShaale - Complete your registration"
-    learner_name = user.get_full_name() or user.first_name or "Learner"
-    message = (
-        f"Hi {learner_name},\n\n"
-        "We are pleased to welcome you to AtomShaale, your digital learning companion powered by Atom.\n\n"
-        "To complete your registration, please verify your email address and set your password by clicking the link below.\n\n"
-        f"{verify_url}\n\n"
-        "You are now logged into our Learning Management System, where you can:\n\n"
-        "Access your courses and study materials\n"
-        "Appear for exams, view results, and track your progress\n\n"
-        "We encourage you to explore the platform, stay organized, and make the most of your learning journey.\n\n"
-        "For any assistance or queries, please reach out to your College Management.\n\n"
-        "We wish you a successful and enriching learning experience.\n\n"
-        "If you have not registered or believe this message was sent to you by mistake, please feel free to ignore it.\n\n"
-        "Regards,\n"
-        "The AtomShaale Team"
-    )
     try:
-        send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+        uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+        token = default_token_generator.make_token(user)
+        verify_url = request.build_absolute_uri(
+            reverse('email_verify', kwargs={'uidb64': uidb64, 'token': token})
+        )
+        subject = "Welcome to AtomShaale - Complete your registration"
+        learner_name = user.get_full_name() or user.first_name or "Learner"
+        message = (
+            f"Hi {learner_name},\n\n"
+            "We are pleased to welcome you to AtomShaale, your digital learning companion powered by Atom.\n\n"
+            "To complete your registration, please verify your email address and set your password by clicking the link below.\n\n"
+            f"{verify_url}\n\n"
+            "You are now logged into our Learning Management System, where you can:\n\n"
+            "Access your courses and study materials\n"
+            "Appear for exams, view results, and track your progress\n\n"
+            "We encourage you to explore the platform, stay organized, and make the most of your learning journey.\n\n"
+            "For any assistance or queries, please reach out to your College Management.\n\n"
+            "We wish you a successful and enriching learning experience.\n\n"
+            "If you have not registered or believe this message was sent to you by mistake, please feel free to ignore it.\n\n"
+            "Regards,\n"
+            "The AtomShaale Team"
+        )
+        sent_count = send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
+        if sent_count != 1:
+            logger.error("Verification email was not accepted by the configured backend for %s", user.email)
+            return False
         return True
     except Exception as exc:
         logger.exception("Verification email failed for %s: %s", user.email, exc)
         return False
+
+
+def send_verification_email_on_commit(request, user):
+    delivery_results = []
+    transaction.on_commit(
+        lambda: delivery_results.append(send_verification_email(request, user))
+    )
+    return delivery_results[0] if delivery_results else None
 
 
 def send_password_reset_email(user, uid, token, domain, protocol):

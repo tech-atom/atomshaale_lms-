@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.forms import SetPasswordForm
 from django.core.exceptions import ValidationError
+from django.db import transaction
 from users.utils import send_password_reset_email
 import re
 
@@ -31,6 +32,10 @@ class UserLoginForm(forms.Form):
     def clean_email(self):
         email = self.cleaned_data.get('email')
         return email.strip().lower() if email else email
+
+
+class ResendVerificationEmailForm(forms.Form):
+    email = forms.EmailField(required=True)
 
 
 class CustomSetPasswordForm(SetPasswordForm):
@@ -244,30 +249,29 @@ class StudentRegistrationForm(forms.Form):
     def save(self):
         from student.models import StudentProfile
 
-        # Create User
-        user = User.objects.create_user(
-            email=self.cleaned_data['email'],
-            first_name=self.cleaned_data['first_name'],
-            mobile_number=self.cleaned_data['mobile_number'],
-            gender=self.cleaned_data['gender'],
-            role='student',
-            is_active=False,
-            is_verified=False
-        )
-        user.set_password(None)
-        user.save()
+        with transaction.atomic():
+            user = User.objects.create_user(
+                email=self.cleaned_data['email'],
+                first_name=self.cleaned_data['first_name'],
+                mobile_number=self.cleaned_data['mobile_number'],
+                gender=self.cleaned_data['gender'],
+                role='student',
+                is_active=False,
+                is_verified=False
+            )
+            user.set_password(None)
+            user.save()
 
-        # Create StudentProfile
-        student_profile = StudentProfile.objects.create(
-            user=user,
-            usn=self.cleaned_data['usn'],
-            college=self.cleaned_data['college'],
-            course=self.cleaned_data['course'],
-            section=self.cleaned_data['section'],
-            semester=self.cleaned_data['semester'],
-            year=self.cleaned_data['year'],
-            batch_year=self.cleaned_data['batch_year'],
-            is_current=True
-        )
+            student_profile = StudentProfile.objects.create(
+                user=user,
+                usn=self.cleaned_data['usn'],
+                college=self.cleaned_data['college'],
+                course=self.cleaned_data['course'],
+                section=self.cleaned_data['section'],
+                semester=self.cleaned_data['semester'],
+                year=self.cleaned_data['year'],
+                batch_year=self.cleaned_data['batch_year'],
+                is_current=True
+            )
 
         return user, student_profile

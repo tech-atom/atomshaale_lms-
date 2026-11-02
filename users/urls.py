@@ -20,6 +20,20 @@ urlpatterns = [
     ),
     path('logout/', views.logout_view, name='logout'),
     path('register/', views.student_register, name='student_register'),
+    path(
+        'resend-verification/',
+        ratelimit(key='ip', rate=settings.VERIFICATION_RESEND_IP_RATE, method='POST', block=True)(
+            ratelimit(
+                key='users.views.normalized_post_email_rate_limit_key',
+                rate=settings.VERIFICATION_RESEND_EMAIL_RATE,
+                method='POST',
+                block=True,
+            )(
+                views.resend_verification_email
+            )
+        ),
+        name='resend_verification_email',
+    ),
     path('', views.home_view, name='home'),
 
     # Password reset (rate limited by IP and by email)
