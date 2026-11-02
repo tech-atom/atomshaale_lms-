@@ -64,13 +64,19 @@ def send_password_reset_email(user, uid, token, domain, protocol):
         "If you didn’t request this, please ignore this email."
     )
     try:
-        send_mail(
+        sent_count = send_mail(
             subject,
             message,
             settings.DEFAULT_FROM_EMAIL,
             [user.email],
             fail_silently=False,
         )
+        if sent_count != 1:
+            logger.error(
+                "Password reset email was not accepted by the configured backend for %s",
+                user.email,
+            )
+            return False
         return True
     except Exception as exc:
         logger.exception("Password reset email failed for %s: %s", user.email, exc)

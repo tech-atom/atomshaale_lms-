@@ -15,7 +15,11 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from users.forms import StudentRegistrationForm, UserLoginForm
-from users.utils import send_verification_email, send_verification_email_on_commit
+from users.utils import (
+    send_password_reset_email,
+    send_verification_email,
+    send_verification_email_on_commit,
+)
 from college.models import (
     College,
     CollegeCourse,
@@ -483,6 +487,62 @@ class ResendVerificationEmailTests(TestCase):
             self.assertFalse(send_verification_email(request, user))
 
         self.assertTrue(User.objects.filter(pk=user.pk, is_active=False).exists())
+
+
+class PasswordResetEmailTests(TestCase):
+    @override_settings(
+        EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+        DEFAULT_FROM_EMAIL='noreply@example.com',
+    )
+    def test_password_reset_view_sends_email_for_active_user(self):
+        user = User.objects.create_user(
+            email='password-reset@example.com',
+            password='ExistingPassword123!',
+            first_name='Password Reset',
+            role='student',
+            mobile_number='+919876543210',
+            gender='NA',
+            is_active=True,
+            is_verified=True,
+        )
+
+        response = self.client.post(
+            reverse('password_reset'),
+            {'email': user.email},
+        )
+
+        self.assertRedirects(response, reverse('password_reset_done'))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [user.email])
+        self.assertIn('/reset/', mail.outbox[0].body)
+
+    @override_settings(
+        EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+        DEFAULT_FROM_EMAIL='noreply@example.com',
+    )
+    def test_password_reset_send_count_zero_is_reported_as_failure(self):
+        user = User.objects.create_user(
+            email='password-reset-no-send@example.com',
+            password='ExistingPassword123!',
+            first_name='Password Reset',
+            role='student',
+            mobile_number='+919876543210',
+            gender='NA',
+            is_active=True,
+            is_verified=True,
+        )
+
+        with patch('users.utils.send_mail', return_value=0) as send_mail_mock:
+            sent = send_password_reset_email(
+                user,
+                'encoded-user-id',
+                'reset-token',
+                'testserver',
+                'http',
+            )
+
+        self.assertFalse(sent)
+        send_mail_mock.assert_called_once()
 
 
 class BulkRegistrationEmailTests(TransactionTestCase):
