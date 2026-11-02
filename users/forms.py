@@ -12,6 +12,20 @@ import re
 #from users.utils import send_password_reset_email  # assuming your function is here
 
 class CustomPasswordResetForm(PasswordResetForm):
+    def get_users(self, email):
+        email_field_name = User.get_email_field_name()
+        active_users = User._default_manager.filter(
+            **{
+                f'{email_field_name}__iexact': email,
+                'is_active': True,
+            }
+        )
+        return (
+            user
+            for user in active_users
+            if email.casefold() == getattr(user, email_field_name).casefold()
+        )
+
     def send_mail(self, subject_template_name, email_template_name, context,
                   from_email, to_email, html_email_template_name=None):
         user = context['user']

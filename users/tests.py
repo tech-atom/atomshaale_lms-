@@ -520,6 +520,56 @@ class PasswordResetEmailTests(TestCase):
         EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
         DEFAULT_FROM_EMAIL='noreply@example.com',
     )
+    def test_password_reset_email_is_sent_for_active_legacy_user_without_password(self):
+        user = User.objects.create_user(
+            email='legacy-passwordless@example.com',
+            password=None,
+            first_name='Legacy User',
+            role='student',
+            mobile_number='+919876543210',
+            gender='NA',
+            is_active=True,
+            is_verified=False,
+        )
+        self.assertFalse(user.has_usable_password())
+
+        response = self.client.post(
+            reverse('password_reset'),
+            {'email': user.email},
+        )
+
+        self.assertRedirects(response, reverse('password_reset_done'))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, [user.email])
+
+    @override_settings(
+        EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+        DEFAULT_FROM_EMAIL='noreply@example.com',
+    )
+    def test_password_reset_does_not_send_for_inactive_account(self):
+        user = User.objects.create_user(
+            email='inactive-password-reset@example.com',
+            password='ExistingPassword123!',
+            first_name='Inactive User',
+            role='student',
+            mobile_number='+919876543210',
+            gender='NA',
+            is_active=False,
+            is_verified=False,
+        )
+
+        response = self.client.post(
+            reverse('password_reset'),
+            {'email': user.email},
+        )
+
+        self.assertRedirects(response, reverse('password_reset_done'))
+        self.assertEqual(len(mail.outbox), 0)
+
+    @override_settings(
+        EMAIL_BACKEND='django.core.mail.backends.locmem.EmailBackend',
+        DEFAULT_FROM_EMAIL='noreply@example.com',
+    )
     def test_password_reset_send_count_zero_is_reported_as_failure(self):
         user = User.objects.create_user(
             email='password-reset-no-send@example.com',
