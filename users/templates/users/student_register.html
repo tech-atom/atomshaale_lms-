@@ -237,9 +237,9 @@
                             {% endif %}
                         </div>
 
-                        <!-- Batch Year -->
+                        <!-- Passout Year -->
                         <div class="form-group">
-                            <label for="id_batch_year">Batch Year <span class="required">*</span></label>
+                            <label for="id_batch_year">Year of Passing <span class="required">*</span></label>
                             <div class="input-wrapper select-wrapper">
                                 <i class="fas fa-layer-group input-icon"></i>
                                 {{ form.batch_year }}
@@ -247,7 +247,7 @@
                             {% if form.batch_year.errors %}
                             <span class="field-error">{{ form.batch_year.errors.0 }}</span>
                             {% endif %}
-                            <small class="field-hint">Year you joined the college (e.g. 2025, 2026)</small>
+                            <small class="field-hint">Year you graduated from the college (e.g. 2025, 2026)</small>
                         </div>
                     </div>
 
