@@ -106,18 +106,65 @@ except Exception as e:
         return True
 
 
+def find_compiler(compiler_name):
+    """
+    Locate compiler or runtime executable.
+    Checks portable compiler detector first, then system PATH via shutil.which.
+    Returns executable path or command name if available, or None if not installed.
+    """
+    if compiler_name == 'python':
+        if sys.executable and os.path.exists(sys.executable):
+            return sys.executable
+        return shutil.which('python3') or shutil.which('python') or 'python'
+
+    # Try portable compiler detector
+    try:
+        if is_compiler_available(compiler_name):
+            path = get_compiler_path(compiler_name)
+            if path:
+                if os.path.isabs(path) and os.path.exists(path):
+                    return path
+                which_res = shutil.which(path)
+                if which_res:
+                    return which_res
+    except Exception:
+        pass
+
+    # Direct check via shutil.which
+    which_res = shutil.which(compiler_name)
+    if which_res:
+        return which_res
+
+    # Try platform-specific binary names
+    alternatives = {
+        'javac': ['javac.exe'] if os.name == 'nt' else ['javac'],
+        'java': ['java.exe'] if os.name == 'nt' else ['java'],
+        'gcc': ['gcc.exe'] if os.name == 'nt' else ['gcc', 'cc'],
+        'g++': ['g++.exe'] if os.name == 'nt' else ['g++', 'c++'],
+        'node': ['node.exe', 'nodejs.exe'] if os.name == 'nt' else ['node', 'nodejs'],
+        'php': ['php.exe'] if os.name == 'nt' else ['php'],
+        'dotnet': ['dotnet.exe'] if os.name == 'nt' else ['dotnet'],
+    }
+    for alt in alternatives.get(compiler_name, []):
+        res = shutil.which(alt)
+        if res:
+            return res
+
+    return None
+
+
 def run_code_with_input(code, language, input_data, timeout_seconds=3):
     """
     Execute code once with provided stdin.
     Returns: {status, output, error}
-    status in: pass | runtime_error | time_limit_exceeded
+    status in: pass | runtime_error | time_limit_exceeded | compilation_error
     """
     lang = (language or "python").lower().strip()
     stdin_data = "" if input_data is None else str(input_data)
 
     try:
         if lang == 'python':
-            python_cmd = get_compiler_path('python') if is_compiler_available('python') else 'python'
+            python_cmd = find_compiler('python') or sys.executable or 'python'
             res = subprocess.run(
                 [python_cmd, '-c', code],
                 input=stdin_data,
@@ -136,14 +183,20 @@ def run_code_with_input(code, language, input_data, timeout_seconds=3):
             if not class_match:
                 return {"status": "runtime_error", "output": "", "error": "Java code must contain a public class declaration"}
 
+            javac_cmd = find_compiler('javac')
+            java_cmd = find_compiler('java')
+            if not javac_cmd or not java_cmd:
+                return {
+                    "status": "compilation_error",
+                    "output": "",
+                    "error": "Java Development Kit (JDK) is not installed on this server. Please install JDK (default-jdk)."
+                }
+
             class_name = class_match.group(1)
             with tempfile.TemporaryDirectory() as tmp:
                 java_file = os.path.join(tmp, f'{class_name}.java')
                 with open(java_file, 'w', encoding='utf-8', newline='\n') as f:
                     f.write(code)
-
-                javac_cmd = get_compiler_path('javac') if is_compiler_available('javac') else 'javac'
-                java_cmd = get_compiler_path('java') if is_compiler_available('java') else 'java'
 
                 comp = subprocess.run([javac_cmd, java_file], capture_output=True, text=True, timeout=timeout_seconds)
                 if comp.returncode != 0:
@@ -163,25 +216,41 @@ def run_code_with_input(code, language, input_data, timeout_seconds=3):
                 return {"status": "pass", "output": run.stdout or "", "error": ""}
 
         if lang in ['c', 'cpp', 'c++']:
+            compiler_key = 'gcc' if lang == 'c' else 'g++'
+            compiler_cmd = find_compiler(compiler_key)
+            if not compiler_cmd:
+                compiler_name = "C compiler (gcc)" if lang == 'c' else "C++ compiler (g++)"
+                return {
+                    "status": "compilation_error",
+                    "output": "",
+                    "error": f"{compiler_name} is not installed on this server. Please install build-essential (gcc/g++)."
+                }
+
             with tempfile.TemporaryDirectory() as tmp:
                 ext = '.c' if lang == 'c' else '.cpp'
                 src = os.path.join(tmp, f'src{ext}')
-                exe = os.path.join(tmp, 'prog.exe')
-                compiler_key = 'gcc' if lang == 'c' else 'g++'
-                compiler_cmd = get_compiler_path(compiler_key) if is_compiler_available(compiler_key) else compiler_key
+                exe_name = 'prog.exe' if os.name == 'nt' else 'prog'
+                exe = os.path.join(tmp, exe_name)
 
                 with open(src, 'w', encoding='utf-8', newline='\n') as f:
                     f.write(code)
 
                 compile_args = [compiler_cmd, src, '-o', exe]
-                if lang in ['cpp', 'c++']:
-                    compile_args.extend(['-static-libstdc++', '-static-libgcc'])
-                elif lang == 'c':
-                    compile_args.append('-static-libgcc')
+                if os.name == 'nt':
+                    if lang in ['cpp', 'c++']:
+                        compile_args.extend(['-static-libstdc++', '-static-libgcc'])
+                    elif lang == 'c':
+                        compile_args.append('-static-libgcc')
 
                 comp = subprocess.run(compile_args, capture_output=True, text=True, timeout=timeout_seconds)
                 if comp.returncode != 0:
                     return {"status": "compilation_error", "output": "", "error": comp.stderr or "Compilation failed"}
+
+                if os.name != 'nt' and os.path.exists(exe):
+                    try:
+                        os.chmod(exe, 0o755)
+                    except OSError:
+                        pass
 
                 run = subprocess.run(
                     [exe],
@@ -197,6 +266,13 @@ def run_code_with_input(code, language, input_data, timeout_seconds=3):
                 return {"status": "pass", "output": run.stdout or "", "error": ""}
 
         if lang in ['csharp', 'c#']:
+            dotnet_cmd = find_compiler('dotnet')
+            if not dotnet_cmd:
+                return {
+                    "status": "compilation_error",
+                    "output": "",
+                    "error": ".NET SDK (dotnet) is not installed on this server."
+                }
             project_dir = tempfile.mkdtemp()
             try:
                 source_file = os.path.join(project_dir, 'Program.cs')
@@ -213,7 +289,6 @@ def run_code_with_input(code, language, input_data, timeout_seconds=3):
                 with open(csproj_file, 'w', encoding='utf-8') as f:
                     f.write(csproj_content)
 
-                dotnet_cmd = get_compiler_path('dotnet') if is_compiler_available('dotnet') else 'dotnet'
                 run = subprocess.run(
                     [dotnet_cmd, 'run', '--project', project_dir],
                     input=stdin_data,
@@ -230,7 +305,13 @@ def run_code_with_input(code, language, input_data, timeout_seconds=3):
                 shutil.rmtree(project_dir, ignore_errors=True)
 
         if lang == 'javascript':
-            node_cmd = get_compiler_path('node') if is_compiler_available('node') else 'node'
+            node_cmd = find_compiler('node')
+            if not node_cmd:
+                return {
+                    "status": "compilation_error",
+                    "output": "",
+                    "error": "Node.js (node) is not installed on this server."
+                }
             run = subprocess.run(
                 [node_cmd, '-e', code],
                 input=stdin_data,
@@ -245,7 +326,13 @@ def run_code_with_input(code, language, input_data, timeout_seconds=3):
             return {"status": "pass", "output": run.stdout or "", "error": ""}
 
         if lang == 'php':
-            php_cmd = get_compiler_path('php') if is_compiler_available('php') else 'php'
+            php_cmd = find_compiler('php')
+            if not php_cmd:
+                return {
+                    "status": "compilation_error",
+                    "output": "",
+                    "error": "PHP runtime (php) is not installed on this server."
+                }
             php_code = (code or '').strip()
             if php_code.startswith('<?php'):
                 php_code = php_code[5:].strip()
@@ -269,6 +356,9 @@ def run_code_with_input(code, language, input_data, timeout_seconds=3):
 
     except subprocess.TimeoutExpired:
         return {"status": "time_limit_exceeded", "output": "", "error": f"Time limit exceeded ({timeout_seconds}s)"}
+    except FileNotFoundError as fnf:
+        missing = fnf.filename or "compiler/runtime executable"
+        return {"status": "compilation_error", "output": "", "error": f"Executable not found on server: {missing}. Please ensure the required compiler is installed."}
     except Exception as exc:
         return {"status": "runtime_error", "output": "", "error": str(exc)}
 
@@ -3300,10 +3390,12 @@ def compile_code_exam(request):
         
         # Java Execution
         elif language == 'java':
-            if not is_compiler_available('javac'):
+            javac_cmd = find_compiler('javac')
+            java_cmd = find_compiler('java')
+            if not javac_cmd or not java_cmd:
                 return JsonResponse({
                     'success': False,
-                    'error': 'Java compiler not available. Please ensure JDK is installed and in PATH.'
+                    'error': 'Java compiler not available. Please ensure JDK (default-jdk) is installed and in PATH.'
                 })
             
             try:
@@ -3326,9 +3418,6 @@ def compile_code_exam(request):
                 if os.path.exists(correct_java_file):
                     os.unlink(correct_java_file)
                 os.rename(java_file, correct_java_file)
-                
-                javac_cmd = get_compiler_path('javac')
-                java_cmd = get_compiler_path('java')
                 
                 # Compile
                 compile_result = subprocess.run([javac_cmd, correct_java_file], 
@@ -3377,10 +3466,11 @@ def compile_code_exam(request):
         
         # C Execution
         elif language == 'c':
-            if not is_compiler_available('gcc'):
+            gcc_cmd = find_compiler('gcc')
+            if not gcc_cmd:
                 return JsonResponse({
                     'success': False,
-                    'error': 'C compiler (gcc) not available. Please ensure MinGW/GCC is installed.'
+                    'error': 'C compiler (gcc) not available. Please ensure GCC/build-essential is installed.'
                 })
             
             try:
@@ -3388,12 +3478,14 @@ def compile_code_exam(request):
                     f.write(code)
                     c_file = f.name
                 
-                gcc_cmd = get_compiler_path('gcc')
-                exe_file = c_file.replace('.c', '.exe')
+                exe_name = 'prog.exe' if os.name == 'nt' else 'prog'
+                exe_file = os.path.join(os.path.dirname(c_file), exe_name)
                 
                 # Compile
-                compile_result = subprocess.run([gcc_cmd, c_file, '-o', exe_file], 
-                                              capture_output=True, text=True, timeout=10)
+                compile_args = [gcc_cmd, c_file, '-o', exe_file]
+                if os.name == 'nt':
+                    compile_args.append('-static-libgcc')
+                compile_result = subprocess.run(compile_args, capture_output=True, text=True, timeout=10)
                 
                 if compile_result.returncode != 0:
                     os.unlink(c_file)
@@ -3401,6 +3493,12 @@ def compile_code_exam(request):
                         'success': False,
                         'error': f'C compilation error:\n{compile_result.stderr}'
                     })
+                
+                if os.name != 'nt' and os.path.exists(exe_file):
+                    try:
+                        os.chmod(exe_file, 0o755)
+                    except OSError:
+                        pass
                 
                 # Run with input
                 stdin_data = user_input if user_input else None
@@ -3435,10 +3533,11 @@ def compile_code_exam(request):
         
         # C++ Execution
         elif language in ['cpp', 'c++']:
-            if not is_compiler_available('g++'):
+            gpp_cmd = find_compiler('g++')
+            if not gpp_cmd:
                 return JsonResponse({
                     'success': False,
-                    'error': 'C++ compiler (g++) not available. Please ensure MinGW/G++ is installed.'
+                    'error': 'C++ compiler (g++) not available. Please ensure G++/build-essential is installed.'
                 })
             
             try:
@@ -3446,12 +3545,14 @@ def compile_code_exam(request):
                     f.write(code)
                     cpp_file = f.name
                 
-                gpp_cmd = get_compiler_path('g++')
-                exe_file = cpp_file.replace('.cpp', '.exe')
+                exe_name = 'prog.exe' if os.name == 'nt' else 'prog'
+                exe_file = os.path.join(os.path.dirname(cpp_file), exe_name)
                 
                 # Compile
-                compile_result = subprocess.run([gpp_cmd, cpp_file, '-o', exe_file, '-static-libstdc++', '-static-libgcc'], 
-                                              capture_output=True, text=True, timeout=10)
+                compile_args = [gpp_cmd, cpp_file, '-o', exe_file]
+                if os.name == 'nt':
+                    compile_args.extend(['-static-libstdc++', '-static-libgcc'])
+                compile_result = subprocess.run(compile_args, capture_output=True, text=True, timeout=10)
                 
                 if compile_result.returncode != 0:
                     os.unlink(cpp_file)
@@ -3459,6 +3560,12 @@ def compile_code_exam(request):
                         'success': False,
                         'error': f'C++ compilation error:\n{compile_result.stderr}'
                     })
+                
+                if os.name != 'nt' and os.path.exists(exe_file):
+                    try:
+                        os.chmod(exe_file, 0o755)
+                    except OSError:
+                        pass
                 
                 # Run with input
                 stdin_data = user_input if user_input else None
