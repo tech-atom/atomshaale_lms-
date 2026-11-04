@@ -3,13 +3,15 @@ FROM python:3.13-slim
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 
-# Install Java (JDK), C, C++, and Node.js compilers/runtimes for code execution
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    gcc \
-    g++ \
-    default-jdk-headless \
-    nodejs \
-    ca-certificates \
+# In Debian slim images, /usr/share/man directories are stripped to save space.
+# We must create /usr/share/man/man1 so JDK post-install symlink scripts don't fail.
+RUN mkdir -p /usr/share/man/man1 /usr/share/man/man2 /usr/share/man/man7 \
+    && apt-get update && apt-get install -y --no-install-recommends \
+        gcc \
+        g++ \
+        default-jdk-headless \
+        nodejs \
+        ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
