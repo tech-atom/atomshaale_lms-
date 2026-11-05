@@ -3452,11 +3452,17 @@ const d = {
     form.onsubmit = async ev => {
       ev.preventDefault();
 
+      const marksVal = document.getElementById('qMarks')?.value ?? (typeof inMarks !== 'undefined' ? inMarks?.value : 1);
+      const negVal = document.getElementById('qNegMark')?.value ?? (typeof inNeg !== 'undefined' ? inNeg?.value : 0);
+      const textVal = document.getElementById('qText')?.value ?? (typeof inText !== 'undefined' ? inText?.value : '');
+      const typeVal = document.getElementById('qType')?.value ?? (typeof selType !== 'undefined' ? selType?.value : 'MCQ');
+      const sectionVal = document.getElementById('qSection')?.value ?? (typeof sectionInput !== 'undefined' ? sectionInput?.value : '');
+
       let body = {
-        question_text: inText.value,
-        type: selType.value,
-        marks: Number(inMarks.value),
-        negative_mark: Number(inNeg.value) || 0,
+        question_text: textVal,
+        type: typeVal,
+        marks: Number(marksVal) || 1,
+        negative_mark: Number(negVal) || 0,
         options: [],
         correct_answer: '',
         test_cases: [],
@@ -3500,7 +3506,7 @@ const d = {
       const fd = new FormData();
       fd.append('question_text', body.question_text);
       fd.append('type', body.type);
-      fd.append('section_tag', sectionInput.value || '');
+      fd.append('section_tag', sectionVal || '');
       fd.append('marks', body.marks);
       fd.append('negative_mark', body.negative_mark);
       fd.append('options', JSON.stringify(body.options || []));
