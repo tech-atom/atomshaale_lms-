@@ -50,7 +50,7 @@ class ExamQuestion(models.Model):
 
     # For MCQ / TF
     options = models.JSONField(blank=True, null=True)
-    correct_answer = models.CharField(max_length=100, blank=True, null=True)
+    correct_answer = models.TextField(blank=True, null=True)
 
     # For Coding
     input_example = models.TextField(blank=True, null=True)

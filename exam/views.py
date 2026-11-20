@@ -438,6 +438,16 @@ def _parse_test_cases(val, row=None):
     return out
 
 
+def _iter_csv_upload_rows(upload):
+    upload.file.seek(0)
+    csv.field_size_limit(sys.maxsize)
+    text_file = io.TextIOWrapper(upload.file, encoding="utf-8-sig", newline="")
+    try:
+        yield from csv.DictReader(text_file)
+    finally:
+        text_file.detach()
+
+
 def is_admin(user):
     return user.is_authenticated and user.role == 'admin'
 
@@ -1489,10 +1499,7 @@ def admin_bulk_upload_questions(request, exam_id):
     rows = []
     try:
         if name.endswith(".csv"):
-            import csv, io
-            text = up.read().decode("utf-8-sig")
-            reader = csv.DictReader(io.StringIO(text))
-            rows = list(reader)
+            rows = _iter_csv_upload_rows(up)
 
         elif name.endswith(".xlsx") or name.endswith(".xls"):
             if openpyxl is None:
@@ -1539,10 +1546,22 @@ def admin_bulk_upload_questions(request, exam_id):
 
     created = 0
     errors = []
+    error_count = 0
     bulk = []
+    batch_size = 500
 
     with transaction.atomic():
-        for idx, row in enumerate(rows, start=2):  # header is row 1
+        row_iterator = iter(rows)
+        idx = 2
+        while True:
+            try:
+                row = next(row_iterator)
+            except StopIteration:
+                break
+            except (csv.Error, UnicodeDecodeError) as e:
+                transaction.set_rollback(True)
+                return JsonResponse({"status": "error", "message": f"Failed to read file: {e}"}, status=400)
+
             try:
                 qtype = _normalize_str(g(row, "type")).upper()
                 if qtype not in {"MCQ", "TF", "CODE", "DESC"}:
@@ -1603,7 +1622,7 @@ def admin_bulk_upload_questions(request, exam_id):
                     mc = g(row, "min_characters")
                     min_characters = int(float(mc)) if mc else None
 
-                bulk.append(ExamQuestion(
+                question = ExamQuestion(
                     exam=exam,
                     question_text=question_text,
                     type="Code" if qtype == "CODE" else qtype,
@@ -1616,17 +1635,34 @@ def admin_bulk_upload_questions(request, exam_id):
                     test_cases=test_cases or None,
                     expected_keywords=expected_keywords or None,
                     min_characters=min_characters,
-                ))
-                created += 1
+                )
+                question.full_clean()
 
             except Exception as e:
-                errors.append(f"Row {idx}: {e}")
+                error_count += 1
+                if len(errors) < 100:
+                    errors.append(f"Row {idx}: {e}")
+                idx += 1
+                continue
 
-        if errors:
+            bulk.append(question)
+            created += 1
+            idx += 1
+            if len(bulk) >= batch_size:
+                ExamQuestion.objects.bulk_create(bulk, batch_size=batch_size)
+                bulk.clear()
+
+        if error_count:
             transaction.set_rollback(True)
-            return JsonResponse({"status": "error", "message": "Validation failed", "errors": errors}, status=400)
+            return JsonResponse({
+                "status": "error",
+                "message": "Validation failed",
+                "errors": errors,
+                "error_count": error_count,
+            }, status=400)
 
-        ExamQuestion.objects.bulk_create(bulk)
+        if bulk:
+            ExamQuestion.objects.bulk_create(bulk, batch_size=batch_size)
 
     return JsonResponse({"status": "success", "message": f"Uploaded {created} questions."})
 

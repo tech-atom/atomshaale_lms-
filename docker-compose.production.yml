@@ -9,6 +9,9 @@ services:
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
+      FILE_UPLOAD_TEMP_DIR: /var/tmp/lms_uploads
+    volumes:
+      - upload-temp:/var/tmp/lms_uploads
     command: gunicorn atomm_lms.wsgi:application --bind 0.0.0.0:8000 --workers ${WEB_WORKERS:-4} --threads ${WEB_THREADS:-2} --timeout 60 --access-logfile -
     ports:
       - "${WEB_PORT:-8000}:8000"
@@ -102,3 +105,4 @@ services:
 volumes:
   postgres-data:
   redis-data:
+  upload-temp:

@@ -291,10 +291,9 @@ CONTENT_SECURITY_POLICY = {
 #, "'unsafe-inline'"
 
 
-# --------------------------------------------------------------------
-#  Trainer PDF Upload Configuration — allows large resume uploads
-# --------------------------------------------------------------------
-# Django default = 2.5 MB → increased to 30 MB (30 × 1024 × 1024 bytes)
-# Allow up to 60 MB
+# These settings do not cap uploaded file size:
+# DATA_UPLOAD_MAX_MEMORY_SIZE limits non-file request data, while
+# FILE_UPLOAD_MAX_MEMORY_SIZE is the threshold for spooling uploads to disk.
 DATA_UPLOAD_MAX_MEMORY_SIZE = 62914560    # 60 MB
 FILE_UPLOAD_MAX_MEMORY_SIZE = 62914560    # 60 MB
+FILE_UPLOAD_TEMP_DIR = env('FILE_UPLOAD_TEMP_DIR', default=None)

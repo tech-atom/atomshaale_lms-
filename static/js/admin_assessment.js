@@ -206,6 +206,9 @@ document.addEventListener('DOMContentLoaded', async function () {
           headers: { 'X-CSRFToken': csrfToken },
           body: fd
         });
+        if (!(r.headers.get('content-type') || '').includes('application/json')) {
+          throw new Error(`Upload failed (HTTP ${r.status}). The server returned an unexpected response.`);
+        }
         const d = await r.json();
         const ok = r.ok && d.status === 'success';
         showToast(d.message || (ok ? 'Upload complete' : 'Upload failed'), ok);
@@ -217,7 +220,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         }
       } catch (err) {
         console.error(err);
-        showToast('Upload failed', false);
+        showToast(err instanceof Error ? err.message : 'Upload failed', false);
       }
     };
     inp.click();

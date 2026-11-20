@@ -23,7 +23,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 RUN useradd --create-home --uid 10001 appuser \
-    && chown -R appuser:appuser /app
+    && mkdir -p /var/tmp/lms_uploads \
+    && chown -R appuser:appuser /app /var/tmp/lms_uploads \
+    && chmod 700 /var/tmp/lms_uploads
 USER appuser
 
 EXPOSE 8000
