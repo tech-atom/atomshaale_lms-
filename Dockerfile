@@ -12,7 +12,11 @@ RUN mkdir -p /usr/share/man/man1 /usr/share/man/man2 /usr/share/man/man7 \
         default-jdk-headless \
         nodejs \
         ca-certificates \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && command -v javac \
+    && javac -version \
+    && command -v java \
+    && java -version
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
