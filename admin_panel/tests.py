@@ -1,5 +1,8 @@
-from django.test import RequestFactory, TransactionTestCase, override_settings
+import re
+
+from django.test import Client, RequestFactory, TestCase, TransactionTestCase, override_settings
 from django.core import mail
+from django.urls import reverse
 
 from admin_panel.forms import (
     StudentRegistrationForm,
@@ -9,6 +12,34 @@ from admin_panel.forms import (
 from college.models import College, Course, Section
 from material.models import Domain
 from users.models import User
+
+
+class AdminAssessmentCsrfTokenTests(TestCase):
+    def setUp(self):
+        self.admin = User.objects.create_user(
+            email='assessment-admin@example.com',
+            password='secret123',
+            first_name='Assessment',
+            last_name='Admin',
+            role='admin',
+            mobile_number='+919999999997',
+            gender='Male',
+        )
+
+    def test_assessment_page_renders_csrf_token_for_upload_requests(self):
+        client = Client(enforce_csrf_checks=True)
+        client.force_login(self.admin)
+
+        response = client.get(reverse('admin_assessment_page'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('csrftoken', response.cookies)
+        token_match = re.search(
+            rb'<meta name="csrf-token" content="([^"]+)">',
+            response.content,
+        )
+        self.assertIsNotNone(token_match)
+        self.assertNotEqual(token_match.group(1), b'NOTPROVIDED')
 
 
 @override_settings(
