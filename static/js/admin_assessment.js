@@ -207,7 +207,26 @@ document.addEventListener('DOMContentLoaded', async function () {
           body: fd
         });
         if (!(r.headers.get('content-type') || '').includes('application/json')) {
-          throw new Error(`Upload failed (HTTP ${r.status}). The server returned an unexpected response.`);
+          const responseText = await r.text();
+          const responseDocument = new DOMParser().parseFromString(responseText, 'text/html');
+          const responseDetail = [
+            responseDocument.querySelector('pre')?.textContent,
+            responseDocument.querySelector('p')?.textContent,
+            responseDocument.body?.innerText
+          ]
+            .find(text => text && text.trim())
+            ?.replace(/\s+/g, ' ')
+            .trim()
+            .slice(0, 300);
+          console.error('Bulk upload returned a non-JSON response:', {
+            status: r.status,
+            detail: responseDetail || 'No readable response detail'
+          });
+          throw new Error(
+            responseDetail
+              ? `Upload failed (HTTP ${r.status}): ${responseDetail}`
+              : `Upload failed (HTTP ${r.status}). The server returned an unexpected response.`
+          );
         }
         const d = await r.json();
         const ok = r.ok && d.status === 'success';
