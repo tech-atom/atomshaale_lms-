@@ -62,6 +62,8 @@ On non-Windows hosts, `COMPILER_USE_SANDBOX` defaults to enabled. Java test-case
 
 The Celery compiler worker must have access to the Docker daemon and only the sandbox image. It must not mount the LMS source, `.env`, media, database socket, or host filesystem into containers. If Docker is unavailable or the image is missing, compiler jobs fail with an error; the system never falls back to host execution.
 
+Celery, Kombu, and redis-py are pinned together in `requirements.txt` because the Redis transport requires a compatible redis-py version. The deployment rebuilds all Celery workers and verifies a broker channel before completing.
+
 The image currently supports Python, JavaScript, C, C++, and Java. Add another language only by updating the image and its allowlisted runner command. Do not reintroduce host compiler fallback.
 
 ## Compiler safety gate

@@ -20,6 +20,7 @@ RUN mkdir -p /usr/share/man/man1 /usr/share/man/man2 /usr/share/man/man7 \
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+RUN python -c "from packaging.version import Version; import redis; assert Version(redis.__version__) >= Version('6.4.0'), f'Redis-py {redis.__version__} is too old for the configured Kombu transport'"
 COPY . .
 
 RUN useradd --create-home --uid 10001 appuser \
