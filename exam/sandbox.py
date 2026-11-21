@@ -20,6 +20,7 @@ def run_sandboxed(payload):
             settings.COMPILER_DOCKER_BINARY,
             "run",
             "--rm",
+            "--interactive",
             "--init",
             "--network=none",
             "--read-only",

@@ -30,6 +30,7 @@ class SandboxRunnerTests(SimpleTestCase):
         command = run.call_args.args[0]
 
         self.assertTrue(result['success'])
+        self.assertIn('--interactive', command)
         self.assertIn('--network=none', command)
         self.assertIn('--read-only', command)
         self.assertIn('--cap-drop=ALL', command)
