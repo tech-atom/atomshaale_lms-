@@ -10,6 +10,7 @@ services:
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
       FILE_UPLOAD_TEMP_DIR: /var/tmp/lms_uploads
+      COMPILER_USE_SANDBOX: "true"
     volumes:
       - upload-temp:/var/tmp/lms_uploads
     command: gunicorn atomm_lms.wsgi:application --bind 0.0.0.0:8000 --workers ${WEB_WORKERS:-4} --threads ${WEB_THREADS:-2} --timeout 60 --access-logfile -

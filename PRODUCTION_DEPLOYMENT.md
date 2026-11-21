@@ -58,6 +58,8 @@ docker build -t atomm-lms-compiler-sandbox:latest -f Compiler/sandbox/Dockerfile
 
 The sandbox runner enforces the following Docker boundary for every job: no network, read-only root filesystem, non-root UID 1000, dropped Linux capabilities, `no-new-privileges`, 256 MB memory, 0.5 CPU, 64 processes, 1 MB file size, 64 MB temporary filesystems, and a 25-second wall-clock timeout. The runner also caps stdout/stderr at 256 KB and kills the complete process group on timeout or output overflow.
 
+On non-Windows hosts, `COMPILER_USE_SANDBOX` defaults to enabled. Java test-case judging and standalone Java runs are dispatched to the `compiler_queue` and run in this sandbox image, rather than depending on a JDK being discoverable on whichever web host receives the request. The deployment workflow verifies Java by compiling and running a small program on each updated web host and sandbox image. Keep resource limits enabled; unbounded execution can exhaust the host and interrupt exams.
+
 The Celery compiler worker must have access to the Docker daemon and only the sandbox image. It must not mount the LMS source, `.env`, media, database socket, or host filesystem into containers. If Docker is unavailable or the image is missing, compiler jobs fail with an error; the system never falls back to host execution.
 
 The image currently supports Python, JavaScript, C, C++, and Java. Add another language only by updating the image and its allowlisted runner command. Do not reintroduce host compiler fallback.

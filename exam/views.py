@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.http import JsonResponse, HttpResponse
@@ -106,6 +107,11 @@ except Exception as e:
         return True
 
 
+def _has_java_runtime(compiler_path):
+    java_home = os.path.dirname(os.path.dirname(compiler_path))
+    return os.path.isfile(os.path.join(java_home, 'lib', 'modules'))
+
+
 def find_compiler(compiler_name):
     """
     Locate compiler or runtime executable.
@@ -117,23 +123,27 @@ def find_compiler(compiler_name):
             return sys.executable
         return shutil.which('python3') or shutil.which('python') or 'python'
 
-    # Try portable compiler detector
-    try:
-        if is_compiler_available(compiler_name):
-            path = get_compiler_path(compiler_name)
-            if path:
-                if os.path.isabs(path) and os.path.exists(path):
-                    return path
-                which_res = shutil.which(path)
-                if which_res:
-                    return which_res
-    except Exception:
-        pass
-
-    # Direct check via shutil.which
+    # Prefer host compilers, and only use the bundled portable toolchain on Windows.
+    # The bundled compiler binaries are Windows executables and cannot run in Linux containers.
     which_res = shutil.which(compiler_name)
     if which_res:
         return which_res
+
+    if os.name == 'nt':
+        try:
+            if is_compiler_available(compiler_name):
+                path = get_compiler_path(compiler_name)
+                if path:
+                    if compiler_name in {'java', 'javac'}:
+                        if not _has_java_runtime(path):
+                            return None
+                    if os.path.isabs(path) and os.path.exists(path):
+                        return path
+                    which_res = shutil.which(path)
+                    if which_res:
+                        return which_res
+        except Exception:
+            pass
 
     # Try platform-specific binary names
     alternatives = {
@@ -151,6 +161,14 @@ def find_compiler(compiler_name):
             return res
 
     return None
+
+
+def _run_compiler_job_in_sandbox(payload):
+    from .compiler_tasks import execute_compiler_job
+
+    return execute_compiler_job.apply_async(args=[payload]).get(
+        timeout=settings.COMPILER_SANDBOX_WALL_TIMEOUT + 5
+    )
 
 
 def run_code_with_input(code, language, input_data, timeout_seconds=3):
@@ -3155,6 +3173,25 @@ def evaluate_code_with_test_cases(code, language, test_cases, max_score=None):
             "details": []
         }
 
+    if language.lower().strip() == "java" and settings.COMPILER_USE_SANDBOX:
+        payload = {
+            "code": code,
+            "language": "java",
+            "test_cases": {
+                "sample_test_cases": sample_cases,
+                "hidden_test_cases": hidden_cases,
+            },
+        }
+        sandbox_result = _run_compiler_job_in_sandbox(payload)
+        if not isinstance(sandbox_result, dict):
+            raise RuntimeError("Java compiler worker returned an invalid result")
+        return {
+            "verdict": sandbox_result.get("verdict", "Runtime Error"),
+            "passed": int(sandbox_result.get("passed", 0)),
+            "total": int(sandbox_result.get("total", len(all_cases))),
+            "details": sandbox_result.get("details", []),
+        }
+
     passed_count = 0
     has_runtime_error = False
     has_compilation_error = False
@@ -3426,6 +3463,30 @@ def compile_code_exam(request):
         
         # Java Execution
         elif language == 'java':
+            if settings.COMPILER_USE_SANDBOX:
+                try:
+                    sandbox_result = _run_compiler_job_in_sandbox({
+                        'code': code,
+                        'language': 'java',
+                        'input': user_input,
+                    })
+                    details = sandbox_result.get('details', []) if isinstance(sandbox_result, dict) else []
+                    detail = details[0] if details else {}
+                    output = str(detail.get('got', '') or '')
+                    success = detail.get('status') == 'Pass'
+                    return JsonResponse({
+                        'success': success,
+                        'output': output if output else ('(no output)' if success else ''),
+                        'error': '' if success else output or 'Java execution failed in the compiler sandbox.',
+                        'verdict': sandbox_result.get('verdict') if isinstance(sandbox_result, dict) else None,
+                    }, status=200 if success else 400)
+                except Exception:
+                    logger.exception("Java compiler sandbox execution failed")
+                    return JsonResponse({
+                        'success': False,
+                        'error': 'Java compiler service is unavailable. Please try again shortly.',
+                    }, status=503)
+
             javac_cmd = find_compiler('javac')
             java_cmd = find_compiler('java')
             if not javac_cmd or not java_cmd:

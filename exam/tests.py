@@ -156,3 +156,29 @@ class BulkUploadQuestionTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertEqual(response.json()['error_count'], 1)
         self.assertEqual(ExamQuestion.objects.filter(exam=self.exam).count(), 0)
+
+    def test_admin_can_add_code_question_with_empty_test_case_input(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(
+            reverse('admin_add_question', kwargs={'exam_id': self.exam.id}),
+            {
+                'question_text': 'Print the number three.',
+                'type': 'Code',
+                'section_tag': '',
+                'marks': '1',
+                'negative_mark': '0',
+                'options': '[]',
+                'correct_answer': '',
+                'test_cases': json.dumps([{'input': '', 'output': '3'}]),
+                'input_example': '',
+                'expected_output': '',
+                'expected_keywords': '[]',
+                'min_characters': '0',
+            },
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json()['status'], 'success')
+        question = ExamQuestion.objects.get(exam=self.exam)
+        self.assertEqual(question.test_cases[0]['input'], '')
+        self.assertEqual(question.test_cases[0]['output'], '3')

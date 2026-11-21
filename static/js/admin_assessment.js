@@ -3517,7 +3517,7 @@ const d = {
             input: tc.querySelector('.tc-input')?.value || '',
             output: tc.querySelector('.tc-output')?.value || ''
           }))
-          .filter(tc => tc.input && tc.output);
+          .filter(tc => tc.input.trim() || tc.output.trim());
       }
 
       if (body.type === 'DESC') {
@@ -3556,12 +3556,20 @@ const d = {
         body: fd
       });
 
+      if (!(r.headers.get('content-type') || '').includes('application/json')) {
+        console.error('Question save returned a non-JSON response:', r.status, await r.text());
+        showToast(`Could not save question (HTTP ${r.status}). Please refresh and try again.`, false);
+        return;
+      }
+
       const resp = await r.json();
 
       if (resp.status !== 'success') {
         console.error('Validation errors:', resp.errors);
-        const f = resp.errors ? Object.keys(resp.errors)[0] : 'error';
-        showToast(resp.message || `${f}: ${resp.errors?.[f]?.join(', ') || 'Invalid data'}`, false);
+        const validationMessage = Object.entries(resp.errors || {})
+          .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+          .join('; ');
+        showToast(validationMessage || resp.message || 'Could not save question.', false);
         return;
       }
 
