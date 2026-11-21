@@ -1,5 +1,7 @@
 FROM python:3.13-slim
 
+COPY --from=docker:27.5.1-cli /usr/local/bin/docker /usr/local/bin/docker
+
 ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
 WORKDIR /app
 
@@ -16,7 +18,8 @@ RUN mkdir -p /usr/share/man/man1 /usr/share/man/man2 /usr/share/man/man7 \
     && command -v javac \
     && javac -version \
     && command -v java \
-    && java -version
+    && java -version \
+    && docker --version
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt

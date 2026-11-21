@@ -60,7 +60,7 @@ The sandbox runner enforces the following Docker boundary for every job: no netw
 
 On non-Windows hosts, `COMPILER_USE_SANDBOX` defaults to enabled. Java test-case judging and standalone Java runs are dispatched to the `compiler_queue` and run in this sandbox image, rather than depending on a JDK being discoverable on whichever web host receives the request. The deployment workflow verifies Java by compiling and running a small program on each updated web host and sandbox image. Keep resource limits enabled; unbounded execution can exhaust the host and interrupt exams.
 
-The Celery compiler worker must have access to the Docker daemon and only the sandbox image. It must not mount the LMS source, `.env`, media, database socket, or host filesystem into containers. If Docker is unavailable or the image is missing, compiler jobs fail with an error; the system never falls back to host execution.
+The Celery compiler worker requires the Docker CLI and access to the host Docker socket, and only the sandbox image. The Compose service adds the host socket's group ID to the worker; deployments must set `DOCKER_GID` from `/var/run/docker.sock`. It must not mount the LMS source, `.env`, media, database socket, or host filesystem into sandbox containers. If Docker is unavailable or the image is missing, compiler jobs fail with an error; the system never falls back to host execution.
 
 Celery, Kombu, and redis-py are pinned together in `requirements.txt` because the Redis transport requires a compatible redis-py version. The deployment rebuilds all Celery workers and verifies a broker channel before completing.
 
