@@ -3,6 +3,7 @@ import re
 import json
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import render,redirect
+from django.urls import reverse
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.views.decorators.http import require_GET, require_POST
 from django.db.models import F, Q
@@ -3435,3 +3436,56 @@ def admin_delete_student(request, student_id):
     if next_url:
         return redirect(next_url)
     return redirect('admin_college')
+
+
+
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def admin_resend_student_email(request, student_id):
+    from users.utils import send_verification_email
+    student_profile = get_object_or_404(StudentProfile.objects.select_related('user'), id=student_id)
+    user = student_profile.user
+    success = send_verification_email(request, user)
+    if success:
+        messages.success(request, f"Verification email sent successfully to {user.email}.")
+    else:
+        messages.error(request, f"Failed to send verification email to {user.email}. Please check SMTP configuration and server logs.")
+
+    next_url = request.POST.get('next') or request.GET.get('next') or request.META.get('HTTP_REFERER')
+    if next_url:
+        return redirect(next_url)
+    return redirect('admin_college')
+
+
+@login_required
+@user_passes_test(is_admin)
+def admin_get_student_verification_link(request, student_id):
+    from django.contrib.auth.tokens import default_token_generator
+    from django.utils.http import urlsafe_base64_encode
+    from django.utils.encoding import force_bytes
+
+    student_profile = get_object_or_404(StudentProfile.objects.select_related('user'), id=student_id)
+    user = student_profile.user
+
+    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+    verify_url = request.build_absolute_uri(
+        reverse('email_verify', kwargs={'uidb64': uidb64, 'token': token})
+    )
+
+    return JsonResponse({
+        'status': 'success',
+        'email': user.email,
+        'student_name': user.get_full_name() or user.first_name or user.email,
+        'verify_url': verify_url,
+        'is_verified': user.is_verified,
+        'is_password_set': user.is_password_set,
+    })
+
+
+
+
+

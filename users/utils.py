@@ -40,6 +40,11 @@ def send_verification_email(request, user):
         if sent_count != 1:
             logger.error("Verification email was not accepted by the configured backend for %s", user.email)
             return False
+
+        from django.utils import timezone
+        user.email_sent = True
+        user.email_sent_at = timezone.now()
+        user.save(update_fields=['email_sent', 'email_sent_at'])
         return True
     except Exception as exc:
         logger.exception("Verification email failed for %s: %s", user.email, exc)

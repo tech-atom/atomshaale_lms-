@@ -4,7 +4,7 @@
 {% block extra_head %}
 <!-- FontAwesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{% static 'css/admin_student_list.css' %}">
+<link rel="stylesheet" href="{% static 'css/admin_student_list.css' %}?v=2.1">
 {% endblock %}
 
 {% block content %}
@@ -17,12 +17,75 @@
       <p class="subtitle-text">
         <i class="fa-solid fa-user-graduate"></i> Student Directory &nbsp;|&nbsp; 
         <strong>Batch {{ batch_year }}</strong>
+        {% if course %}&nbsp;|&nbsp; <span>{{ course }} &bull; Sem {{ semester }} (Year {{ year }}) &bull; Sec {{ section }}</span>{% endif %}
       </p>
     </div>
 
-    <a href="{% url 'college_student_page' college.id %}" class="back-btn">
-      <i class="fa-solid fa-arrow-left"></i> Back to Groups
-    </a>
+    <div class="header-actions">
+      {% if pending_count > 0 %}
+        <form action="{% url 'college_resend_batch_pending_emails' college.id year semester section course batch_year %}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to resend verification emails to all {{ pending_count }} pending student(s)?');">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="btn btn-warning-resend" title="Resend verification email to all unverified students in this batch">
+            <i class="fa-solid fa-paper-plane"></i> Resend to All Pending ({{ pending_count }})
+          </button>
+        </form>
+      {% else %}
+        <span class="btn btn-all-verified" title="All students in this batch have set their passwords">
+          <i class="fa-solid fa-circle-check"></i> All Passwords Set
+        </span>
+      {% endif %}
+
+      <a href="{% url 'college_student_page' college.id %}" class="back-btn">
+        <i class="fa-solid fa-arrow-left"></i> Back to Groups
+      </a>
+    </div>
+  </div>
+
+  {% if messages %}
+  <div class="messages-container">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">
+        <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% elif message.tags == 'error' %}fa-circle-xmark{% else %}fa-circle-info{% endif %}"></i>
+        <span>{{ message }}</span>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Student Status Overview Cards -->
+  <div class="student-stats-grid">
+    <div class="stat-card stat-total">
+      <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+      <div class="stat-content">
+        <span class="stat-number">{{ total_count }}</span>
+        <span class="stat-label">Total Students</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-mail">
+      <div class="stat-icon"><i class="fa-solid fa-envelope-circle-check"></i></div>
+      <div class="stat-content">
+        <span class="stat-number">{{ emails_sent_count|default:0 }}</span>
+        <span class="stat-label">Mails Sent</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-password">
+      <div class="stat-icon"><i class="fa-solid fa-key"></i></div>
+      <div class="stat-content">
+        <span class="stat-number">{{ passwords_set_count|default:0 }}</span>
+        <span class="stat-label">Passwords Set / Active</span>
+      </div>
+    </div>
+
+    <div class="stat-card stat-pending">
+      <div class="stat-icon"><i class="fa-solid fa-user-clock"></i></div>
+      <div class="stat-content">
+        <span class="stat-number">{{ pending_count|default:0 }}</span>
+        <span class="stat-label">Pending Verification</span>
+      </div>
+    </div>
   </div>
 
   <div class="table-container">
@@ -33,11 +96,9 @@
           <th>USN</th>
           <th>Name</th>
           <th>Email</th>
-          <th>Course</th>
-          <th>Year</th>
-          <th>Semester</th>
-          <th>Section</th>
-          <th>Batch Year</th>
+          <th>Course & Section</th>
+          <th>Mail Status</th>
+          <th>Password Status</th>
           <th>Actions</th>
         </tr>
       </thead>
@@ -46,23 +107,76 @@
         <tr>
           <td>{{ forloop.counter }}</td>
           <td class="usn-highlight">{{ s.usn }}</td>
-          <td class="student-name"><strong>{{ s.user.get_full_name }}</strong></td>
+          <td class="student-name">
+            <strong>{{ s.user.get_full_name|default:s.user.email }}</strong>
+            {% if s.user.is_verified %}
+              <i class="fa-solid fa-circle-check verified-icon" title="Account Verified"></i>
+            {% endif %}
+          </td>
           <td>{{ s.user.email }}</td>
-          <td><span class="badge badge-course">{{ s.course.name }}</span></td>
-          <td>{{ s.year }}</td>
-          <td>{{ s.semester }}</td>
-          <td><span class="badge badge-section">{{ s.section.name }}</span></td>
-          <td><strong>{{ s.batch_year }}</strong></td>
+          <td>
+            <span class="badge badge-course">{{ s.course.name }}</span>
+            <span class="badge badge-section">Sec {{ s.section.name }}</span>
+          </td>
+
+          <!-- Mail Status -->
+          <td>
+            {% if s.user.is_mail_sent %}
+              <span class="badge badge-status-sent" title="Verification email was sent">
+                <i class="fa-solid fa-paper-plane"></i> Sent
+              </span>
+              {% if s.user.email_sent_at %}
+                <div class="status-time">{{ s.user.email_sent_at|date:"d M, H:i" }}</div>
+              {% endif %}
+            {% else %}
+              <span class="badge badge-status-pending" title="Verification email has not been sent yet">
+                <i class="fa-solid fa-envelope"></i> Not Sent
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- Password Status -->
+          <td>
+            {% if s.user.is_password_set %}
+              <span class="badge badge-status-active" title="Student has verified email and set password">
+                <i class="fa-solid fa-lock"></i> Password Set
+              </span>
+              {% if s.user.password_set_at %}
+                <div class="status-time">{{ s.user.password_set_at|date:"d M, H:i" }}</div>
+              {% endif %}
+            {% else %}
+              <span class="badge badge-status-unverified" title="Student has not set password yet">
+                <i class="fa-solid fa-clock"></i> Pending
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- Actions -->
           <td>
             <div class="actions-flex">
-              <a href="{% url 'admin_edit_student' s.id %}" class="btn btn-teal btn-sm">
+              <!-- Copy Direct Verification Link Button -->
+              <button type="button" class="btn btn-copy btn-sm" onclick="copyVerificationLink(this, '{{ s.id }}')" title="Copy direct verification link to share with student">
+                <i class="fa-solid fa-copy"></i> Copy Link
+              </button>
+
+              <!-- Resend Verification Mail Button -->
+              <form action="{% url 'admin_resend_student_email' s.id %}" method="post" style="display:inline;" onsubmit="return confirm('Send verification email to {{ s.user.email }}?');">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                <button type="submit" class="btn btn-mail btn-sm" title="Resend verification email to student">
+                  <i class="fa-solid fa-paper-plane"></i> Resend Mail
+                </button>
+              </form>
+
+              <a href="{% url 'admin_edit_student' s.id %}" class="btn btn-teal btn-sm" title="Edit Student">
                 <i class="fa-solid fa-user-pen"></i> Edit
               </a>
+
               <form action="{% url 'admin_delete_student' s.id %}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete student {{ s.user.get_full_name }}? This will permanently delete their account and profile.');">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
-                <button type="submit" class="btn btn-danger btn-sm">
-                  <i class="fa-solid fa-trash-can"></i> Delete
+                <button type="submit" class="btn btn-danger btn-sm" title="Delete Student">
+                  <i class="fa-solid fa-trash-can"></i>
                 </button>
               </form>
             </div>
@@ -70,7 +184,7 @@
         </tr>
         {% empty %}
         <tr>
-          <td colspan="10" class="empty-row">
+          <td colspan="8" class="empty-row">
             <i class="fa-solid fa-users-slash empty-icon"></i>
             <div>No students found for this batch.</div>
           </td>
@@ -81,5 +195,88 @@
   </div>
 
 </div>
+
+<!-- Floating Toast Container for Copied Link -->
+<div id="copyToast" class="copy-toast" role="status" aria-live="polite"></div>
+
+<script>
+function showCopyToast(message, isSuccess = true) {
+  const toast = document.getElementById('copyToast');
+  if (!toast) return;
+  toast.innerHTML = (isSuccess ? '<i class="fa-solid fa-circle-check"></i> ' : '<i class="fa-solid fa-circle-exclamation"></i> ') + message;
+  toast.className = 'copy-toast ' + (isSuccess ? 'toast-success show' : 'toast-error show');
+  setTimeout(() => {
+    toast.className = 'copy-toast';
+  }, 3500);
+}
+
+function copyVerificationLink(btn, studentId) {
+  const originalHtml = btn.innerHTML;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Getting...';
+  btn.disabled = true;
+
+  fetch(`/admin-panel/admin/student/${studentId}/get-verification-link/`, {
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest'
+    }
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'success' && data.verify_url) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(data.verify_url).then(() => {
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+          btn.classList.add('btn-copied');
+          showCopyToast(`Verification link for <strong>${data.student_name}</strong> copied to clipboard!`, true);
+          setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.classList.remove('btn-copied');
+            btn.disabled = false;
+          }, 2500);
+        }).catch(() => fallbackCopy(data.verify_url, btn, originalHtml, data.student_name));
+      } else {
+        fallbackCopy(data.verify_url, btn, originalHtml, data.student_name);
+      }
+    } else {
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
+      showCopyToast(data.message || 'Failed to generate verification link.', false);
+    }
+  })
+  .catch(err => {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+    showCopyToast('Network error while getting verification link.', false);
+  });
+}
+
+function fallbackCopy(text, btn, originalHtml, studentName) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.top = '0';
+  textarea.style.left = '0';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  try {
+    document.execCommand('copy');
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+    btn.classList.add('btn-copied');
+    showCopyToast(`Verification link for <strong>${studentName}</strong> copied to clipboard!`, true);
+    setTimeout(() => {
+      btn.innerHTML = originalHtml;
+      btn.classList.remove('btn-copied');
+      btn.disabled = false;
+    }, 2500);
+  } catch (e) {
+    prompt('Copy the verification link below:', text);
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
+  document.body.removeChild(textarea);
+}
+</script>
 
 {% endblock %}

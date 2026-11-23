@@ -17,6 +17,9 @@ class User(AbstractUser):
     gender=models.CharField(max_length=10,choices=GENDER_CHOICES)
     updated_at = models.DateTimeField(auto_now=True)
     is_verified = models.BooleanField(default=False)
+    email_sent = models.BooleanField(default=False, help_text="True if verification email was sent successfully")
+    email_sent_at = models.DateTimeField(null=True, blank=True, help_text="Timestamp when verification email was sent")
+    password_set_at = models.DateTimeField(null=True, blank=True, help_text="Timestamp when password was set")
 
     #created_at = models.DateTimeField(auto_now_add=True) we are using date_joined
 
@@ -24,6 +27,16 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['first_name','role','mobile_number','gender']
     
     objects = CustomUserManager()
+
+    @property
+    def is_mail_sent(self):
+        """Returns True if verification email has been sent or if user is already verified."""
+        return bool(self.email_sent or self.is_verified)
+
+    @property
+    def is_password_set(self):
+        """Returns True if user has set a usable password / verified their account."""
+        return bool(self.password_set_at or (self.is_verified and self.has_usable_password()))
 
     def __str__(self):
         return f"{self.first_name} ({self.email})"

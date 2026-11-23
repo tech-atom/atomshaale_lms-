@@ -262,6 +262,261 @@ body.dark-mode .btn-danger:hover {
   color: #000000;
 }
 
+/* ---------- Messages / Alerts ---------- */
+.messages-container {
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.alert {
+  padding: 0.85rem 1.25rem;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+}
+
+.alert-success {
+  background: rgba(0, 128, 55, 0.12);
+  color: #008037;
+  border-color: rgba(0, 128, 55, 0.25);
+}
+
+.alert-error, .alert-danger {
+  background: rgba(220, 53, 69, 0.12);
+  color: #dc3545;
+  border-color: rgba(220, 53, 69, 0.25);
+}
+
+.alert-warning {
+  background: rgba(255, 193, 7, 0.15);
+  color: #856404;
+  border-color: rgba(255, 193, 7, 0.3);
+}
+
+/* ---------- Student Stats Grid ---------- */
+.student-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.35rem;
+}
+
+.stat-total .stat-icon {
+  background: rgba(0, 128, 55, 0.1);
+  color: var(--color-brand);
+}
+
+.stat-mail .stat-icon {
+  background: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+}
+
+.stat-password .stat-icon {
+  background: rgba(25, 135, 84, 0.1);
+  color: #198754;
+}
+
+.stat-pending .stat-icon {
+  background: rgba(255, 193, 7, 0.15);
+  color: #d39e00;
+}
+
+.stat-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-number {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--text-main);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* ---------- Status Badges ---------- */
+.badge-status-sent {
+  background: rgba(13, 110, 253, 0.12);
+  color: #0d6efd;
+  border: 1px solid rgba(13, 110, 253, 0.25);
+  gap: 0.35rem;
+}
+
+.badge-status-pending {
+  background: rgba(108, 117, 125, 0.12);
+  color: #6c757d;
+  border: 1px solid rgba(108, 117, 125, 0.25);
+  gap: 0.35rem;
+}
+
+.badge-status-active {
+  background: rgba(25, 135, 84, 0.12);
+  color: #198754;
+  border: 1px solid rgba(25, 135, 84, 0.25);
+  gap: 0.35rem;
+}
+
+.badge-status-unverified {
+  background: rgba(255, 193, 7, 0.18);
+  color: #997404;
+  border: 1px solid rgba(255, 193, 7, 0.35);
+  gap: 0.35rem;
+}
+
+.status-time {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 0.2rem;
+  font-weight: 500;
+}
+
+.verified-icon {
+  color: #198754;
+  font-size: 0.85rem;
+  margin-left: 0.35rem;
+}
+
+/* ---------- Header Actions ---------- */
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.btn-warning-resend {
+  background: #f59e0b;
+  color: #ffffff;
+  border-color: #d97706;
+  font-weight: 700;
+  box-shadow: 0 2px 4px rgba(245, 158, 11, 0.25);
+}
+
+.btn-warning-resend:hover {
+  background: #d97706;
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-all-verified {
+  background: rgba(25, 135, 84, 0.1);
+  color: #198754;
+  border: 1px solid rgba(25, 135, 84, 0.25);
+  font-weight: 700;
+  cursor: default;
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+}
+
+/* ---------- Action Buttons ---------- */
+.btn-mail {
+  background: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+  border-color: rgba(13, 110, 253, 0.25);
+}
+
+.btn-mail:hover {
+  background: #0d6efd;
+  color: #ffffff;
+}
+
+.btn-copy {
+  background: rgba(111, 66, 193, 0.1);
+  color: #6f42c1;
+  border-color: rgba(111, 66, 193, 0.25);
+}
+
+.btn-copy:hover {
+  background: #6f42c1;
+  color: #ffffff;
+}
+
+.btn-copied {
+  background: #198754 !important;
+  color: #ffffff !important;
+  border-color: #198754 !important;
+}
+
+/* ---------- Floating Toast Notification ---------- */
+.copy-toast {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  background: #1e1e1e;
+  color: #ffffff;
+  padding: 0.9rem 1.4rem;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  z-index: 9999;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(20px);
+  transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+  pointer-events: none;
+}
+
+.copy-toast.show {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.copy-toast.toast-success {
+  border-left: 4px solid #198754;
+}
+
+.copy-toast.toast-error {
+  border-left: 4px solid #dc3545;
+}
+
+
 /* ---------- Empty State ---------- */
 .empty-row {
   text-align: center;
@@ -293,5 +548,9 @@ body.dark-mode .btn-danger:hover {
   .actions-flex {
     flex-direction: column;
     align-items: stretch;
+  }
+
+  .student-stats-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }

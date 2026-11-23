@@ -44,6 +44,11 @@ path(
     views.college_students_list,
     name="college_students_list"
 ),
+path(
+    "college/<uuid:college_id>/students/<int:year>/<int:semester>/<str:section>/<str:course>/<int:batch_year>/resend-pending/",
+    views.college_resend_batch_pending_emails,
+    name="college_resend_batch_pending_emails"
+),
 
     # Pause / Resume student group access
     path(
