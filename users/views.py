@@ -159,7 +159,7 @@ def student_register(request):
                 elif email_sent is False:
                     messages.error(request, "Your account was created, but the verification email could not be sent. Use the verification resend link on the login page or contact support.")
                 else:
-                    messages.success(request, "Registration is complete. A verification email will be attempted after the account transaction commits. If it does not arrive, use the verification resend link on the login page.")
+                    messages.success(request, "Registration is complete. Your verification email has been queued. If it does not arrive, use the verification resend link on the login page.")
                 return redirect('login')
             except Exception as e:
                 messages.error(request, f"An error occurred during registration: {str(e)}")

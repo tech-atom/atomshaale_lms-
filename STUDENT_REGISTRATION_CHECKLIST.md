@@ -135,16 +135,7 @@
 ## 🚀 Deployment Steps
 
 ### Step 1: Update settings.py
-```python
-# Add email configuration
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'your-smtp-server'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your-email@example.com'
-EMAIL_HOST_PASSWORD = 'your-app-password'
-DEFAULT_FROM_EMAIL = 'noreply@atommlms.com'
-```
+Set production email values in the deployment's `.env.production` from `.env.production.example`; keep local development on the console backend. For SES requirements and queued delivery details, see [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md).
 
 ### Step 2: Verify Admin Data
 ```bash
@@ -209,8 +200,8 @@ python manage.py runserver
 
 ### Expected Performance:
 - Registration form load: < 500ms
-- Form submission: < 2s (includes email)
-- Email sending: < 5s (depends on SMTP)
+- Form submission: < 2s (email is queued after account commit)
+- Email delivery: asynchronous; depends on SES quota and sending rate
 - Database queries: 3-4 per registration
 - Email verification: < 1s
 

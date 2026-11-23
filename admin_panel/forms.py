@@ -130,7 +130,7 @@ class BulkStudentUploadForm(BootstrapFormMixin,forms.Form):
         df['mobile_number'] = df.get('mobile_number', '').fillna('').apply(lambda x: str(x).strip().rstrip('.0'))
         df['gender']        = df.get('gender', '').fillna('').apply(lambda x: str(x).strip())
 
-        created, failed, email_failed = [], [], []
+        created, failed, email_queued, email_failed = [], [], 0, []
 
         for idx, row in enumerate(df.to_dict(orient='records'), start=2):
             first_name    = row.get('first_name', '').strip()
@@ -208,6 +208,8 @@ class BulkStudentUploadForm(BootstrapFormMixin,forms.Form):
 
                 if created_new_user:
                     email_sent = send_verification_email_on_commit(request, user)
+                    if email_sent is not False:
+                        email_queued += 1
                 created.append(email)
                 if email_sent is False:
                     email_failed.append(email)
@@ -217,7 +219,7 @@ class BulkStudentUploadForm(BootstrapFormMixin,forms.Form):
             except Exception as e:
                 failed.append({'row': idx, 'email': email, 'error': str(e)})
 
-        return created, failed, email_failed
+        return created, failed, email_queued, email_failed
 
 
 

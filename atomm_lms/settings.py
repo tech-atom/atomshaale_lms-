@@ -161,6 +161,7 @@ CELERY_BROKER_URL = env('CELERY_BROKER_URL', default=REDIS_URL)
 CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default=REDIS_URL)
 CELERY_TASK_ACKS_LATE = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+EMAIL_TASK_RATE_LIMIT = env('EMAIL_TASK_RATE_LIMIT', default='10/s')
 CELERY_TASK_TIME_LIMIT = env.int('CELERY_TASK_TIME_LIMIT', default=40)
 CELERY_TASK_SOFT_TIME_LIMIT = env.int('CELERY_TASK_SOFT_TIME_LIMIT', default=35)
 CELERY_TASK_ROUTES = {
@@ -227,7 +228,7 @@ EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL', default=False)
 EMAIL_TIMEOUT = env.int('EMAIL_TIMEOUT', default=20)
 DEFAULT_FROM_EMAIL = env(
     'DEFAULT_FROM_EMAIL',
-    default=EMAIL_HOST_USER or 'webmaster@localhost',
+    default='webmaster@localhost' if DEBUG else '',
 )
 VERIFICATION_RESEND_IP_RATE = env('VERIFICATION_RESEND_IP_RATE', default='10/h')
 VERIFICATION_RESEND_EMAIL_RATE = env('VERIFICATION_RESEND_EMAIL_RATE', default='3/h')
@@ -238,6 +239,10 @@ if EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend':
     if not EMAIL_HOST or not DEFAULT_FROM_EMAIL:
         raise ImproperlyConfigured(
             'EMAIL_HOST and DEFAULT_FROM_EMAIL must be configured for SMTP email.'
+        )
+    if not DEBUG and DEFAULT_FROM_EMAIL.rsplit('@', 1)[-1].lower() == 'localhost':
+        raise ImproperlyConfigured(
+            'DEFAULT_FROM_EMAIL must use a production sender domain, not localhost.'
         )
     if not 1 <= EMAIL_PORT <= 65535:
         raise ImproperlyConfigured('EMAIL_PORT must be between 1 and 65535.')

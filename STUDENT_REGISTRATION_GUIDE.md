@@ -171,17 +171,9 @@ Features:
    - Sections/groups within courses
 
 ### Email Configuration
-The system uses Django's email backend. Ensure your `settings.py` has:
+Local development uses Django's console email backend and does not send real messages. Production reads SMTP settings from `.env.production`; signup and admin bulk-upload verification emails are queued through Celery's `email_queue`. For AWS SES configuration, quotas, and credentials, follow [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md).
 
-```python
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'your-email-host'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your-email@example.com'
-EMAIL_HOST_PASSWORD = 'your-password'
-DEFAULT_FROM_EMAIL = 'noreply@atommlms.com'
-```
+Keep SES SMTP credentials in the deployment secret manager; do not put real credentials in `settings.py` or commit them.
 
 ### Security Features
 - Password hashing using Django's default hasher (PBKDF2)
@@ -268,10 +260,10 @@ python manage.py createsuperuser
 ## Troubleshooting
 
 ### Emails Not Sending
-- Check `EMAIL_*` settings in `settings.py`
-- Verify SMTP credentials
-- Check Django logs for send errors
-- Test with: `python manage.py shell` → `from django.core.mail import send_mail; send_mail(...)`
+- Confirm production `EMAIL_*` values and sender identity are verified in SES
+- Confirm the SES account is out of the sandbox and has enough daily quota
+- Check Celery `email_queue` worker logs and ensure the worker is running
+- Local development prints messages to the console; it does not send real email
 
 ### Form Not Validating
 - Check Django version compatibility

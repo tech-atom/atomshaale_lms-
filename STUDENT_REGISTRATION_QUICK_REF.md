@@ -140,16 +140,8 @@ All required models already exist. Just add form & views to existing apps.
 
 ## Configuration Needed
 
-### 1. Email Settings (settings.py)
-```python
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'  # or your provider
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = 'your-email@example.com'
-EMAIL_HOST_PASSWORD = 'app-password'
-DEFAULT_FROM_EMAIL = 'noreply@atommlms.com'
-```
+### 1. Email Settings
+Local development uses the console backend. Production uses Amazon SES SMTP credentials in `.env.production`; verification messages are queued to Celery. Follow [PRODUCTION_DEPLOYMENT.md](./PRODUCTION_DEPLOYMENT.md) for the sender identity, quota, and rate setup.
 
 ### 2. Ensure Admin Data Exists
 In Django admin, add:
