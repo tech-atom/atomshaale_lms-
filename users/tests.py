@@ -174,7 +174,7 @@ class StudentRegistrationFormTest(TestCase):
             'section': self.section.name,
             'semester': 4,
             'year': 2,
-            'batch_year': 2024
+            'batch_year': datetime.now().year
         }
         form = StudentRegistrationForm(data=form_data)
         form.is_valid()
@@ -192,7 +192,7 @@ class StudentRegistrationFormTest(TestCase):
             'section': self.section.name,
             'semester': 4,
             'year': 2,
-            'batch_year': 2024
+            'batch_year': datetime.now().year
         }
         form = StudentRegistrationForm(data=form_data)
         form.is_valid()
@@ -211,7 +211,7 @@ class StudentRegistrationFormTest(TestCase):
             'section': self.section.name,
             'semester': 4,
             'year': 2,
-            'batch_year': 2024,
+            'batch_year': datetime.now().year,
         }
         form = StudentRegistrationForm(data=form_data)
         self.assertTrue(form.is_valid(), form.errors)
@@ -237,12 +237,43 @@ class StudentRegistrationFormTest(TestCase):
             'section': self.section.name,
             'semester': 4,
             'year': 2,
-            'batch_year': 2024
+            'batch_year': datetime.now().year
         }
         form = StudentRegistrationForm(data=form_data)
         form.is_valid()
         self.assertIn('first_name', form.errors)
         self.assertEqual(form.errors['first_name'][0], "Name must contain only alphabetic characters and spaces.")
+
+    def test_passout_year_choices_exclude_past_years(self):
+        current_year = datetime.now().year
+        form = StudentRegistrationForm()
+        choices = [val for val, _ in form.fields['batch_year'].widget.choices]
+        self.assertEqual(choices[0], current_year)
+        self.assertNotIn(current_year - 1, choices)
+        self.assertNotIn(2020, choices)
+        self.assertNotIn(2025, choices)
+        # Should include current year and subsequent 5 years (6 total)
+        self.assertEqual(choices, list(range(current_year, current_year + 6)))
+
+    def test_passout_year_rejects_past_years(self):
+        current_year = datetime.now().year
+        form_data = {
+            'email': 'pastyear@gmail.com',
+            'first_name': 'Past Year Student',
+            'mobile_number': '+919876543210',
+            'gender': 'Male',
+            'usn': 'PASTYEAR01',
+            'college': self.college.id,
+            'course': self.course.id,
+            'section': self.section.name,
+            'semester': 4,
+            'year': 2,
+            'batch_year': current_year - 1
+        }
+        form = StudentRegistrationForm(data=form_data)
+        self.assertFalse(form.is_valid())
+        self.assertIn('batch_year', form.errors)
+        self.assertIn(f"minimum {current_year}", form.errors['batch_year'][0])
 
 @override_settings(SECURE_SSL_REDIRECT=False)
 class ResendVerificationEmailTests(TestCase):

@@ -85,6 +85,16 @@ class CustomSetPasswordForm(SetPasswordForm):
         return password
 
 
+def get_passout_year_choices(years_ahead=6):
+    """
+    Returns dynamic choices for Passed Out Year starting from the current year
+    and projecting forward (e.g. 2026 to 2031).
+    Excludes past years and automatically rolls forward on Jan 1st each year.
+    """
+    current_year = datetime.date.today().year
+    return [(y, str(y)) for y in range(current_year, current_year + years_ahead)]
+
+
 class StudentRegistrationForm(forms.Form):
     # User Fields
     email = forms.EmailField(
@@ -170,13 +180,12 @@ class StudentRegistrationForm(forms.Form):
     )
     batch_year = forms.IntegerField(
         required=True,
-        label='Batch Year',
-        help_text='Academic intake year (e.g. 2024, 2025)',
+        label='Passed Out Year',
+        help_text='Year of passing out / graduation',
         widget=forms.Select(
-            choices=[(y, str(y)) for y in range(2021, datetime.date.today().year + 2)],
+            choices=get_passout_year_choices,
             attrs={'class': 'form-control'}
-        ),
-        initial=datetime.date.today().year
+        )
     )
 
     def __init__(self, *args, **kwargs):
@@ -188,9 +197,22 @@ class StudentRegistrationForm(forms.Form):
         self.fields['course'].queryset = Course.objects.all()
         self.fields['section'].queryset = Section.objects.all()
 
+        # Dynamic passout year choices starting strictly from current year forward
+        current_year = datetime.date.today().year
+        self.fields['batch_year'].widget.choices = get_passout_year_choices()
+        if not self.is_bound and not self.initial.get('batch_year'):
+            self.fields['batch_year'].initial = current_year
+
         # Make all fields required
         for field_name, field in self.fields.items():
             field.required = True
+
+    def clean_batch_year(self):
+        batch_year = self.cleaned_data.get('batch_year')
+        current_year = datetime.date.today().year
+        if batch_year is not None and batch_year < current_year:
+            raise forms.ValidationError(f"Passed out year cannot be in the past (minimum {current_year}).")
+        return batch_year
 
     def clean_email(self):
         email = self.cleaned_data.get('email')

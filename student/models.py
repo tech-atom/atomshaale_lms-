@@ -21,7 +21,7 @@ class StudentProfile(models.Model):
     batch_year = models.IntegerField(
         default=datetime.date.today().year,
         db_index=True,
-        help_text="Academic intake year (e.g. 2024, 2025). Used to separate batches for pause/resume."
+        help_text="Passed out / graduation year (e.g. 2025, 2026). Used to separate batches for pause/resume."
     )
     resume = models.FileField(upload_to='resumes/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

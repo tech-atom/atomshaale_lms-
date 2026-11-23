@@ -1,4 +1,5 @@
 import pandas as pd
+import datetime
 from django import forms
 from django.db import transaction
 from django.core.exceptions import ValidationError
@@ -328,6 +329,19 @@ class TpoRegistrationForm(BootstrapFormMixin,forms.ModelForm):
 # ──────────────────────────────────────────────────────────────────────────────
 # Student Editing Form
 # ──────────────────────────────────────────────────────────────────────────────
+def get_passout_year_choices(student_batch_year=None, years_ahead=6):
+    """
+    Returns choices for Passed Out Year starting from current year forward.
+    If editing an existing student whose batch year is in the past, includes that
+    year as the lower bound so existing profile data remains valid.
+    """
+    current_year = datetime.date.today().year
+    start_year = current_year
+    if student_batch_year and student_batch_year < current_year:
+        start_year = student_batch_year
+    return [(y, str(y)) for y in range(start_year, current_year + years_ahead)]
+
+
 class StudentEditForm(BootstrapFormMixin, forms.ModelForm):
     usn        = forms.CharField(max_length=20)
     college    = forms.ModelChoiceField(queryset=College.objects.all())
@@ -335,7 +349,11 @@ class StudentEditForm(BootstrapFormMixin, forms.ModelForm):
     section    = forms.ModelChoiceField(queryset=Section.objects.all())
     semester   = forms.ChoiceField(choices=[(i, i) for i in range(1, 13)])
     year       = forms.ChoiceField(choices=[(i, i) for i in range(1, 6)])
-    batch_year = forms.IntegerField()
+    batch_year = forms.IntegerField(
+        label='Passed Out Year',
+        help_text='Year of passing out / graduation (e.g. 2026, 2027)',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
 
     class Meta:
         model  = User
@@ -344,6 +362,8 @@ class StudentEditForm(BootstrapFormMixin, forms.ModelForm):
     def __init__(self, *args, student_profile=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.student_profile = student_profile
+        existing_batch_year = student_profile.batch_year if student_profile else None
+        self.fields['batch_year'].widget.choices = get_passout_year_choices(existing_batch_year)
         if student_profile:
             self.fields['usn'].initial = student_profile.usn
             self.fields['college'].initial = student_profile.college

@@ -54,16 +54,16 @@ class StudentGroupAccess(models.Model):
     (College + Year + Semester + Section + Course + BatchYear)
     is paused or active. When paused, students in that batch cannot log in.
 
-    batch_year: the academic intake year (e.g. 2024, 2025).
-    Each intake year is an independent batch, so pausing Batch 2024
-    never affects Batch 2025 students in the same slot.
+    batch_year: the passed out / graduation year (e.g. 2025, 2026).
+    Each passout year is an independent batch, so pausing Batch 2025
+    never affects Batch 2026 students in the same slot.
     """
     college    = models.ForeignKey(College, on_delete=models.CASCADE, related_name='group_access')
     year       = models.IntegerField()
     semester   = models.IntegerField()
     section    = models.ForeignKey(Section, on_delete=models.CASCADE)
     course     = models.ForeignKey(Course, on_delete=models.CASCADE)
-    batch_year = models.IntegerField(default=2024)  # academic intake year
+    batch_year = models.IntegerField(default=2024)  # passed out year
     is_paused  = models.BooleanField(default=False)
     paused_at  = models.DateTimeField(null=True, blank=True)
     paused_by  = models.CharField(max_length=150, null=True, blank=True)
