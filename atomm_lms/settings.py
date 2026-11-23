@@ -16,7 +16,6 @@ import os
 from csp.constants import NONCE
 from django.core.exceptions import ImproperlyConfigured, ValidationError
 from django.core.validators import validate_email
-from email.utils import parseaddr
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 # Initialise environment variables
@@ -214,7 +213,7 @@ STATIC_ROOT = BASE_DIR / "staticfiles"  # Directory where static files will be c
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# Email Configuration - Production Ready
+#for development using default email
 EMAIL_BACKEND = env(
     'EMAIL_BACKEND',
     default='django.core.mail.backends.console.EmailBackend' if DEBUG else 'django.core.mail.backends.smtp.EmailBackend',
@@ -223,18 +222,13 @@ EMAIL_HOST = env('EMAIL_HOST', default='')
 EMAIL_PORT = env.int('EMAIL_PORT', default=587)
 EMAIL_HOST_USER = env('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD', default='')
-EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=(EMAIL_PORT == 587))
-EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL', default=(EMAIL_PORT == 465))
+EMAIL_USE_TLS = env.bool('EMAIL_USE_TLS', default=False)
+EMAIL_USE_SSL = env.bool('EMAIL_USE_SSL', default=False)
 EMAIL_TIMEOUT = env.int('EMAIL_TIMEOUT', default=20)
 DEFAULT_FROM_EMAIL = env(
     'DEFAULT_FROM_EMAIL',
-    default=f'AtomShaale <{EMAIL_HOST_USER}>' if EMAIL_HOST_USER else 'AtomShaale <noreply@atomshaale.com>',
+    default=EMAIL_HOST_USER or 'webmaster@localhost',
 )
-SERVER_EMAIL = env(
-    'SERVER_EMAIL',
-    default=EMAIL_HOST_USER or 'noreply@atomshaale.com',
-)
-EMAIL_SUBJECT_PREFIX = env('EMAIL_SUBJECT_PREFIX', default='[AtomShaale] ')
 VERIFICATION_RESEND_IP_RATE = env('VERIFICATION_RESEND_IP_RATE', default='10/h')
 VERIFICATION_RESEND_EMAIL_RATE = env('VERIFICATION_RESEND_EMAIL_RATE', default='3/h')
 PASSWORD_RESET_TIMEOUT = env.int('PASSWORD_RESET_TIMEOUT', default=86400)
@@ -256,16 +250,9 @@ if EMAIL_BACKEND == 'django.core.mail.backends.smtp.EmailBackend':
             'EMAIL_HOST_USER and EMAIL_HOST_PASSWORD must either both be set or both be empty.'
         )
     try:
-        _, from_email_addr = parseaddr(DEFAULT_FROM_EMAIL)
-        validate_email(from_email_addr or DEFAULT_FROM_EMAIL)
+        validate_email(DEFAULT_FROM_EMAIL)
     except ValidationError as exc:
-        raise ImproperlyConfigured('DEFAULT_FROM_EMAIL must contain a valid email address.') from exc
-    try:
-        _, server_email_addr = parseaddr(SERVER_EMAIL)
-        if server_email_addr:
-            validate_email(server_email_addr)
-    except ValidationError as exc:
-        raise ImproperlyConfigured('SERVER_EMAIL must contain a valid email address.') from exc
+        raise ImproperlyConfigured('DEFAULT_FROM_EMAIL must be a valid email address.') from exc
 
 
 
