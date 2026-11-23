@@ -737,7 +737,7 @@ class BulkRegistrationEmailTests(TransactionTestCase):
             is_verified=False,
         )
 
-        with patch('users.tasks.send_verification_email_message') as deliver:
+        with patch('users.utils.send_mail', return_value=1) as send_mail_mock:
             self.assertTrue(
                 send_verification_email_task.run(
                     user.pk,
@@ -747,6 +747,9 @@ class BulkRegistrationEmailTests(TransactionTestCase):
                 )
             )
 
-        verify_url = deliver.call_args.args[1]
-        self.assertTrue(verify_url.startswith('https://lms.example.com/'))
-        self.assertIn('/verify/', verify_url)
+        message = send_mail_mock.call_args.args[1]
+        self.assertIn('https://lms.example.com/', message)
+        self.assertIn('/verify/', message)
+        user.refresh_from_db()
+        self.assertTrue(user.email_sent)
+        self.assertIsNotNone(user.email_sent_at)

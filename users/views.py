@@ -206,10 +206,13 @@ def email_verify(request, uidb64, token):
         if request.method == 'POST':
             form = _style_set_password_form(CustomSetPasswordForm(user, request.POST))
             if form.is_valid():
+                from django.utils import timezone
                 form.save()
                 user.is_active = True
                 user.is_verified = True
-                user.save()
+                user.email_sent = True
+                user.password_set_at = timezone.now()
+                user.save(update_fields=['is_active', 'is_verified', 'email_sent', 'password_set_at'])
                 messages.success(request, "Your account is verified! You may now log in.")
                 return redirect('login')
             messages.error(request, "Please fix password issues and try again.")

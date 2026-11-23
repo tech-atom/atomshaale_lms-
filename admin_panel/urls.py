@@ -90,7 +90,9 @@ path("admin/api/colleges/", views.admin_college_list_api, name="admin_college_li
 path("trainer-reports/export/", views.export_trainer_reports_excel, name="export_trainer_reports_excel"),
     path('api/trainers/', views.trainer_list_api, name='trainer_list_api'),
 
-    # Student edit and delete URLs
+    # Student edit, delete, and verification URLs
     path("admin/student/<uuid:student_id>/edit/", views.admin_edit_student, name="admin_edit_student"),
     path("admin/student/<uuid:student_id>/delete/", views.admin_delete_student, name="admin_delete_student"),
+    path("admin/student/<uuid:student_id>/resend-email/", views.admin_resend_student_email, name="admin_resend_student_email"),
+    path("admin/student/<uuid:student_id>/get-verification-link/", views.admin_get_student_verification_link, name="admin_get_student_verification_link"),
 ]

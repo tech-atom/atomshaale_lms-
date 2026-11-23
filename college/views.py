@@ -1,5 +1,7 @@
-from django.shortcuts import get_object_or_404, render
+from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib import messages
+from django.urls import reverse
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
@@ -508,7 +510,7 @@ def college_students_list(request, college_id, year, semester, section, course, 
 
     college = get_object_or_404(College, id=college_id)
 
-    students = (
+    students = list(
         StudentProfile.objects
         .select_related("user", "course", "section")
         .filter(
@@ -522,6 +524,11 @@ def college_students_list(request, college_id, year, semester, section, course, 
         )
     )
 
+    total_count = len(students)
+    emails_sent_count = sum(1 for s in students if s.user.is_mail_sent)
+    passwords_set_count = sum(1 for s in students if s.user.is_password_set)
+    pending_count = total_count - passwords_set_count
+
     return render(
         request,
         "admin_student_list.html",
@@ -529,8 +536,67 @@ def college_students_list(request, college_id, year, semester, section, course, 
             "students": students,
             "college": college,
             "batch_year": batch_year,
+            "year": year,
+            "semester": semester,
+            "section": section,
+            "course": course,
+            "total_count": total_count,
+            "emails_sent_count": emails_sent_count,
+            "passwords_set_count": passwords_set_count,
+            "pending_count": pending_count,
         }
     )
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def college_resend_batch_pending_emails(request, college_id, year, semester, section, course, batch_year):
+    from users.utils import send_verification_email_on_commit
+    college = get_object_or_404(College, id=college_id)
+
+    students = list(
+        StudentProfile.objects
+        .select_related("user")
+        .filter(
+            college=college,
+            year=year,
+            semester=semester,
+            section__name=section,
+            course__name=course,
+            batch_year=batch_year,
+            is_current=True,
+        )
+    )
+
+    pending_students = [s for s in students if not s.user.is_password_set]
+
+    if not pending_students:
+        messages.info(request, "All students in this batch have already verified their accounts and set passwords.")
+    else:
+        submitted_count = 0
+        fail_count = 0
+        for s in pending_students:
+            if send_verification_email_on_commit(request, s.user) is False:
+                fail_count += 1
+            else:
+                submitted_count += 1
+
+        if submitted_count > 0:
+            messages.success(request, f"Submitted verification emails for {submitted_count} pending student(s) using the configured email backend.")
+        if fail_count > 0:
+            messages.error(request, f"Could not queue or send verification emails for {fail_count} student(s). Please check the email worker, broker, and provider logs.")
+
+    next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or reverse('college_students_list', kwargs={
+        'college_id': college_id,
+        'year': year,
+        'semester': semester,
+        'section': section,
+        'course': course,
+        'batch_year': batch_year,
+    })
+    return redirect(next_url)
+
 
 
 @login_required

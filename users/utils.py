@@ -9,6 +9,7 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.urls import reverse
 from django.db import transaction
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
 
@@ -40,6 +41,9 @@ def send_verification_email_message(user, verify_url):
     )
     if sent_count != 1:
         raise RuntimeError("The configured email backend did not accept the verification email.")
+    user.email_sent = True
+    user.email_sent_at = timezone.now()
+    user.save(update_fields=['email_sent', 'email_sent_at'])
 
 
 def send_verification_email(request, user):
