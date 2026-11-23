@@ -320,30 +320,42 @@ def admin_registration(request):
                 elif email_sent is False:
                     messages.warning(request, "Student created, but the verification email could not be sent. Check the SMTP configuration and server logs.")
                 else:
-                    messages.success(request, "Student created; verification email will be attempted after the account transaction commits. The recipient can request another email from login.")
+                    messages.success(request, "Student created; verification email queued for delivery.")
                 return redirect('admin_registration')
 
         elif 'student_bulk' in request.POST:
             bulk_form = BulkStudentUploadForm(request.POST, request.FILES)
             if bulk_form.is_valid():
-                created, failed, email_failed = bulk_form.process(request)
+                created, failed, email_queued, email_failed = bulk_form.process(request)
 
                 if created:
                     messages.success(
                         request,
-                        f"Processed {len(created)} rows; student accounts/profiles created for {', '.join(created)}."
+                        f"Student accounts/profiles created for {len(created)} rows."
                     )
 
-                for err in failed:
+                for err in failed[:10]:
                     messages.error(
                         request,
                         f"Row {err['row']} ({err['email']}): {err['error']}"
                     )
 
+                if len(failed) > 10:
+                    messages.error(
+                        request,
+                        f"{len(failed) - 10} additional rows failed. Review the upload and logs for details."
+                    )
+
+                if email_queued:
+                    messages.info(
+                        request,
+                        f"Queued verification emails for {email_queued} new students. Delivery will continue in the background."
+                    )
+
                 if email_failed:
                     messages.warning(
                         request,
-                        f"Verification emails could not be sent to: {', '.join(email_failed)}. Check the SMTP configuration and server logs."
+                        f"Could not queue verification emails for {len(email_failed)} students. First affected addresses: {', '.join(email_failed[:10])}. Check the email worker and broker logs."
                     )
 
                 return redirect('admin_registration')
@@ -357,7 +369,7 @@ def admin_registration(request):
                 elif email_sent is False:
                     messages.warning(request, "Trainer created, but the verification email could not be sent. Check the SMTP configuration and server logs.")
                 else:
-                    messages.success(request, "Trainer created; verification email will be attempted after the account transaction commits. The recipient can request another email from login.")
+                    messages.success(request, "Trainer created; verification email queued for delivery.")
                 return redirect('admin_registration')
 
         elif 'tpo' in request.POST:
@@ -369,7 +381,7 @@ def admin_registration(request):
                 elif email_sent is False:
                     messages.warning(request, "TPO created, but the verification email could not be sent. Check the SMTP configuration and server logs.")
                 else:
-                    messages.success(request, "TPO created; verification email will be attempted after the account transaction commits. The recipient can request another email from login.")
+                    messages.success(request, "TPO created; verification email queued for delivery.")
                 return redirect('admin_registration')
 
     return render(request, 'admin_registration.html', {

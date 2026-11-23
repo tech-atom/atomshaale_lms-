@@ -38,7 +38,7 @@ services:
       REDIS_URL: redis://redis:6379/0
       CELERY_BROKER_URL: redis://redis:6379/1
       CELERY_RESULT_BACKEND: redis://redis:6379/2
-    command: celery -A atomm_lms worker --loglevel=INFO --queues=email_queue --concurrency=${EMAIL_WORKERS:-2} --max-tasks-per-child=100
+    command: celery -A atomm_lms worker --loglevel=INFO --queues=email_queue --concurrency=${EMAIL_WORKERS:-4} --max-tasks-per-child=100
     depends_on:
       redis:
         condition: service_healthy

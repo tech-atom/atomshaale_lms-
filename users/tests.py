@@ -20,6 +20,7 @@ from users.utils import (
     send_verification_email,
     send_verification_email_on_commit,
 )
+from users.tasks import send_verification_email_task
 from college.models import (
     College,
     CollegeCourse,
@@ -652,11 +653,12 @@ class BulkRegistrationEmailTests(TransactionTestCase):
                 side_effect=[False, True],
             ),
         ):
-            created, failed, email_failed = bulk_form.process(
+            created, failed, email_queued, email_failed = bulk_form.process(
                 RequestFactory().post('/admin-panel/register/', HTTP_HOST='testserver')
             )
 
         self.assertEqual(created, ['first@example.com', 'last@example.com'])
+        self.assertEqual(email_queued, 1)
         self.assertEqual(failed[0]['email'], 'not-an-email')
         self.assertEqual(failed[0]['error'], 'Invalid email address')
         self.assertEqual(email_failed, ['first@example.com'])
@@ -685,3 +687,69 @@ class BulkRegistrationEmailTests(TransactionTestCase):
             self.assertEqual(len(mail.outbox), 0)
 
         self.assertEqual(len(mail.outbox), 1)
+
+    @override_settings(
+        EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend',
+        DEFAULT_FROM_EMAIL='noreply@example.com',
+    )
+    def test_smtp_verification_is_queued_only_after_account_commit(self):
+        user = User.objects.create_user(
+            email='queued@example.com',
+            password=None,
+            first_name='Queued Student',
+            role='student',
+            mobile_number='+919876543210',
+            gender='NA',
+            is_active=False,
+            is_verified=False,
+        )
+        request = RequestFactory().get(
+            '/register/',
+            HTTP_HOST='lms.example.com',
+            secure=True,
+        )
+
+        with (
+            override_settings(ALLOWED_HOSTS=['lms.example.com']),
+            patch('users.tasks.send_verification_email_task.apply_async') as apply_async,
+        ):
+            with transaction.atomic():
+                result = send_verification_email_on_commit(request, user)
+                self.assertIsNone(result)
+                apply_async.assert_not_called()
+
+            apply_async.assert_called_once()
+            queued_user_id, base_url, uidb64, token = apply_async.call_args.kwargs['args']
+            self.assertEqual(queued_user_id, user.pk)
+            self.assertEqual(base_url, 'https://lms.example.com/')
+            self.assertTrue(default_token_generator.check_token(user, token))
+
+    @override_settings(DEFAULT_FROM_EMAIL='noreply@example.com')
+    def test_verification_task_generates_link_from_public_base_url(self):
+        user = User.objects.create_user(
+            email='task@example.com',
+            password=None,
+            first_name='Task Student',
+            role='student',
+            mobile_number='+919876543210',
+            gender='NA',
+            is_active=False,
+            is_verified=False,
+        )
+
+        with patch('users.utils.send_mail', return_value=1) as send_mail_mock:
+            self.assertTrue(
+                send_verification_email_task.run(
+                    user.pk,
+                    'https://lms.example.com/',
+                    urlsafe_base64_encode(force_bytes(user.pk)),
+                    default_token_generator.make_token(user),
+                )
+            )
+
+        message = send_mail_mock.call_args.args[1]
+        self.assertIn('https://lms.example.com/', message)
+        self.assertIn('/verify/', message)
+        user.refresh_from_db()
+        self.assertTrue(user.email_sent)
+        self.assertIsNotNone(user.email_sent_at)

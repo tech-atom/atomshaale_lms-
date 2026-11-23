@@ -1,5 +1,6 @@
 # users/utils.py
 import logging
+from urllib.parse import urljoin
 
 from django.conf import settings
 from django.core.mail import send_mail
@@ -8,43 +9,52 @@ from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.urls import reverse
 from django.db import transaction
+from django.utils import timezone
 
 logger = logging.getLogger(__name__)
+
+
+def send_verification_email_message(user, verify_url):
+    subject = "Welcome to AtomShaale - Complete your registration"
+    learner_name = user.get_full_name() or user.first_name or "Learner"
+    message = (
+        f"Hi {learner_name},\n\n"
+        "We are pleased to welcome you to AtomShaale, your digital learning companion powered by Atom.\n\n"
+        "To complete your registration, please verify your email address and set your password by clicking the link below.\n\n"
+        f"{verify_url}\n\n"
+        "You are now logged into our Learning Management System, where you can:\n\n"
+        "Access your courses and study materials\n"
+        "Appear for exams, view results, and track your progress\n\n"
+        "We encourage you to explore the platform, stay organized, and make the most of your learning journey.\n\n"
+        "For any assistance or queries, please reach out to your College Management.\n\n"
+        "We wish you a successful and enriching learning experience.\n\n"
+        "If you have not registered or believe this message was sent to you by mistake, please feel free to ignore it.\n\n"
+        "Regards,\n"
+        "The AtomShaale Team"
+    )
+    sent_count = send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,
+        [user.email],
+        fail_silently=False,
+    )
+    if sent_count != 1:
+        raise RuntimeError("The configured email backend did not accept the verification email.")
+    user.email_sent = True
+    user.email_sent_at = timezone.now()
+    user.save(update_fields=['email_sent', 'email_sent_at'])
 
 
 def send_verification_email(request, user):
     try:
         uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
         token = default_token_generator.make_token(user)
-        verify_url = request.build_absolute_uri(
-            reverse('email_verify', kwargs={'uidb64': uidb64, 'token': token})
+        verify_url = urljoin(
+            request.build_absolute_uri('/'),
+            reverse('email_verify', kwargs={'uidb64': uidb64, 'token': token}),
         )
-        subject = "Welcome to AtomShaale - Complete your registration"
-        learner_name = user.get_full_name() or user.first_name or "Learner"
-        message = (
-            f"Hi {learner_name},\n\n"
-            "We are pleased to welcome you to AtomShaale, your digital learning companion powered by Atom.\n\n"
-            "To complete your registration, please verify your email address and set your password by clicking the link below.\n\n"
-            f"{verify_url}\n\n"
-            "You are now logged into our Learning Management System, where you can:\n\n"
-            "Access your courses and study materials\n"
-            "Appear for exams, view results, and track your progress\n\n"
-            "We encourage you to explore the platform, stay organized, and make the most of your learning journey.\n\n"
-            "For any assistance or queries, please reach out to your College Management.\n\n"
-            "We wish you a successful and enriching learning experience.\n\n"
-            "If you have not registered or believe this message was sent to you by mistake, please feel free to ignore it.\n\n"
-            "Regards,\n"
-            "The AtomShaale Team"
-        )
-        sent_count = send_mail(subject, message, settings.DEFAULT_FROM_EMAIL, [user.email])
-        if sent_count != 1:
-            logger.error("Verification email was not accepted by the configured backend for %s", user.email)
-            return False
-
-        from django.utils import timezone
-        user.email_sent = True
-        user.email_sent_at = timezone.now()
-        user.save(update_fields=['email_sent', 'email_sent_at'])
+        send_verification_email_message(user, verify_url)
         return True
     except Exception as exc:
         logger.exception("Verification email failed for %s: %s", user.email, exc)
@@ -53,9 +63,30 @@ def send_verification_email(request, user):
 
 def send_verification_email_on_commit(request, user):
     delivery_results = []
-    transaction.on_commit(
-        lambda: delivery_results.append(send_verification_email(request, user))
-    )
+    base_url = request.build_absolute_uri('/')
+    uidb64 = urlsafe_base64_encode(force_bytes(user.pk))
+    token = default_token_generator.make_token(user)
+
+    def deliver_after_commit():
+        if settings.EMAIL_BACKEND != 'django.core.mail.backends.smtp.EmailBackend':
+            delivery_results.append(send_verification_email(request, user))
+            return
+
+        try:
+            from .tasks import send_verification_email_task
+
+            result = send_verification_email_task.apply_async(
+                args=[user.pk, base_url, uidb64, token]
+            )
+            delivery_results.append(result.id)
+        except Exception:
+            logger.exception(
+                "Could not queue verification email for user id %s",
+                user.pk,
+            )
+            delivery_results.append(False)
+
+    transaction.on_commit(deliver_after_commit)
     return delivery_results[0] if delivery_results else None
 
 

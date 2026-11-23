@@ -552,7 +552,7 @@ def college_students_list(request, college_id, year, semester, section, course, 
 @user_passes_test(is_admin)
 @require_POST
 def college_resend_batch_pending_emails(request, college_id, year, semester, section, course, batch_year):
-    from users.utils import send_verification_email
+    from users.utils import send_verification_email_on_commit
     college = get_object_or_404(College, id=college_id)
 
     students = list(
@@ -574,18 +574,18 @@ def college_resend_batch_pending_emails(request, college_id, year, semester, sec
     if not pending_students:
         messages.info(request, "All students in this batch have already verified their accounts and set passwords.")
     else:
-        success_count = 0
+        submitted_count = 0
         fail_count = 0
         for s in pending_students:
-            if send_verification_email(request, s.user):
-                success_count += 1
-            else:
+            if send_verification_email_on_commit(request, s.user) is False:
                 fail_count += 1
+            else:
+                submitted_count += 1
 
-        if success_count > 0:
-            messages.success(request, f"Successfully resent verification emails to {success_count} pending student(s).")
+        if submitted_count > 0:
+            messages.success(request, f"Submitted verification emails for {submitted_count} pending student(s) using the configured email backend.")
         if fail_count > 0:
-            messages.error(request, f"Failed to send verification emails to {fail_count} student(s). Please verify SMTP settings.")
+            messages.error(request, f"Could not queue or send verification emails for {fail_count} student(s). Please check the email worker, broker, and provider logs.")
 
     next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or reverse('college_students_list', kwargs={
         'college_id': college_id,
