@@ -34,10 +34,20 @@ urlpatterns = [
     ),
 
     path(
-    "college/<uuid:college_id>/students/",
-    views.college_students_page,
-    name="college_student_page"
-),
+        "college/<uuid:college_id>/students/",
+        views.college_students_page,
+        name="college_student_page"
+    ),
+    path(
+        "college/<uuid:college_id>/students/export-tracksheet/",
+        views.college_export_student_tracksheet,
+        name="college_export_student_tracksheet"
+    ),
+    path(
+        "college/<uuid:college_id>/students/resend-all-pending/",
+        views.college_resend_all_pending_emails,
+        name="college_resend_all_pending_emails"
+    ),
 
 path(
     "college/<uuid:college_id>/students/<int:year>/<int:semester>/<str:section>/<str:course>/<int:batch_year>/",

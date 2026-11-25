@@ -4,24 +4,413 @@
 {% block extra_head %}
 <!-- FontAwesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="{% static 'css/admin_collegestudents.css' %}?v=2.0">
+<link rel="stylesheet" href="{% static 'css/admin_collegestudents.css' %}?v=3.0">
 {% endblock %}
 
 {% block content %}
 
 <div class="college-students-wrapper">
 
+  <!-- Page Header -->
   <div class="page-header">
     <div class="header-titles">
       <h1>{{ college.name }}</h1>
-      <p class="subtitle-text"><i class="fa-solid fa-layer-group"></i> Manage Student Batches & System Access</p>
+      <p class="subtitle-text">
+        <i class="fa-solid fa-chart-line"></i> Student Registration Dashboard &amp; Live Track Sheet
+      </p>
     </div>
-    <a href="{% url 'admin_college' %}" class="back-btn">
-      <i class="fa-solid fa-arrow-left"></i> Back to Colleges
+    
+    <div class="header-actions">
+      <!-- Export Track Sheet CSV -->
+      <a href="{% url 'college_export_student_tracksheet' college.id %}?{{ pagination_params }}" 
+         class="btn-export" 
+         title="Download filtered track sheet as CSV spreadsheet">
+        <i class="fa-solid fa-file-csv"></i> Export Track Sheet (CSV)
+      </a>
+
+      <!-- Resend to all pending students if any exist -->
+      {% if pending_count > 0 %}
+        <form action="{% url 'college_resend_all_pending_emails' college.id %}" method="post" style="display:inline;" 
+              onsubmit="return confirm('Are you sure you want to resend verification emails to all {{ pending_count }} pending student(s) in this college?');">
+          {% csrf_token %}
+          <input type="hidden" name="next" value="{{ request.get_full_path }}">
+          <button type="submit" class="btn-warning-resend" title="Resend verification email to all unverified students in this college">
+            <i class="fa-solid fa-paper-plane"></i> Resend to All Pending ({{ pending_count }})
+          </button>
+        </form>
+      {% else %}
+        <span class="btn-all-verified" title="All students in this college have set their passwords">
+          <i class="fa-solid fa-circle-check"></i> All Passwords Set
+        </span>
+      {% endif %}
+
+      <a href="{% url 'admin_college' %}" class="back-btn">
+        <i class="fa-solid fa-arrow-left"></i> Back to Colleges
+      </a>
+    </div>
+  </div>
+
+  <!-- Flash Messages -->
+  {% if messages %}
+  <div class="messages-container">
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }}">
+        <i class="fa-solid {% if message.tags == 'success' %}fa-circle-check{% elif message.tags == 'error' %}fa-circle-xmark{% else %}fa-circle-info{% endif %}"></i>
+        <span>{{ message }}</span>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <!-- Student Registration & Activity Dashboard Grid -->
+  <div class="student-stats-grid">
+    <!-- Total Students -->
+    <div class="stat-card stat-total">
+      <div class="stat-icon"><i class="fa-solid fa-users"></i></div>
+      <div class="stat-content">
+        <span class="stat-number">{{ total_count }}</span>
+        <span class="stat-label">Total Registered Students</span>
+      </div>
+    </div>
+
+    <!-- Registered Today (High-Volume Daily Metric) -->
+    <div class="stat-card stat-today">
+      <div class="stat-icon"><i class="fa-solid fa-calendar-day"></i></div>
+      <div class="stat-content">
+        <div class="stat-number-row">
+          <span class="stat-number">{{ today_count }}</span>
+          <span class="stat-pill">Today</span>
+        </div>
+        <span class="stat-label">Registered Today</span>
+      </div>
+    </div>
+
+    <!-- Mails Sent -->
+    <div class="stat-card stat-mail">
+      <div class="stat-icon"><i class="fa-solid fa-envelope-circle-check"></i></div>
+      <div class="stat-content">
+        <span class="stat-number">{{ emails_sent_count }}</span>
+        <span class="stat-label">Verification Mails Sent</span>
+      </div>
+    </div>
+
+    <!-- Passwords Set / Active -->
+    <div class="stat-card stat-password">
+      <div class="stat-icon"><i class="fa-solid fa-key"></i></div>
+      <div class="stat-content">
+        <span class="stat-number">{{ passwords_set_count }}</span>
+        <span class="stat-label">Passwords Set / Active</span>
+      </div>
+    </div>
+
+    <!-- Pending Verification -->
+    <div class="stat-card stat-pending">
+      <div class="stat-icon"><i class="fa-solid fa-user-clock"></i></div>
+      <div class="stat-content">
+        <span class="stat-number">{{ pending_count }}</span>
+        <span class="stat-label">Pending Password Setup</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Navigation Tabs (Track Sheet vs Batches) -->
+  <div class="dashboard-tabs">
+    <a href="?tab=tracksheet{% if search_query %}&search={{ search_query|urlencode }}{% endif %}{% if date_filter %}&date_filter={{ date_filter }}{% endif %}{% if custom_date %}&custom_date={{ custom_date }}{% endif %}{% if status_filter %}&status_filter={{ status_filter }}{% endif %}{% if batch_year_filter %}&batch_year={{ batch_year_filter }}{% endif %}{% if course_filter %}&course={{ course_filter|urlencode }}{% endif %}" 
+       class="tab-btn {% if active_tab == 'tracksheet' %}active{% endif %}">
+      <i class="fa-solid fa-table-list"></i> Student Track Sheet 
+      <span class="tab-count">{{ page_obj.paginator.count }}</span>
+    </a>
+
+    <a href="?tab=batches" 
+       class="tab-btn {% if active_tab == 'batches' %}active{% endif %}">
+      <i class="fa-solid fa-layer-group"></i> Batches &amp; System Access 
+      <span class="tab-count">{{ groups|length }}</span>
     </a>
   </div>
 
-  <!-- Toast notification -->
+  <!-- ============================================================== -->
+  <!-- TAB 1: STUDENT TRACK SHEET                                     -->
+  <!-- ============================================================== -->
+  {% if active_tab == 'tracksheet' %}
+  
+  <!-- Filter & Search Controls Card -->
+  <div class="tracksheet-filter-card">
+    <form method="get" action="" class="filter-form" id="tracksheetFilterForm">
+      <input type="hidden" name="tab" value="tracksheet">
+      <input type="hidden" name="date_filter" id="dateFilterInput" value="{{ date_filter }}">
+
+      <!-- Search & Status Row -->
+      <div class="filter-row">
+        <!-- Search Input -->
+        <div class="search-box-wrapper">
+          <i class="fa-solid fa-magnifying-glass"></i>
+          <input type="text" name="search" class="search-input" 
+                 placeholder="Search by Name, USN, Email, Mobile..." 
+                 value="{{ search_query }}">
+        </div>
+
+        <!-- Status Filter -->
+        <select name="status_filter" class="filter-select">
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Statuses</option>
+          <option value="active" {% if status_filter == 'active' %}selected{% endif %}>Password Set / Active</option>
+          <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Password Setup</option>
+          <option value="email_sent" {% if status_filter == 'email_sent' %}selected{% endif %}>Email Sent</option>
+          <option value="email_pending" {% if status_filter == 'email_pending' %}selected{% endif %}>Email Pending</option>
+        </select>
+
+        <!-- Passout Year Filter -->
+        <select name="batch_year" class="filter-select">
+          <option value="" {% if not batch_year_filter %}selected{% endif %}>All Passout Years</option>
+          {% for y in available_batch_years %}
+            <option value="{{ y }}" {% if batch_year_filter == y|stringformat:"i" %}selected{% endif %}>Passout {{ y }}</option>
+          {% endfor %}
+        </select>
+
+        <!-- Course Filter -->
+        <select name="course" class="filter-select">
+          <option value="" {% if not course_filter %}selected{% endif %}>All Courses</option>
+          {% for c in available_courses %}
+            <option value="{{ c }}" {% if course_filter == c %}selected{% endif %}>{{ c }}</option>
+          {% endfor %}
+        </select>
+
+        <!-- Filter Submit & Reset Actions -->
+        <div class="filter-actions">
+          <button type="submit" class="btn-filter">
+            <i class="fa-solid fa-filter"></i> Filter
+          </button>
+          {% if search_query or date_filter != 'all' or status_filter != 'all' or batch_year_filter or course_filter %}
+            <a href="?tab=tracksheet" class="btn-clear" title="Reset all filters">
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </a>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Date Quick Filter Pills Row -->
+      <div class="filter-row">
+        <div class="date-pills-wrapper">
+          <span class="date-label"><i class="fa-regular fa-calendar"></i> Registration Date:</span>
+          
+          <button type="button" class="pill-btn {% if date_filter == 'all' %}active{% endif %}" 
+                  onclick="selectDateFilter('all')">All Dates</button>
+          
+          <button type="button" class="pill-btn {% if date_filter == 'today' %}active{% endif %}" 
+                  onclick="selectDateFilter('today')">Today</button>
+          
+          <button type="button" class="pill-btn {% if date_filter == 'yesterday' %}active{% endif %}" 
+                  onclick="selectDateFilter('yesterday')">Yesterday</button>
+          
+          <button type="button" class="pill-btn {% if date_filter == '7days' %}active{% endif %}" 
+                  onclick="selectDateFilter('7days')">Last 7 Days</button>
+          
+          <button type="button" class="pill-btn {% if date_filter == 'custom' %}active{% endif %}" 
+                  onclick="selectDateFilter('custom')">Custom Date</button>
+
+          <!-- Custom Date Input -->
+          <input type="date" name="custom_date" id="customDateInput" class="custom-date-input" 
+                 value="{{ custom_date }}" 
+                 style="display: {% if date_filter == 'custom' %}inline-block{% else %}none{% endif %};" 
+                 onchange="onCustomDateChange()">
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- Track Sheet Table Container -->
+  <div class="table-container">
+    <table class="track-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>USN</th>
+          <th>Student Details</th>
+          <th>Email Address</th>
+          <th>Course &amp; Batch</th>
+          <th>Registered Date &amp; Time</th>
+          <th>Mail Status</th>
+          <th>Password Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for s in page_obj %}
+        <tr>
+          <!-- # Row Counter -->
+          <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+
+          <!-- USN -->
+          <td><span class="usn-badge">{{ s.usn }}</span></td>
+
+          <!-- Student Name & Mobile -->
+          <td>
+            <div class="student-info-col">
+              <span class="student-full-name">
+                {{ s.user.get_full_name|default:s.user.first_name }}
+                {% if s.user.is_password_set %}
+                  <i class="fa-solid fa-circle-check verified-icon" title="Account verified and active"></i>
+                {% endif %}
+              </span>
+              {% if s.user.mobile_number %}
+                <span class="student-phone">
+                  <i class="fa-solid fa-phone"></i> {{ s.user.mobile_number }}
+                </span>
+              {% endif %}
+            </div>
+          </td>
+
+          <!-- Email -->
+          <td>{{ s.user.email }}</td>
+
+          <!-- Course & Batch Info -->
+          <td>
+            <div class="academic-info-col">
+              <div class="academic-tags">
+                {% if s.course %}<span class="badge badge-course">{{ s.course.name }}</span>{% endif %}
+                {% if s.section %}<span class="badge badge-section">Sec {{ s.section.name }}</span>{% endif %}
+              </div>
+              <span class="academic-subtext">
+                Year {{ s.year }} &bull; Sem {{ s.semester }} &bull; Passout {{ s.batch_year }}
+              </span>
+            </div>
+          </td>
+
+          <!-- Registered Date & Time -->
+          <td>
+            <div class="date-time-cell">
+              <span class="date-primary">{{ s.user.date_joined|date:"d M Y" }}</span>
+              <span class="time-secondary"><i class="fa-regular fa-clock"></i> {{ s.user.date_joined|date:"h:i A" }}</span>
+            </div>
+          </td>
+
+          <!-- Mail Status & Sent Timestamp -->
+          <td>
+            {% if s.user.is_mail_sent %}
+              <span class="badge-status-sent">
+                <i class="fa-solid fa-paper-plane"></i> Sent
+              </span>
+              {% if s.user.email_sent_at %}
+                <div class="status-time">{{ s.user.email_sent_at|date:"d M, h:i A" }}</div>
+              {% else %}
+                <div class="status-time">Sent</div>
+              {% endif %}
+            {% else %}
+              <span class="badge-status-pending">
+                <i class="fa-solid fa-clock"></i> Pending
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- Password Status & Set Timestamp -->
+          <td>
+            {% if s.user.is_password_set %}
+              <span class="badge-status-active">
+                <i class="fa-solid fa-lock"></i> Password Set
+              </span>
+              {% if s.user.password_set_at %}
+                <div class="status-time">{{ s.user.password_set_at|date:"d M, h:i A" }}</div>
+              {% else %}
+                <div class="status-time">Active</div>
+              {% endif %}
+            {% else %}
+              <span class="badge-status-unverified">
+                <i class="fa-solid fa-user-clock"></i> Pending Setup
+              </span>
+            {% endif %}
+          </td>
+
+          <!-- Action Buttons -->
+          <td>
+            <div class="actions-flex">
+              {% if not s.user.is_password_set %}
+                <!-- Resend Mail Form -->
+                <form action="{% url 'admin_resend_student_email' s.id %}" method="post" style="display:inline;">
+                  {% csrf_token %}
+                  <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                  <button type="submit" class="btn-action-resend" title="Resend verification email to {{ s.user.email }}">
+                    <i class="fa-solid fa-paper-plane"></i> Resend
+                  </button>
+                </form>
+
+                <!-- Copy Direct Verification Link -->
+                <button type="button" class="btn-action-copy" 
+                        data-student-id="{{ s.id }}" 
+                        onclick="copyVerificationLink(this)" 
+                        title="Copy direct verification link for this student">
+                  <i class="fa-solid fa-copy"></i> Link
+                </button>
+              {% else %}
+                <span class="badge-active-check" title="Student has verified email and set password">
+                  <i class="fa-solid fa-circle-check"></i> Ready
+                </span>
+              {% endif %}
+
+              <!-- Edit Student Profile -->
+              <a href="{% url 'admin_edit_student' s.id %}?next={{ request.get_full_path|urlencode }}" 
+                 class="btn-action-edit" 
+                 title="Edit student profile">
+                <i class="fa-solid fa-pen-to-square"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td colspan="9" class="empty-row">
+            <i class="fa-solid fa-users-slash empty-icon"></i>
+            <div>No registered students found matching your criteria.</div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination Controls (Optimized for 2k+ Daily Registrations) -->
+  {% if page_obj.paginator.num_pages > 1 %}
+  <div class="pagination-container">
+    <div class="pagination-info">
+      Showing {{ page_obj.start_index }} to {{ page_obj.end_index }} of {{ page_obj.paginator.count }} students
+    </div>
+
+    <div class="pagination-links">
+      {% if page_obj.has_previous %}
+        <a href="?page=1&{{ pagination_params }}" class="page-link" title="First Page">
+          <i class="fa-solid fa-angles-left"></i>
+        </a>
+        <a href="?page={{ page_obj.previous_page_number }}&{{ pagination_params }}" class="page-link" title="Previous Page">
+          <i class="fa-solid fa-angle-left"></i>
+        </a>
+      {% else %}
+        <span class="page-link disabled"><i class="fa-solid fa-angle-left"></i></span>
+      {% endif %}
+
+      <!-- Page Number Display -->
+      <span class="page-link active">{{ page_obj.number }}</span>
+      <span style="font-size: 0.85rem; color: var(--text-muted); font-weight: 600;">of {{ page_obj.paginator.num_pages }}</span>
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}&{{ pagination_params }}" class="page-link" title="Next Page">
+          <i class="fa-solid fa-angle-right"></i>
+        </a>
+        <a href="?page={{ page_obj.paginator.num_pages }}&{{ pagination_params }}" class="page-link" title="Last Page">
+          <i class="fa-solid fa-angles-right"></i>
+        </a>
+      {% else %}
+        <span class="page-link disabled"><i class="fa-solid fa-angle-right"></i></span>
+      {% endif %}
+    </div>
+  </div>
+  {% endif %}
+
+  {% endif %}
+
+  <!-- ============================================================== -->
+  <!-- TAB 2: BATCHES & SYSTEM ACCESS (ORIGINAL TABLE)                -->
+  <!-- ============================================================== -->
+  {% if active_tab == 'batches' %}
+
+  <!-- Toast notification for batch pause/resume -->
   <div id="accessToast" class="access-toast" role="alert" aria-live="polite"></div>
 
   <div class="table-container">
@@ -103,16 +492,112 @@
     </table>
   </div>
 
+  {% endif %}
+
 </div>
 
+<!-- Floating Copy Toast Notification -->
+<div id="copyToast" class="access-toast" role="alert" aria-live="polite"></div>
+
 <script nonce="{{ request.csp_nonce }}">
+// Date Filter Pills Switcher
+function selectDateFilter(filterType) {
+  document.getElementById('dateFilterInput').value = filterType;
+  const customInput = document.getElementById('customDateInput');
+  if (filterType === 'custom') {
+    customInput.style.display = 'inline-block';
+    customInput.focus();
+  } else {
+    customInput.style.display = 'none';
+    document.getElementById('tracksheetFilterForm').submit();
+  }
+}
+
+function onCustomDateChange() {
+  document.getElementById('dateFilterInput').value = 'custom';
+  document.getElementById('tracksheetFilterForm').submit();
+}
+
+// Copy Verification Link AJAX
+function copyVerificationLink(btn) {
+  const studentId = btn.dataset.studentId;
+  const originalHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Getting…';
+
+  fetch(`/admin-panel/admin/student/${studentId}/get-verification-link/`, {
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+    }
+  })
+  .then(resp => resp.json())
+  .then(data => {
+    if (data.status === 'success' && data.verify_url) {
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(data.verify_url).then(() => {
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+          btn.classList.add('btn-copied');
+          showToast(`Verification link for <strong>${data.student_name}</strong> copied to clipboard!`, false);
+          setTimeout(() => {
+            btn.innerHTML = originalHtml;
+            btn.classList.remove('btn-copied');
+            btn.disabled = false;
+          }, 2500);
+        }).catch(() => fallbackCopy(data.verify_url, btn, originalHtml, data.student_name));
+      } else {
+        fallbackCopy(data.verify_url, btn, originalHtml, data.student_name);
+      }
+    } else {
+      btn.innerHTML = originalHtml;
+      btn.disabled = false;
+      showToast(data.message || 'Failed to generate verification link.', true);
+    }
+  })
+  .catch(err => {
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+    showToast('Network error while getting verification link.', true);
+  });
+}
+
+function fallbackCopy(text, btn, originalHtml, studentName) {
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.style.position = 'fixed';
+  textarea.style.top = '0';
+  textarea.style.left = '0';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.focus();
+  textarea.select();
+  try {
+    document.execCommand('copy');
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Copied!';
+    btn.classList.add('btn-copied');
+    showToast(`Verification link for <strong>${studentName}</strong> copied to clipboard!`, false);
+    setTimeout(() => {
+      btn.innerHTML = originalHtml;
+      btn.classList.remove('btn-copied');
+      btn.disabled = false;
+    }, 2500);
+  } catch (e) {
+    prompt('Copy the verification link below:', text);
+    btn.innerHTML = originalHtml;
+    btn.disabled = false;
+  }
+  document.body.removeChild(textarea);
+}
+
+// Toast notification function
 function showToast(message, isError) {
-  const toast = document.getElementById('accessToast');
+  let toast = document.getElementById('copyToast') || document.getElementById('accessToast');
+  if (!toast) return;
   toast.innerHTML = (isError ? '<i class="fa-solid fa-circle-exclamation"></i> ' : '<i class="fa-solid fa-circle-check"></i> ') + message;
   toast.className = 'access-toast ' + (isError ? 'toast-error' : 'toast-success') + ' toast-show';
   setTimeout(() => { toast.className = 'access-toast'; }, 3500);
 }
 
+// Toggle batch access
 async function toggleAccess(btn) {
   const counter   = btn.dataset.counter;
   const college   = btn.dataset.college;
@@ -124,7 +609,6 @@ async function toggleAccess(btn) {
   const isPaused  = btn.dataset.paused === 'true';
   const action    = isPaused ? 'resume' : 'pause';
 
-  // Loading state
   btn.disabled = true;
   btn.innerHTML = action === 'pause' ? '<i class="fa-solid fa-spinner fa-spin"></i> Pausing…' : '<i class="fa-solid fa-spinner fa-spin"></i> Resuming…';
 
@@ -151,12 +635,10 @@ async function toggleAccess(btn) {
     if (data.status === 'success') {
       const nowPaused = data.is_paused;
 
-      // Update button
       btn.dataset.paused = nowPaused ? 'true' : 'false';
       btn.innerHTML      = nowPaused ? '<i class="fa-solid fa-play"></i> Resume' : '<i class="fa-solid fa-pause"></i> Pause';
       btn.className      = 'toggle-access-btn ' + (nowPaused ? 'resume-btn' : 'pause-btn');
 
-      // Update badge
       const badge = document.getElementById('status-badge-' + counter);
       badge.innerHTML = nowPaused ? '<i class="fa-solid fa-circle-pause"></i> Paused' : '<i class="fa-solid fa-circle-check"></i> Active';
       badge.className   = 'status-badge ' + (nowPaused ? 'paused' : 'active');

@@ -1,24 +1,22 @@
+import csv
+import datetime
+import json
+import logging
 from django.shortcuts import get_object_or_404, render, redirect
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
 from django.urls import reverse
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.db import IntegrityError
-from .models import College 
-from .forms import CollegeForm , CourseForm
-import json
-import logging
-from .models import College, Course, StudentGroupAccess
-from .forms import CollegeForm, CourseForm
-from .models import Section
-from .forms import SectionForm
-import json
-import logging
-from student.models import StudentProfile
-from django.db.models import Count
+from django.db.models import Count, Q
+from django.core.paginator import Paginator
 from django.utils import timezone
+
+from .models import College, Course, Section, StudentGroupAccess
+from .forms import CollegeForm, CourseForm, SectionForm
+from student.models import StudentProfile
 
 logger = logging.getLogger(__name__)
 
@@ -452,13 +450,85 @@ def get_students_by_group(request):
 @login_required
 @user_passes_test(is_admin)
 def college_students_page(request, college_id):
-
     college = get_object_or_404(College, id=college_id)
+    base_qs = StudentProfile.objects.filter(college=college, is_current=True)
+    today = timezone.localdate()
 
+    # Aggregate stats across the whole college in a single fast SQL query
+    stats = base_qs.aggregate(
+        total_count=Count('id'),
+        today_count=Count('id', filter=Q(user__date_joined__date=today)),
+        emails_sent_count=Count('id', filter=Q(user__email_sent=True) | Q(user__is_verified=True)),
+        passwords_set_count=Count('id', filter=Q(user__password_set_at__isnull=False) | Q(user__is_verified=True)),
+    )
+    total_count = stats['total_count'] or 0
+    today_count = stats['today_count'] or 0
+    emails_sent_count = stats['emails_sent_count'] or 0
+    passwords_set_count = stats['passwords_set_count'] or 0
+    pending_count = total_count - passwords_set_count
+
+    # Prepare Track Sheet queryset with filtering
+    track_qs = base_qs.select_related("user", "course", "section")
+
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        track_qs = track_qs.filter(
+            Q(user__first_name__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(usn__icontains=search_query) |
+            Q(user__mobile_number__icontains=search_query)
+        )
+
+    date_filter = request.GET.get('date_filter', 'all').strip()
+    custom_date = request.GET.get('custom_date', '').strip()
+    if date_filter == 'today':
+        track_qs = track_qs.filter(user__date_joined__date=today)
+    elif date_filter == 'yesterday':
+        track_qs = track_qs.filter(user__date_joined__date=today - datetime.timedelta(days=1))
+    elif date_filter == '7days':
+        track_qs = track_qs.filter(user__date_joined__date__gte=today - datetime.timedelta(days=7))
+    elif date_filter == 'custom' and custom_date:
+        try:
+            parsed_date = datetime.date.fromisoformat(custom_date)
+            track_qs = track_qs.filter(user__date_joined__date=parsed_date)
+        except ValueError:
+            pass
+
+    status_filter = request.GET.get('status_filter', 'all').strip()
+    if status_filter == 'active':
+        track_qs = track_qs.filter(Q(user__password_set_at__isnull=False) | Q(user__is_verified=True))
+    elif status_filter == 'pending':
+        track_qs = track_qs.filter(user__password_set_at__isnull=True, user__is_verified=False)
+    elif status_filter == 'email_sent':
+        track_qs = track_qs.filter(Q(user__email_sent=True) | Q(user__is_verified=True))
+    elif status_filter == 'email_pending':
+        track_qs = track_qs.filter(user__email_sent=False, user__is_verified=False)
+
+    batch_year_filter = request.GET.get('batch_year', '').strip()
+    if batch_year_filter:
+        try:
+            track_qs = track_qs.filter(batch_year=int(batch_year_filter))
+        except ValueError:
+            pass
+
+    course_filter = request.GET.get('course', '').strip()
+    if course_filter:
+        track_qs = track_qs.filter(course__name=course_filter)
+
+    track_qs = track_qs.order_by("-user__date_joined", "-id")
+
+    # High-volume pagination (50 students per page)
+    per_page = 50
+    paginator = Paginator(track_qs, per_page)
+    page_number = request.GET.get('page', 1)
+    try:
+        page_obj = paginator.get_page(page_number)
+    except Exception:
+        page_obj = paginator.get_page(1)
+
+    # Batches table data (pre-fetching paused records to avoid N+1 queries)
     raw_groups = (
-        StudentProfile.objects
-        .filter(college=college, is_current=True)
-        .values(
+        base_qs.values(
             "year",
             "semester",
             "section__name",
@@ -468,40 +538,210 @@ def college_students_page(request, college_id):
         .distinct()
         .order_by("batch_year", "year", "semester")
     )
-
-    # Annotate each batch-group with its current paused status
+    paused_set = set(
+        StudentGroupAccess.objects.filter(college=college, is_paused=True).values_list(
+            'year', 'semester', 'section__name', 'course__name', 'batch_year'
+        )
+    )
     groups = []
     for g in raw_groups:
-        try:
-            access = StudentGroupAccess.objects.get(
-                college=college,
-                year=g['year'],
-                semester=g['semester'],
-                section__name=g['section__name'],
-                course__name=g['course__name'],
-                batch_year=g['batch_year'],
-            )
-            is_paused = access.is_paused
-        except StudentGroupAccess.DoesNotExist:
-            is_paused = False
-
+        key = (g['year'], g['semester'], g['section__name'], g['course__name'], g['batch_year'])
         groups.append({
             'year': g['year'],
             'semester': g['semester'],
             'section__name': g['section__name'],
             'course__name': g['course__name'],
             'batch_year': g['batch_year'],
-            'is_paused': is_paused,
+            'is_paused': (key in paused_set),
         })
+
+    # Available filter choices
+    available_batch_years = list(base_qs.values_list('batch_year', flat=True).distinct().order_by('-batch_year'))
+    available_courses = list(base_qs.filter(course__isnull=False).values_list('course__name', flat=True).distinct().order_by('course__name'))
+
+    # Active tab ('tracksheet' or 'batches')
+    active_tab = request.GET.get('tab', 'tracksheet').strip()
+    if active_tab not in ('tracksheet', 'batches'):
+        active_tab = 'tracksheet'
+
+    # Build pagination parameters preserving filters
+    query_params = request.GET.copy()
+    if 'page' in query_params:
+        del query_params['page']
+    pagination_params = query_params.urlencode()
 
     return render(
         request,
         "admin_college_students.html",
         {
             "college": college,
-            "groups": groups
+            "groups": groups,
+            "total_count": total_count,
+            "today_count": today_count,
+            "emails_sent_count": emails_sent_count,
+            "passwords_set_count": passwords_set_count,
+            "pending_count": pending_count,
+            "page_obj": page_obj,
+            "search_query": search_query,
+            "date_filter": date_filter,
+            "custom_date": custom_date,
+            "status_filter": status_filter,
+            "batch_year_filter": batch_year_filter,
+            "course_filter": course_filter,
+            "available_batch_years": available_batch_years,
+            "available_courses": available_courses,
+            "active_tab": active_tab,
+            "pagination_params": pagination_params,
+            "today_date": today,
         }
     )
+
+
+@login_required
+@user_passes_test(is_admin)
+def college_export_student_tracksheet(request, college_id):
+    """
+    Exports the college student track sheet to CSV format with streaming support
+    for large daily registration volumes.
+    """
+    college = get_object_or_404(College, id=college_id)
+    base_qs = StudentProfile.objects.filter(college=college, is_current=True).select_related("user", "course", "section")
+    today = timezone.localdate()
+
+    # Search filter
+    search_query = request.GET.get('search', '').strip()
+    if search_query:
+        base_qs = base_qs.filter(
+            Q(user__first_name__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(usn__icontains=search_query) |
+            Q(user__mobile_number__icontains=search_query)
+        )
+
+    # Date filter
+    date_filter = request.GET.get('date_filter', 'all').strip()
+    custom_date = request.GET.get('custom_date', '').strip()
+    if date_filter == 'today':
+        base_qs = base_qs.filter(user__date_joined__date=today)
+    elif date_filter == 'yesterday':
+        base_qs = base_qs.filter(user__date_joined__date=today - datetime.timedelta(days=1))
+    elif date_filter == '7days':
+        base_qs = base_qs.filter(user__date_joined__date__gte=today - datetime.timedelta(days=7))
+    elif date_filter == 'custom' and custom_date:
+        try:
+            parsed_date = datetime.date.fromisoformat(custom_date)
+            base_qs = base_qs.filter(user__date_joined__date=parsed_date)
+        except ValueError:
+            pass
+
+    # Status filter
+    status_filter = request.GET.get('status_filter', 'all').strip()
+    if status_filter == 'active':
+        base_qs = base_qs.filter(Q(user__password_set_at__isnull=False) | Q(user__is_verified=True))
+    elif status_filter == 'pending':
+        base_qs = base_qs.filter(user__password_set_at__isnull=True, user__is_verified=False)
+    elif status_filter == 'email_sent':
+        base_qs = base_qs.filter(Q(user__email_sent=True) | Q(user__is_verified=True))
+    elif status_filter == 'email_pending':
+        base_qs = base_qs.filter(user__email_sent=False, user__is_verified=False)
+
+    batch_year_filter = request.GET.get('batch_year', '').strip()
+    if batch_year_filter:
+        try:
+            base_qs = base_qs.filter(batch_year=int(batch_year_filter))
+        except ValueError:
+            pass
+
+    course_filter = request.GET.get('course', '').strip()
+    if course_filter:
+        base_qs = base_qs.filter(course__name=course_filter)
+
+    base_qs = base_qs.order_by("-user__date_joined", "-id")
+
+    # CSV response
+    response = HttpResponse(content_type='text/csv; charset=utf-8')
+    safe_college_name = "".join(c for c in college.name if c.isalnum() or c in (' ', '_', '-')).strip().replace(' ', '_')
+    filename = f"TrackSheet_{safe_college_name}_{today}.csv"
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+    writer = csv.writer(response)
+    writer.writerow([
+        '#', 'USN', 'Student Name', 'Email', 'Mobile Number', 'Gender',
+        'College', 'Course', 'Year', 'Semester', 'Section', 'Passed Out Year',
+        'Registered Date & Time', 'Mail Status', 'Mail Sent Timestamp',
+        'Password Status', 'Password Set Timestamp'
+    ])
+
+    for idx, s in enumerate(base_qs.iterator(chunk_size=1000), start=1):
+        u = s.user
+        reg_time = timezone.localtime(u.date_joined).strftime("%d-%b-%Y %I:%M %p") if u.date_joined else ""
+        mail_status = "Sent" if u.is_mail_sent else "Pending"
+        mail_time = timezone.localtime(u.email_sent_at).strftime("%d-%b-%Y %I:%M %p") if u.email_sent_at else ""
+        pwd_status = "Active / Password Set" if u.is_password_set else "Pending Verification"
+        pwd_time = timezone.localtime(u.password_set_at).strftime("%d-%b-%Y %I:%M %p") if u.password_set_at else ""
+
+        writer.writerow([
+            idx,
+            s.usn,
+            u.get_full_name() or u.first_name,
+            u.email,
+            str(u.mobile_number),
+            u.gender,
+            college.name,
+            s.course.name if s.course else "",
+            s.year,
+            s.semester,
+            s.section.name if s.section else "",
+            s.batch_year,
+            reg_time,
+            mail_status,
+            mail_time,
+            pwd_status,
+            pwd_time,
+        ])
+
+    return response
+
+
+@login_required
+@user_passes_test(is_admin)
+@require_POST
+def college_resend_all_pending_emails(request, college_id):
+    """
+    Bulk resends verification emails to all pending unverified students in the college.
+    """
+    from users.utils import send_verification_email_on_commit
+    college = get_object_or_404(College, id=college_id)
+
+    pending_students = list(
+        StudentProfile.objects
+        .select_related("user")
+        .filter(
+            college=college,
+            is_current=True,
+            user__password_set_at__isnull=True,
+            user__is_verified=False,
+        )
+    )
+
+    if not pending_students:
+        messages.info(request, "All students in this college have already verified their accounts and set passwords.")
+    else:
+        submitted_count = 0
+        fail_count = 0
+        for s in pending_students:
+            if send_verification_email_on_commit(request, s.user) is False:
+                fail_count += 1
+            else:
+                submitted_count += 1
+
+        if submitted_count > 0:
+            messages.success(request, f"Submitted verification emails for {submitted_count} pending student(s).")
+        if fail_count > 0:
+            messages.error(request, f"Could not queue or send verification emails for {fail_count} student(s).")
+
+    next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or reverse('college_student_page', kwargs={'college_id': college_id})
+    return redirect(next_url)
 
 
 @login_required
